@@ -1,0 +1,62 @@
+open Ast
+
+%%
+%header (functor ExampleLrValsFun (structure Token : TOKEN))
+
+%term
+   EOF
+ | IDENT of string
+ | NUMERAL of int
+ | LPAREN | RPAREN
+ | DOT | HASH | SEMI
+ | LAMBDA
+ | FUN_APP
+ | THUNK
+ | RET
+ | REC
+ | SEQ
+ | SUC 
+ | ZERO
+ | LARR
+
+%left FUN_APP
+
+%nonterm
+   start of ast
+ | term of ast
+ | atomicTerm of ast
+ | cmd of ast
+
+%verbose
+%pos (string -> Coord.t)
+%start start
+%eop EOF
+%noshift EOF
+%name Example
+%arg (fileName) : string
+%%
+
+start : term (term) 
+
+term
+  : atomicTerm atomicTerm %prec FUN_APP (Ast.$$ (O.AP, [\ ([], atomicTerm1), \ ([], atomicTerm2)]))
+  | REC LPAREN atomicTerm SEMI term SEMI IDENT DOT IDENT DOT term RPAREN 
+    (Ast.$$ (O.REC, [\ ([], atomicTerm1), \ ([], term1), \ ([IDENT1, IDENT2], term2)]))
+  | RET LPAREN atomicTerm RPAREN (Ast.$$ (O.RET, [\ ([], atomicTerm)]))
+  | SEQ LPAREN atomicTerm SEMI IDENT DOT term (Ast.$$ (O.SEQ, [\ ([], atomicTerm), \ ([IDENT], term)]))
+  | cmd (cmd)
+
+cmd 
+  : IDENT LARR term SEMI cmd
+    (Ast.$$ (O.SEQ, [\ ([], Ast.$$ (O.THUNK, [\ ([],term)])), \ ([IDENT], cmd)]))
+  | term SEMI (term)
+
+atomicTerm
+  : LAMBDA IDENT DOT term (Ast.$$ (O.LAM, [\ ([IDENT], term)]))
+  | NUMERAL (Ast.$$ (O.LIT NUMERAL, []))
+  | IDENT (Ast.`` IDENT)
+  | HASH atomicTerm (Ast.$$ (O.NUM, [\ ([], atomicTerm)]))
+  | ZERO (Ast.$$ (O.ZERO, []))
+  | SUC atomicTerm (Ast.$$ (O.SUC, [\ ([], atomicTerm)]))
+  | THUNK term (Ast.$$ (O.THUNK, [\ ([], term)]))
+  | LPAREN atomicTerm RPAREN (atomicTerm)
