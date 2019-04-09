@@ -1,0 +1,97 @@
+\newcommand{\leaf}{\ensuremath{\mathtt{leaf}}}
+\newcommand{\single}[1]{\ensuremath{\mathtt{single}(#1)}}
+\newcommand{\ttwo}[2]{\ensuremath{\mathtt{t2}(#1,#2)}}
+\newcommand{\tthree}[3]{\ensuremath{\mathtt{t3}(#1,#2,#3)}}
+\newcommand{\ttrec}[8]{\mathtt{TTREC}(#1)(#2 \mid #3.#4 \mid #5.#6 \mid #7.#8)}
+\newcommand{\tttree}[3]{\ensuremath{\mathtt{23tree}(#1,#2,#3)}}
+\newcommand{\word}{\mathtt{word}}
+\newcommand{\mw}[1]{\mathtt{mw}(#1)}
+\section{Trees}
+
+Augment the language with the following values and commands:
+
+\begin{align*}
+    \mathsf{Val} \quad v &::= \dots
+    \mid \leaf
+    \mid \single{v}
+    \mid \ttwo{v_l}{v_r}
+    \mid \tthree{v_l}{v_m}{v_r}
+    \mid \tttree{A}{v}{w}\\
+    &\mid \word
+    \mid \mw{-2^{63}} \dots \mw{2^{63}-1}\\
+    \mathsf{Comp} \quad M &::= 
+    \dots
+    \mid \ttrec{v}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3}\\
+\end{align*}
+
+The semantics is extended with the computation rules:
+
+\begin{mathpar}
+\inferrule{
+}{
+ \step{\ttrec{\leaf}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3}}{M_0}
+}
+
+\inferrule{
+}{
+ \step{\ttrec{\single{v}}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3}}{[v/a]M_1}
+}
+
+
+\inferrule{
+  v_l = (\_,\_,n_l)\\
+  v_r = (\_,\_,n_r)\\\\
+  F_l \triangleq \ttrec{n_l}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3}\\
+  F_r \triangleq \ttrec{n_r}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3}\\
+}{
+ \step{\ttrec{\ttwo{v_l}{v_r}}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3}}{
+ \lsub{F_l}{f_l}{\lsub{F_r}{f_r}{[n_l/l,n_r/r]M_2}}}
+}
+
+\inferrule{
+  v_l = (\_,\_,n_l)\\
+  v_m = (\_,\_,n_m)\\
+  v_r = (\_,\_,n_r)\\\\
+  F_l \triangleq \ttrec{n_l}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3}\\
+  F_m \triangleq \ttrec{n_m}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3}\\
+  F_r \triangleq \ttrec{n_r}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3}\\
+}{
+ \ttrec{\tthree{v_l}{v_m}{v_r}}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3} \mapsto\\
+ \lsub{F_l}{f_l}{\lsub{F_m}{f_m}{\lsub{F_r}{f_r}{[n_l/l,n_r/r]M_2}}}
+}
+
+\end{mathpar}
+
+Augment the types:
+\begin{itemize}
+\item \isType{\tttree{A}{s}{d}} 
+  \begin{enumerate}
+  \item \isType{A}
+  \item \isVal{s}{\word}
+  \item \isVal{d}{\word}
+  \end{enumerate}
+
+\item \isVal{\leaf}{\tttree{A}{\mw{0}}{\mw{0}}}
+\item \isVal{\single{a}}{\tttree{A}{\mw{1}}{\mw{1}}}
+  \begin{enumerate}
+  \item \isVal{a}{A}
+  \end{enumerate}
+\item \isVal{\ttwo{l}{r}}{\tttree{A}{s_l+s_r}{d+\mw{1}}}
+  \begin{enumerate}
+  \item \isVal{l}{\tttree{A}{s_l}{d}}
+  \item \isVal{r}{\tttree{A}{s_r}{d}}
+  \end{enumerate}
+
+\item \isVal{\tthree{l}{m}{r}}{\tttree{A}{s_l+s_m+s_r}{d+\mw{1}}}
+  \begin{enumerate}
+  \item \isVal{l}{\tttree{A}{s_l}{d}}
+  \item \isVal{m}{\tttree{A}{s_m}{d}}
+  \item \isVal{r}{\tttree{A}{s_r}{d}}
+  \end{enumerate}
+
+Define join: 
+
+\begin{gather}
+test
+\end{gather}
+\end{itemize}

@@ -1,0 +1,68 @@
+\section{Ground Judgments}
+
+\begin{center}
+\begin{tabularx}{1.0\textwidth}{lXll}
+    \toprule
+ Judgment & English & Presupposition & Meaning\\ \midrule
+ \isType{A_0} & $A_0$ is a canonical type & --- & what are canonical values of $A_0$? \\ \midrule
+ \isTypeComp{\star}{A} & $A$ computes to a type  & --- & \eval{A}{A_0} and \isType{A_0}\\ \midrule
+ \isVal{v}{A} & $v$ is a canonical value of type $A$ & \isTypeComp{\star}{A} & 
+    \makecell[tl]{Given that \eval{A}{A_0},\\ $v$ is a canonical value of $A_0$} \\ \midrule
+ \isComp{\varphi}{M}{A}{\varrho} & $M$ computes to a value of type $A$ & 
+    \makecell[tl]{\isTypeComp{\star}{A},\\\isPot{\varphi},\\ \isPot{\varrho}}&
+    \makecell[tl]{\evalCost{M}{c}{v}, \isVal{v}{B}, \eval{\varphi}{p},\\ \eval{[v/y]\varrho}{p'},\\ and $\toNat{p} \ge c + \toNat{p'}$}\\
+ \isType{\nat} & $\nat$ is a canonical type & --- & 
+    \makecell[tl]{\isVal{\zero}{\nat}\\ \isVal{\suc{v}}{\ret{\nat}} given that\\ \isVal{v}{\ret{\nat}}}\\ \midrule
+\isPot{\varphi}& $\varphi$ computes a potential & --- & 
+    \makecell[tl]{\isComp{p}{\varphi}{\ret{\nat}}{p'}\\ for some $p,p'$}\\
+ \iffalse
+ \isPotTyped{\varrho}{A} & $\varrho$ is a potential function for $A$ & \isTypeComp{\star}{A} &
+    \makecell[cl]{$\varrho$ is $i.M$ and for all \isVal{a}{A},\\ \eval{[a/i]M}{n} and \isVal{n}{\nat}}\\
+    \fi
+    \bottomrule
+\end{tabularx}
+\end{center}
+
+Let it be the case that
+\begin{gather*}
+\isTypeComp{\star}{A_1}\\
+\isTypeComp{\star}{[a_1/x_1]A_2} \text{ given } \isVal{a_1}{A_1},\\
+\dots\dots\\
+\isTypeComp{\star}{[a_1/x_1,\dots,a_{n-1}/x_{n-1}]A_n}\\
+\text{ given } \\ 
+    \isVal{a_1}{A_1},\\
+    \dots,\\
+    \isVal{a_{n-1}}{[a_1/x_1,\dots,a_{n-2}/x_{n-2}]A_{n-1}}
+\end{gather*}
+
+And 
+
+\[
+\isVal{a_1}{A_1},\dots,\isVal{a_n}{[a_1/x_1,\dots,a_{n_1}/x_{n-1}]A_n}
+\]
+Then for $\mathcal{J} \in \{\isTypeComp{\star}{A},\; \isVal{v}{A},\; \isPot{\varphi}\}$, the shorthand
+\[\isOf{x_1}{A_1},\dots,\isOf{x_n}{A_n} \rhd_n \mathcal{J}
+\]
+means
+\[[a_1/x_1,\dots,a_n/x_n]\mathcal{J}\]
+
+If moreover, it is the case that 
+\begin{gather*}
+    \isPot{[a_1/x_1,\dots,a_n/x_n]\varphi}\\
+    \isTypeComp{\star}{[a_1/x_1,\dots,a_n/x_n]B}\\
+    \isPot{[a_1/x_1,\dots,a_n/x_n,b/y]\varrho} \text{ for all } \isVal{b}{[a_1/x_1,\dots,a_n/x_n]B}\\
+\end{gather*}
+
+Then the notation
+\[
+\isOf{x_1}{A_1},\dots,\isOf{x_n}{A_n} / \varphi \rhd_n M \in \isOf{y}{B}/\varrho
+\]
+means that 
+\begin{gather*}
+\eval{[a_1/x_1,\dots,a_n/x_n]\varphi}{p}\\ 
+\evalCost{[a_1/x_1,\dots,a_n/x_n]M}{c}{v} \text{ for some } \isVal{v}{[a_1/x_1,\dots,a_n/x_n]B}\\
+\eval{[a_1/x_1,\dots,a_n/x_n,v/y]\varrho}{p'}
+\end{gather*}
+satisfying $\toNat{p} \ge c + \toNat{p'}$.
+
+

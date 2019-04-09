@@ -1,0 +1,35 @@
+
+\section{Hypothetical Judgments}
+
+\begin{center}
+\begin{tabularx}{1.0\textwidth}{lXl}
+    \toprule
+ Judgment & Presupposition & Meaning\\ \midrule
+  \rowcolor[gray]{0.7}
+ \isCtx{\cdot} & --- & ---\\
+  \rowcolor[gray]{0.7}
+ \isCtx{\isOf{x}{A},\Gamma} & --- & \isTypeComp{\star}{A}, and for all \isVal{a}{A}, \isCtx{[a/x]\Gamma}\\
+  \isSub{\cdot}{\cdot} & --- & --- \\
+ \isSub{x\mapsto M,\gamma}{\isOf{x}{A},\Gamma} & --- & \isVal{M}{A} and \isSub{\gamma}{[M/x]\Gamma}\\
+ \rowcolor[gray]{0.7}
+ \gammaToTypeComp{\cdot}{\star}{B} & --- & \isTypeComp{\star}{B}\\
+  \rowcolor[gray]{0.7}
+ \gammaToTypeComp{\isOf{x}{A},\Gamma}{\star}{B} & \isCtx{\isOf{x}{A},\Gamma} & for all \isVal{a}{A}, $[a/x]\left(\gammaToTypeComp{\Gamma}{\star}{B}\right)$ \\ 
+ \gammaToVal{\cdot}{v}{B} & --- & \isVal{v}{B} \\
+ \gammaToVal{\isOf{x}{A},\Gamma}{v}{B} & \isCtx{\isOf{x}{A},\Gamma} & for all \isVal{a}{A}, 
+    $[a/x]\left(\gammaToVal{\Gamma}{v}{B}\right)$\\
+\rowcolor[gray]{0.7}
+ \gammaToPot{\cdot}{\varphi} & --- & \isPot{\varphi} \\ 
+ \rowcolor[gray]{0.7}
+ \gammaToPot{\isOf{x}{A},\Gamma}{\varphi} & \isCtx{\isOf{x}{A},\Gamma} & for all \isVal{a}{A},                       $[a/x]\left(\gammaToPot{\Gamma}{\varphi}\right)$\\
+ \gammaToComp{\cdot}{\varphi}{M}{\isOf{y}{B}}{\varrho} & \isTypeComp{\star}{B}, \isPot{\varphi}, and \gammaToPot{\isOf{y}{B}}{\varrho}
+    & \makecell[tl]{\evalCost{M}{c}{v},\\ \isVal{v}{B},\\ \eval{\varphi}{p},\\ \eval{[v/y]\varrho}{p'},\\ and $\toNat{p} \ge c + \toNat{p'}$}\\
+  \gammaToComp{\isOf{x}{A},\Gamma}{\varphi}{M}{\isOf{y}{B}}{\varrho} & 
+  \makecell[tl]{\isCtx{\isOf{x}{A},\Gamma},\\
+  \gammaToTypeComp{\isOf{x}{A},\Gamma}{\star}{B},\\
+  \gammaToPot{\isOf{x}{A},\Gamma}{\varphi},\\ 
+  \gammaToPot{\isOf{x}{A},\Gamma,\isOf{y}{B}}{\varrho}}
+  &\makecell[tl]{for all \isVal{a}{A},\\ $[a/x]\left(\gammaToComp{\Gamma}{\varphi}{M}{\isOf{y}{B}}{\varrho}\right)$}\\
+    \bottomrule
+\end{tabularx}
+\end{center}

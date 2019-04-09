@@ -1,0 +1,51 @@
+\section{Types}
+
+\begin{itemize}
+    \item \isType{\dprod{\isOf{x}{A}}{B}}
+    \begin{enumerate}
+        \item \isTypeComp{\star}{A}
+        \item \gammaToTypeCompFixed{\isOf{x}{A}}{1}{B}
+    \end{enumerate}
+    \item \isType{\comp{A}}
+    \begin{enumerate}
+        \item \isType{A}
+    \end{enumerate}
+    \item \isVal{\thunk{M}}{\comp{A}}, given:
+    \begin{enumerate}
+        \item \isComp{\varphi}{M}{\isOf{x}{A}}{\varrho} for some $\varphi, \varrho$
+    \end{enumerate}
+        \item \isType{\ccomp{\varphi}{\isOf{x}{A}}{\varrho}}
+         \begin{enumerate}
+        \item \isType{A}
+        \item \isPot{\varphi}
+        \item \gammaToPotFixed{\isOf{x}{A}}{1}{\varrho}
+        \end{enumerate}
+        \item \isVal{\thunk{M}}{\ccomp{\varphi}{\isOf{x}{A}}{\varrho}}
+        \begin{enumerate}
+            \item \isComp{\varphi}{M}{\isOf{x}{A}}{\varrho}
+        \end{enumerate}
+
+    \item \isType{\arr{\isOf{x}{A}}{\varphi}{\isOf{y}{B}}{\varrho}}
+\begin{enumerate}
+    \item \isTypeComp{\star}{A}
+    \item \gammaToTypeCompFixed{\isOf{x}{A}}{1}{B}
+    \item \gammaToPotFixed{\isOf{x}{A}}{1}{\varphi}
+    \item \gammaToPotFixed{\isOf{x}{A},\isOf{y}{B}}{2}{\varrho}
+\end{enumerate}
+
+    \item $\lam{x}{A}{M}$ is a canonical element of \arr{\isOf{x}{A}}{\varphi}{\isOf{y}{B}}{\varrho}, given:
+\[
+    \gammaToCompFixed{\isOf{x}{A}}{\varphi}{1}{M}{\isOf{y}{B}}{\varrho}
+    \]
+By the previous remarks, this is the case iff:
+given \isVal{a}{A}, it is the case that:
+\begin{enumerate}
+    \item \eval{[a/x]\varphi}{p}
+    \item \evalCost{[a/x]M}{c}{v} for some \isVal{v}{[a/x]B}
+    \item \eval{[a/x,v/y]\varrho}{p'}
+    \item $\toNat{p} \ge c + \toNat{p'}$
+\end{enumerate}
+
+\end{itemize}
+
+

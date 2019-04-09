@@ -1,0 +1,80 @@
+\section{Language}
+
+\begin{align*}
+    \mathsf{Val} \quad v &::= \lam{x}{A}{M} 
+    \mid \suc{v}
+    \mid \zero 
+    \mid \thunk{M}
+    \mid \comp{M}
+    \mid x
+    \mid \nat
+    \mid \pair{v}{w}
+    \mid \arr{\isOf{x}{M}}{\varphi}{\isOf{x'}{M'}}{\varphi'}
+    \mid \dprod{\isOf{x}{M}}{M'}\\
+    \mathsf{Comp} \quad M &::= 
+     v_1 \; v_2
+    \mid \rec{v}{M_0}{x}{f}{M_1}
+    \mid \seq{v}{x}{M}
+    \mid \fst{v}
+    \mid \snd{v}
+    \mid \ret{v}\\
+    \mathsf{Pot} \quad \varphi &::= M
+\end{align*}
+
+\section{Semantics}
+\[
+\fbox{$\step{M}{M'}$} \quad\quad \fbox{$\final{M}$}
+\]
+
+\begin{mathpar}
+
+\inferrule{
+}{
+    \final{\ret{v}}
+}
+
+\inferrule{
+}{
+    \step{(\lam{x}{A}{M}) v}{[v/x]M}
+}
+
+\inferrule{
+}{
+    \step{\rec{\zero}{M_0}{x}{f}{M_1}}{M_0}
+}
+
+\inferrule{
+}{
+    \step{\rec{\suc{v}}{M_0}{x}{f}{M_1}}{\seq{\thunk{\rec{v}{M_0}{x}{f}{M_1}}}{f}{[v/x]M_1}}
+}
+
+\inferrule{
+}{
+    \step{\fst{\pair{v}{w}}}{\ret{v}}
+}
+
+\inferrule{
+}{
+    \step{\snd{\pair{v}{w}}}{\ret{w}}
+}
+
+\inferrule{
+    \step{M_1}{M_1'}
+}{
+    \step{\seq{\thunk{M_1}}{x}{M_2}}{\seq{\thunk{M_1'}}{x}{M_2}}
+}
+
+\inferrule{
+}{
+    \step{\seq{\thunk{\ret{v}}}{x}{M_2}}{[v/x]M_2}
+}
+\end{mathpar}
+
+\evalCost{M}{c}{v} means $\exists v. \stepIn{M}{c}{\ret{v}}$ and \eval{M}{v} means $\exists v.
+\stepIn{M}{*}{\ret{v}}$
+
+Define a translation from values to natural numbers: 
+$\toNat{n} = \begin{cases} 0 \text{ if } n = \zero\\
+1+\toNat{v} \text{ if } n = \suc{v} \end{cases}$
+
+

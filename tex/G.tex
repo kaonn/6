@@ -1,0 +1,134 @@
+% --------------------------------------------------------------
+% This is all preamble stuff that you don't have to worry about.
+% Head down to where it says "Start here"
+% --------------------------------------------------------------
+ 
+\documentclass[12pt]{article}
+ 
+\usepackage[margin=1in]{geometry} 
+\usepackage{amsmath,amsthm,amssymb,tikz}
+\usepackage{mathpartir}
+\usepackage{stix}
+\usepackage{tabularx}
+\usepackage{booktabs,colortbl}
+\usepackage{makecell}
+\usepackage{tgpagella}
+\usepackage[normalem]{ulem}
+ 
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+ 
+\newenvironment{theorem}[2][Theorem]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newtheorem{lemma}{Lemma}[section]
+\newtheorem{corollary}{Corollary}[lemma]
+\newenvironment{exercise}[2][Exercise]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{reflection}[2][Reflection]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{proposition}[2][Proposition]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\iffalse
+\newenvironment{corollary}[2][Corollary]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\fi
+\newenvironment{problem}[2][Problem]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+
+\newcommand*{\rulefiller}{%
+  \arrayrulecolor[gray]{0.8}% change to cell colour
+  \specialrule{\heavyrulewidth}{0pt}{-\heavyrulewidth}% "invisible" rule
+  \arrayrulecolor{black}% revert to regular line colour
+}
+
+\newcommand{\map}[3]{{\color{red}{\varphi}} #1 : #2.\; #3}
+\newcommand{\zero}{{\color{red}{\mathtt{zero}}}}
+\newcommand{\suc}[1]{{\color{red}{\mathtt{suc}}}(#1)}
+\newcommand{\pair}[2]{{\textcolor{red}{\langle}} #1,#2 {\textcolor{red}{\rangle}}}
+\newcommand{\ind}[5]{{\color{red}{\mathtt{ind}}}(#1)(#2;#3.#4.#5)}
+
+\newcommand{\lam}[3]{\ensuremath{{\color{red}{\lambda}} #1 .\; #3}}
+\newcommand{\seq}[3]{\mathtt{seq}(#1;#2.\;#3)}
+\newcommand{\bind}[3]{#2 \leftarrow #1;\;#3}
+\newcommand{\rec}[5]{\mathtt{rec}(#1)(#2;#3.#4.#5)}
+\newcommand{\thunk}[1]{{\color{red}{\mathtt{thunk}}}(#1)}
+\newcommand{\comp}[1]{{\color{red}{\mathtt{comp}}}(#1)}
+\newcommand{\ccomp}[3]{{\color{red}{\mathtt{comp}}}(#1, #2 \diamond #3)}
+\newcommand{\force}[1]{\mathtt{force}(#1)}
+\newcommand{\ret}[1]{\mathtt{ret}(#1)}
+\newcommand{\fst}[1]{#1 \cdot \mathtt{1}}
+\newcommand{\snd}[1]{#1 \cdot \mathtt{2}}
+
+\newcommand{\nat}{\mathtt{nat}}
+\newcommand{\pure}[2]{#1 \rhd #2}
+\newcommand{\arr}[4]{\ensuremath{(#1\diamond#2) \to (#3\diamond#4)}}
+\newcommand{\dprod}[2]{\ensuremath{#1 \times #2}}
+
+\newcommand{\step}[2]{\ensuremath{#1 \mapsto #2}}
+\newcommand{\stepIn}[3]{\ensuremath{#1 \mapsto^{#2} #3}}
+\newcommand{\eqto}[2]{#1 \Rightarrow #2}
+\newcommand{\eval}[2]{\ensuremath{#1 \Downarrow #2}}
+\newcommand{\evalCost}[3]{\ensuremath{#1 \Downarrow^{#2} #3}}
+
+\newcommand{\val}[1]{\ensuremath{#1 \;\mathsf{val}}}
+\newcommand{\final}[1]{\ensuremath{#1 \;\mathsf{final}}}
+
+\newcommand{\isOf}[2]{#1 {:} #2}
+\newcommand{\gammaToVal}[3]{\ensuremath{#1 \gg #2 \in_0 #3}}
+\newcommand{\gammaToTypeComp}[3]{\ensuremath{#1 \gg #3 \; \mathsf{type}}}
+\newcommand{\gammaToTypeCompFixed}[3]{\ensuremath{#1 \rhd_{#2} #3 \; \mathsf{type}}}
+\newcommand{\gammaToComp}[5]{\ensuremath{#1 \diamond #2 \gg #3 \in #4 \diamond #5}}
+\newcommand{\gammaToCompFixed}[6]{\ensuremath{#1 \diamond #2 \rhd_{#3} #4 \in (#5 \diamond #6)}}
+\newcommand{\gammaToPot}[2]{\ensuremath{#1 \gg #2 \; \mathsf{pot}}}
+\newcommand{\gammaToPotFixed}[3]{\ensuremath{#1 \rhd_{#2} #3 \; \mathsf{pot}}}
+
+\newcommand{\gammaToPotTyped}[3]{\ensuremath{#1 \gg #2 \; \mathsf{pot}\; #3}}
+
+\newcommand{\isVal}[2]{\ensuremath{#1 \in_0 #2}}
+\newcommand{\isType}[1]{\ensuremath{#1 \; \mathsf{type}_0}}
+\newcommand{\isComp}[4]{\ensuremath{#1\; \mathsf{ wit }\; #2 \in #3 \;\mathsf{ with }\; #4}}
+\newcommand{\isTypeComp}[2]{\ensuremath{#2 \; \mathsf{type}}}
+\newcommand{\isPot}[1]{\ensuremath{#1 \; \mathsf{pot}}}
+\newcommand{\isPotTyped}[2]{\ensuremath{#1 \; \mathsf{pot} \; #2}}
+\newcommand{\isCtx}[1]{\ensuremath{#1\; \mathsf{ctx} }}
+\newcommand{\isSub}[2]{\ensuremath{#1 \in #2}}
+
+\newcommand{\subst}[2]{[#1]#2}
+\newcommand{\lsub}[3]{\left< #1/#2 \right>#3}
+
+\newcommand{\zp}{\mathbb{0}}
+\newcommand{\toNat}[1]{\underline{#1}}
+\newcommand{\toNum}[1]{\overline{#1}}
+\newcommand{\pmin}{\mathtt{min}}
+\newcommand{\sub}{\mathtt{sub}}
+\newcommand{\plus}{\mathtt{plus}}
+\newcommand{\mult}{\mathtt{mult}}
+
+
+\newcommand{\fact}[2]{#1$^{\textbf {\color{blue}{#2}}}$}
+\newcommand{\applyAss}[1]{assumption \textbf{\color{blue}{#1}}}
+\begin{document}
+ 
+% --------------------------------------------------------------
+%                         Start here
+% --------------------------------------------------------------
+ 
+%\renewcommand{\qedsymbol}{\filledbox}
+ 
+\title{}%replace X with the appropriate number
+\author{ %replace with your name
+} %if necessary, replace with your course title
+ 
+%\maketitle
+
+%\input{setup.tex}
+%\input{ground.tex}
+%\input{types.tex}
+%\input{hypothetical.tex}
+%\input{lemmas.tex}
+%\input{arith.tex}
+
+\input{tree.tex}
+
+\end{document}

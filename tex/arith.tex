@@ -1,0 +1,111 @@
+
+\section{Arithmetic}
+
+\begin{lemma}(Plus)
+\isVal{\plus}
+{\ret{\arr{\isOf{x}{\ret{\nat}}}{\zp}{\ret{\arr{\ret{\nat}}{\varphi}{\ret{\nat}}{\varrho}}}{\zp}}},
+where 
+\begin{gather*}
+    \varphi_0 = \zp\\
+    \varphi_1 = \ret{\suc{\zero}}\\
+    \varphi= \rec{x}{\varphi_0^+}{z}{g}{\bind{\varphi_1}{\phi_1}{\plus\;\phi_1\;g}^+}\\
+    \varrho_0 = \zp\\
+    \varrho_1 = \zp\\
+    \varrho= \rec{x}{\varrho_0}{z}{g}{\bind{\varrho_1}{\rho_1}{\plus\;\rho_1\;g}}\\
+\end{gather*}
+\end{lemma}
+
+\begin{proof}
+By definition, it suffices to show\\
+\gammaToCompFixed{\isOf{x}{\ret{\nat}}}{\zp}{1}{\ret{\lam{y}{b}{\rec{x}{\ret{y}}{\_}{f}{\ret{\suc{f}}}}}}{\ret{\arr{\ret{\nat}}{\varphi}{\ret{\nat}}{\varrho}}}{\zp}\\
+Let \isVal{n}{\ret{\nat}}. 
+Then by Lemma~\ref{lemma:ret}, it suffices to show
+\[
+\isVal{\lam{y}{b}{\rec{n}{\ret{y}}{\_}{f}{\ret{\suc{f}}}}}{\ret{\arr{\ret{\nat}}{[n/x]\varphi}{\ret{\nat}}{\varrho}}}\]
+
+By definition, we need to show 
+\[
+\gammaToCompFixed{\isOf{y}{\ret{\nat}}}{[n/x]\varphi}{1}{\rec{n}{\ret{y}}{\_}{f}{\ret{\suc{f}}}}{\ret{\nat}}{\varrho}
+\]
+
+Let \isVal{m}{\ret{\nat}} and unfold with $[m/y]$.  
+By Lemma~\ref{lemma:recursor}, it suffices to show
+\begin{enumerate}
+    \item \gammaToComp{\cdot}{\zp}{\ret{m}}{\isOf{y}{\ret{\nat}}}{\zp}: follows from Lemma~\ref{lemma:ret}.
+    \item \gammaToComp{\isOf{z}{\ret{\nat}},\isOf{f}{\ccomp{\zp}{\isOf{w}{\ret{\nat}}}{\zp}} }{\varphi_1}{\ret{\suc{f}}}{\ret{\nat}}{\varrho_1}.\\
+    Let \isVal{z}{\ret{\nat}}. STS 
+    \gammaToComp{\isOf{f}{\ccomp{\zp}{\isOf{w}{\ret{\nat}}}{\zp}} }{\varphi_1}{\ret{\suc{f}}}{\ret{\nat}}{\varrho_1}.
+    Let \isVal{f}{\ccomp{\zp}{\isOf{w}{\ret{\nat}}}{\zp}}. 
+    Then $f$ is $\thunk{F}$ for some $F$ s.t. \isComp{\zp}{F}{\isOf{w}{\ret{\nat}}}{\zp}. 
+    This implies that $\evalCost{F}{0}{u}$, and hence $F = \ret{u}$. 
+         Thus,
+        \begin{align*}
+            &\lsub{F}{f}{[\zero/z]\ret{\suc{f}}} = \lsub{\ret{u}}{f}{\ret{\suc{f}}} \mapsto \ret{\suc{u}}
+        \end{align*} 
+        Further, 
+        \begin{align*}
+           &\eval{\varphi_1 = \ret{\suc{\zero}}}{\suc{\zero}}
+        \end{align*}
+        Similarly, \eval{\varrho_1}{\zero}.
+        The result holds since $\toNat{\suc{\zero}} \ge 1 + \toNat{\zero}$.
+\end{enumerate}
+
+Simplified recurrence for $\plus$: $\Phi(\plus)(x) = 2x + 1$.
+\end{proof}
+
+Recall $\mult \triangleq \lam{x}{a}{\ret{\lam{y}{b}{\rec{x}{\ret{\zero}}{\_}{f}{\plus\; y\; f}}}}
+$. 
+\begin{lemma}(Mult)\label{lemma:mult}
+\isVal{\mult}{\ret{\arr{\isOf{x}{\ret{\nat}}}{\zp}{\ret{\arr{\isOf{y}{\ret{\nat}}}{\varphi}{\ret{\nat}}{\varrho}}}{\zp}}},
+where 
+\begin{gather*}
+    \varphi_0 = \zp\\
+    \varphi_1 = \bind{\mult\;\toNum{2}\;y}{r}{\plus\;r\;\toNum{5}}\\
+    \varphi= \rec{x}{\varphi_0^+}{z}{g}{\bind{\varphi_1}{\phi_1}{\plus\;\phi_1\;g}^+}\\
+    \varrho_0 = \zp\\
+    \varrho_1 = \zp\\
+    \varrho= \rec{x}{\varrho_0}{z}{g}{\bind{\varrho_1}{\rho_1}{\plus\;\rho_1\;g}}\\
+\end{gather*}
+\end{lemma}
+
+\begin{proof}
+It suffices to show 
+
+\gammaToCompFixed{\isOf{x}{\ret{\nat}}}{\zp}{1}{\ret{\lam{y}{b}{\rec{x}{\ret{\zero}}{\_}{f}{\plus\; y\; f}}}}{\ret{\arr{\isOf{y}{\ret{\nat}}}{\varphi}{\ret{\nat}}{\varrho}}}{\zp}
+
+Let \isVal{n}{\ret{\nat}}. Instantiate with $[n/x]$, by Lemma~\ref{lemma:ret}, STS
+\isVal{\lam{y}{b}{\rec{n}{\ret{\zero}}{\_}{f}{\plus\; y\; f}}}{\ret{\arr{\isOf{y}{\ret{\nat}}}{\varphi}{\ret{\nat}}{\varrho}}}. Again,
+NTS
+\gammaToCompFixed{\isOf{y}{\ret{\nat}}}{\varphi}{1}{\rec{n}{\ret{\zero}}{\_}{f}{\plus\; y\; f}}{\ret{\nat}}{\varrho}. Let \isVal{m}{\ret{\nat}}. Instantiating with $[m/y]$, STS
+
+\[
+\gammaToComp{\cdot}{\varphi}{\rec{n}{\ret{\zero}}{\_}{f}{\plus\; m\; f}}{\ret{\nat}}{\varrho}
+\]
+By Lemma~\ref{lemma:recursor'}, STS
+\begin{enumerate}
+    \item \gammaToComp{\cdot}{\zp}{\ret{\zero}}{\isOf{y}{\ret{\nat}}}{\zp}: follows from
+    Lemma~\ref{lemma:ret}
+    \item \gammaToComp{\isOf{z}{\ret{\nat}},\isOf{f}{\ccomp{\zp}{\isOf{w}{\ret{\nat}}}{\zp}} }{\varphi_1}{\plus\; y\; f}{\ret{\nat}}{\varrho_1}.\\
+    Let \isVal{z}{\ret{\nat}} and \isVal{f}{\ccomp{\zp}{\isOf{w}{\ret{\nat}}}{\zp}}. 
+    Then $f = \thunk{F}$ s.t. \isComp{\zp}{F}{\isOf{w}{\ret{\nat}}}{\zp}. Hence,
+    $F = \ret{u}$ for some \isVal{u}{\ret{\nat}}. Thus,
+    \begin{align*}
+    &\lsub{\ret{u}}{f}{\plus\; y\; f}\\
+    \mapsto& \plus\; y\; u = \bind{\plus\; y}{r}{r\; u}\\
+    \mapsto& \bind{\lam{y'}{b}{\rec{y}{\ret{y'}}{\_}{f}{\ret{\suc{f}}}}}{r}{r\; u}\\
+    \mapsto& \lam{y'}{b}{\rec{y}{\ret{y'}}{\_}{f}{\ret{\suc{f}}}}\; u\\
+    \mapsto& \rec{y}{\ret{u}}{\_}{f}{\ret{\suc{f}}}\\
+    \mapsto^{2\toNat{y}+1}& \ret{v}
+    \end{align*}
+    Hence \evalCost{\lsub{\ret{u}}{f}{\plus\; y\; f}}{2\toNat{y}+5}{v}.
+    Furthermore, \eval{\varphi_1 = \bind{\mult\;\toNum{2}\;y}{r}{\plus\;r\;\toNum{5}}}{\toNum{2\toNat{y}+5}},
+    and \eval{\varrho_1}{\zero}. The result follows since 
+    $\toNat{\toNum{2\toNat{y}+5}} \ge 2\toNat{y}+5 + \toNat{\zero}$.
+\end{enumerate}
+
+Simplified recurrence for $\mult$: $\Phi(\mult)(x)(y) = x^2y + (6-y)x + 1$.
+
+
+
+\end{proof}
+
