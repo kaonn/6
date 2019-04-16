@@ -139,7 +139,8 @@ struct
     end
 
   fun main (name, args) =
-    (print "\n\nType an expression at the prompt\n\n";
+    (Proof1.test ();
+    print "\n\nType an expression at the prompt\n\n";
      loop ())
   end
 end

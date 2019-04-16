@@ -11,7 +11,7 @@ structure O =
 struct
   structure Ar = ListAbtArity (structure S = Sort)
   datatype t = LAM | AP | NUM | LIT of int | THUNK | RET | REC | SEQ | ZERO |
-  SUC
+  SUC 
 
   val eq : t * t -> bool = op=
   val toString =
@@ -25,7 +25,6 @@ struct
      | SEQ => "seq"
      | ZERO => "zero"
      | SUC => "suc"
-
 
   local
     open Sort
