@@ -1,0 +1,24 @@
+plus := (\x. ret(\y. rec(x; ret(y); z.f.ret(suc(f)))));
+sub := (\x. rec(x; ret(\y. ret(zero)); z.f.ret(\y. rec(y; ret(suc(z)); z'.g. f z'))));
+//plus := (\x. ret(\y. rec(y; ret(x); z.f.ret(suc(f))))); 
+mult := (\x. ret(\y. rec(x; ret(zero); z.f.plus f y)));
+//mult (suc(suc(suc(suc(zero))))) (suc(suc(zero)));
+double := (\x. rec(x ; ret(zero); z.f.ret(suc(suc(suc(f))))));
+r <- double (suc(suc(suc(zero))));
+//r1 <- double r;
+//r2 <- double r1;
+foo := (\x. 
+  r' <- sub r x;
+  rec(r'; ret(zero); z.g. mult r' g);
+  );
+//f <- foo (suc(suc(suc(zero))));
+one := suc(zero);
+two := suc(one);
+three := suc(two);
+bar := (\x. rec(x; ret((x,zero)); z.f. x' <- f.fst; g <- f.snd; r <- plus g x';
+  ret((x',r));));
+barr := (\x. rec(x; ret(zero); z.f. plus f x));
+rr <- barr (suc(three));
+xr <- bar (suc(three));
+r <- xr.snd;
+ret((r,rr));

@@ -8,16 +8,27 @@ open Ast
  | IDENT of string
  | NUMERAL of int
  | LPAREN | RPAREN
- | DOT | HASH | SEMI
+ | LBRACE | RBRACE
+ | DOT | HASH | SEMI | COLON | EQUAL | MID 
  | LAMBDA
  | FUN_APP
  | THUNK
  | RET
- | REC
+ | REC | IF | THEN | ELSE
  | SEQ
  | SUC 
  | ZERO
  | LARR
+ | COMMA
+ | FST
+ | SND
+ | LEAF 
+ | SINGLE
+ | T2
+ | T3
+ | TREC
+ | TMATCH
+ | PLUS | MINUS | GT
 
 %left FUN_APP
 
@@ -26,6 +37,7 @@ open Ast
  | term of ast
  | atomicTerm of ast
  | cmd of ast
+ | ap of ast
 
 %verbose
 %pos (string -> Coord.t)
@@ -39,24 +51,75 @@ open Ast
 start : term (term) 
 
 term
-  : atomicTerm atomicTerm %prec FUN_APP (Ast.$$ (O.AP, [\ ([], atomicTerm1), \ ([], atomicTerm2)]))
-  | REC LPAREN atomicTerm SEMI term SEMI IDENT DOT IDENT DOT term RPAREN 
+  : REC LPAREN atomicTerm SEMI term SEMI IDENT DOT IDENT DOT term RPAREN 
     (Ast.$$ (O.REC, [\ ([], atomicTerm1), \ ([], term1), \ ([IDENT1, IDENT2], term2)]))
+  | IF LPAREN atomicTerm RPAREN THEN LBRACE term RBRACE ELSE LBRACE term RBRACE 
+    (Ast.$$ (O.REC, [\ ([], atomicTerm1), \ ([], term2), \ (["_p", "_f"], term1)]))
+  | TREC LPAREN atomicTerm RPAREN 
+    LBRACE term 
+    MID IDENT DOT term 
+    MID IDENT DOT IDENT DOT IDENT DOT IDENT DOT term 
+    MID IDENT DOT IDENT DOT IDENT DOT IDENT DOT IDENT DOT IDENT DOT term 
+    RBRACE 
+    (Ast.$$ (O.TREC, [\ ([], atomicTerm1), 
+    \ ([], term1), 
+    \ ([IDENT1], term2), 
+    \ ([IDENT2, IDENT3, IDENT4, IDENT5], term3),
+    \ ([IDENT6, IDENT7, IDENT8, IDENT9, IDENT10, IDENT11], term4)
+    ]))
+  | TMATCH LPAREN atomicTerm RPAREN 
+    LBRACE 
+    IDENT DOT IDENT DOT term 
+    MID IDENT DOT IDENT DOT IDENT DOT term 
+    MID IDENT DOT IDENT DOT IDENT DOT IDENT DOT term 
+    MID IDENT DOT IDENT DOT IDENT DOT IDENT DOT IDENT DOT term 
+    RBRACE 
+    (Ast.$$ (O.TMATCH, [\ ([], atomicTerm1), 
+    \ ([IDENT1,IDENT2], term1), 
+    \ ([IDENT3,IDENT4,IDENT5], term2), 
+    \ ([IDENT6, IDENT7, IDENT8, IDENT9], term3),
+    \ ([IDENT10, IDENT11, IDENT12, IDENT13, IDENT14], term4)
+    ]))
+
   | RET LPAREN atomicTerm RPAREN (Ast.$$ (O.RET, [\ ([], atomicTerm)]))
-  | SEQ LPAREN atomicTerm SEMI IDENT DOT term (Ast.$$ (O.SEQ, [\ ([], atomicTerm), \ ([IDENT], term)]))
+  | SEQ LPAREN atomicTerm SEMI IDENT DOT term RPAREN (Ast.$$ (O.SEQ, [\ ([], atomicTerm), \ ([IDENT], term)]))
   | cmd (cmd)
+  | ap (ap)
+  | atomicTerm DOT FST (Ast.$$ (O.FST, [\([],atomicTerm)]))
+  | atomicTerm DOT SND (Ast.$$ (O.SND, [\([],atomicTerm)]))
+  | atomicTerm PLUS atomicTerm (Ast.$$ (O.PLUS, [\([], atomicTerm1), \([], atomicTerm2)]))
+  | atomicTerm MINUS atomicTerm (Ast.$$ (O.MINUS, [\([], atomicTerm1), \([], atomicTerm2)]))
+  | atomicTerm GT atomicTerm (Ast.$$ (O.GT, [\([], atomicTerm1), \([], atomicTerm2)]))
+
+ap 
+  : ap atomicTerm %prec FUN_APP 
+  (Ast.$$ (O.SEQ, [\([], Ast.$$ (O.THUNK, [\([], ap)])), \(["_r"], Ast.$$ (O.AP, [\([], Ast.`` "_r"), \([],atomicTerm)]))]))
+  | atomicTerm atomicTerm %prec FUN_APP (Ast.$$ (O.AP, [\ ([], atomicTerm1), \ ([], atomicTerm2)]))
 
 cmd 
   : IDENT LARR term SEMI cmd
     (Ast.$$ (O.SEQ, [\ ([], Ast.$$ (O.THUNK, [\ ([],term)])), \ ([IDENT], cmd)]))
+  | IDENT COLON EQUAL atomicTerm SEMI cmd
+    (Ast.$$ (O.SEQ, [\ ([], Ast.$$ (O.THUNK, [\ ([], Ast.$$ (O.RET, [\([], atomicTerm)]))])), \ ([IDENT], cmd)]))
   | term SEMI (term)
 
 atomicTerm
   : LAMBDA IDENT DOT term (Ast.$$ (O.LAM, [\ ([IDENT], term)]))
   | NUMERAL (Ast.$$ (O.LIT NUMERAL, []))
   | IDENT (Ast.`` IDENT)
-  | HASH atomicTerm (Ast.$$ (O.NUM, [\ ([], atomicTerm)]))
   | ZERO (Ast.$$ (O.ZERO, []))
   | SUC atomicTerm (Ast.$$ (O.SUC, [\ ([], atomicTerm)]))
-  | THUNK term (Ast.$$ (O.THUNK, [\ ([], term)]))
+  | THUNK LPAREN term RPAREN (Ast.$$ (O.THUNK, [\ ([], term)]))
   | LPAREN atomicTerm RPAREN (atomicTerm)
+  | LPAREN atomicTerm COMMA atomicTerm RPAREN 
+    (Ast.$$ (O.PAIR, [\([],atomicTerm1), \([],atomicTerm2)]))
+  | LEAF COLON LPAREN atomicTerm COMMA atomicTerm RPAREN
+    (Ast.$$ (O.NODE O.LEAF, [\([],atomicTerm1), \([], atomicTerm2) ]))
+  | SINGLE atomicTerm COLON LPAREN atomicTerm COMMA atomicTerm RPAREN
+    (Ast.$$ (O.NODE O.SINGLE, [\([],atomicTerm2), \([],atomicTerm3), \([], atomicTerm1)]))
+  | T2 LPAREN atomicTerm COMMA atomicTerm RPAREN COLON LPAREN atomicTerm COMMA atomicTerm RPAREN
+    (Ast.$$ (O.NODE O.T2, [\([], atomicTerm3), \([],atomicTerm4), \([], atomicTerm1),\([], atomicTerm2)]))
+  | T3 LPAREN atomicTerm COMMA atomicTerm COMMA atomicTerm RPAREN 
+    COLON LPAREN atomicTerm COMMA atomicTerm RPAREN
+    (Ast.$$ (O.NODE O.T3,
+    [\([], atomicTerm4),\([], atomicTerm5),\([], atomicTerm1),\([], atomicTerm2),\([], atomicTerm3)]))

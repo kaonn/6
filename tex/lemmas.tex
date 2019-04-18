@@ -207,7 +207,7 @@ Induction on length of $\Gamma$.
 \end{itemize}
 \end{proof}
 
-\begin{lemma}\textnormal{(Abstraction)}
+\begin{lemma}\textnormal{(Abstraction)}\label{lemma:abs}
 If \gammaToComp{\Gamma[\isOf{x}{A}]}{\varphi}{M}{\isOf{y}{B}}{\varrho}, then 
 \gammaToVal{\Gamma}{\lam{x}{A}{M}}{\ret{\arr{\isOf{x}{A}}{\varphi}{\isOf{y}{B}}{\varrho}}}
 \end{lemma}

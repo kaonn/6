@@ -3,9 +3,10 @@
 \newcommand{\ttwo}[2]{\ensuremath{\mathtt{t2}(#1,#2)}}
 \newcommand{\tthree}[3]{\ensuremath{\mathtt{t3}(#1,#2,#3)}}
 \newcommand{\ttrec}[8]{\mathtt{23TREC}(#1)(#2 \mid #3.#4 \mid #5.#6 \mid #7.#8)}
-\newcommand{\tttree}[3]{\ensuremath{\mathtt{23tree}(#1,#2,#3)}}
+\newcommand{\tttree}[2]{\ensuremath{\mathtt{23tree}(#1,#2)}}
 \newcommand{\word}{\mathtt{word}}
 \newcommand{\mw}[1]{\mathtt{mw}(#1)}
+\newcommand{\wrec}[4]{\mathtt{WREC}(#1)(#2; #3.#4)}
 \newcommand{\join}{\mathsf{join}}
 \newcommand{\cmp}{\mathsf{cmp}}
 \newcommand{\ifnat}[3]{\mathsf{if}(#1;#2;#3)}
@@ -23,18 +24,30 @@ Augment the language with the following values and commands:
     \mid \ttwo{v_l}{v_r}
     \mid \tthree{v_l}{v_m}{v_r}\\
     \mathsf{Val} \quad v &::= \dots
-    \mid \tttree{A}{v}{w}
-    \mid (\isOf{n}{\tttree{A}{v}{w}})
+    \mid \tttree{v}{w}
+    \mid (\isOf{n}{\tttree{v}{w}})
     \mid \word
     \mid \mw{0} \dots \mw{2^{64}-1}\\
     \mathsf{Comp} \quad M &::= 
     \dots
-    \mid \ttrec{v}{M_0}{a}{M_1}{l,r,s_l,s_r,d_l,d_r,f_l,f_r}{M_2}{l,m,r,s_l,s_m,s_r,d_l,d_m,d_r,f_l,f_m,f_r}{M_3}\\
+    \mid \wrec{v}{M_0}{f}{M_1}\\
+    &\mid \ttrec{v}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3}\\
 \end{align*}
 
 The semantics is extended with the computation rules:
 
 \begin{mathpar}
+\inferrule{
+}{
+  \step{\wrec{\mw{0}}{M_0}{f}{M_1}}{M_0}
+}
+
+\inferrule{
+  F \triangleq \lam{d}{\_}{\bind{\mw{w}-d}{x}{\wrec{x}{M_0}{f}{M_1}}}
+}{
+  \step{\wrec{\mw{w}}{M_0}{f}{M_1}}{[F/f]M_1}
+}
+
 \inferrule{
 }{
  \step{\ttrec{\leaf}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3}}{M_0}
@@ -46,29 +59,28 @@ The semantics is extended with the computation rules:
 }
 
 \inferrule{
-  t = \isOf{\ttwo{l}{r}}{\tttree{A}{s}{d}}\\
-  \step{d > \mw{0}}{\suc{\zero}}\\
-  \step{s > \mw{0}}{\suc{\zero}}\\
-  v_l = \isOf{l}{\tttree{A}{S_l}{D_l}}\\
-  v_r = \isOf{r}{\tttree{A}{S_r}{D_r}}\\
+  t = \isOf{\ttwo{l}{r}}{\tttree{s}{d}}\\
+  \eval{d > \mw{0}}{\suc{\zero}}\\
+  \eval{s > \mw{0}}{\suc{\zero}}\\
+  v_l = \isOf{l}{\tttree{S_l}{D_l}}\\
+  v_r = \isOf{r}{\tttree{S_r}{D_r}}\\
   \eval{d_l+1}{d}\\
   \eval{d_r+1}{d}\\
   \eval{s_l+s_r}{s}\\\\
-  F_l \triangleq \thunk{\ttrec{v_l}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3}}\\
-  F_r \triangleq \thunk{\ttrec{v_r}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3}}\\
+  F_l \triangleq \ttrec{v_l}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3}\\
+  F_r \triangleq \ttrec{v_r}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3}\\
 }{
-  \ttrec{t}{M_0}{a}{M_1}{l,r,s_l,s_r,d_l,d_r,f_l,f_r}{M_2}{l,m,r,s_l,s_m,s_r,
-  d_l,d_m,d_r,f_l,f_m,f_r}{M_3} \mapsto\\
-  [n_l/l,n_r/r,S_l/s_l,S_r/s_r,D_l/d_l,D_r/d_r,F_l/f_l,F_r/f_r]M_2
+  \ttrec{t}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3} \mapsto\\
+\lsub{F_l}{f_l}{\lsub{F_r}{f_r}{M_2}}
 }
 
 \inferrule{
-  t = \isOf{\ttwo{l}{r}}{\tttree{A}{s}{d}}\\
-  \step{d > \mw{0}}{\suc{\zero}}\\
-  \step{s > \mw{0}}{\suc{\zero}}\\
-  v_l = \isOf{l}{\tttree{A}{S_l}{D_l}}\\
-  v_m = \isOf{m}{\tttree{A}{S_m}{D_m}}\\
-  v_r = \isOf{r}{\tttree{A}{S_r}{D_r}}\\
+  t = \isOf{\tthree{l}{m}{r}}{\tttree{s}{d}}\\
+  \eval{d > \mw{0}}{\suc{\zero}}\\
+  \eval{s > \mw{0}}{\suc{\zero}}\\
+  v_l = \isOf{l}{\tttree{S_l}{D_l}}\\
+  v_m = \isOf{m}{\tttree{S_m}{D_m}}\\
+  v_r = \isOf{r}{\tttree{S_r}{D_r}}\\
   \eval{d_l+1}{d}\\
   \eval{d_m+1}{d}\\
   \eval{d_r+1}{d}\\
@@ -77,99 +89,182 @@ The semantics is extended with the computation rules:
   F_m \triangleq \ttrec{n_m}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3}\\
   F_r \triangleq \ttrec{n_r}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3}\\
 }{
- \ttrec{\tthree{v_l}{v_m}{v_r}}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3} \mapsto\\
- \lsub{F_l}{f_l}{\lsub{F_m}{f_m}{\lsub{F_r}{f_r}{[n_l/l,n_r/r,S_l/s_l,S_m/s_m,S_r/s_r,D_l/d_l,D_m/d_m,D_r/d_r]M_2}}}
+ \ttrec{t}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3} \mapsto\\
+ \lsub{F_l}{f_l}{\lsub{F_m}{f_m}{\lsub{F_r}{f_r}{M_3}}}
 }
 
 \end{mathpar}
 
 Augment the types:
 \begin{itemize}
-\item \isType{\tttree{A}{s}{d}} 
+\item \isType{\tttree{s}{d}} 
   \begin{enumerate}
   \item \isType{A}
   \item \isVal{s}{\word}
   \item \isVal{d}{\word}
   \end{enumerate}
 
-\item \isVal{\leaf}{\tttree{A}{\mw{0}}{\mw{0}}}
-\item \isVal{\single{a}}{\tttree{A}{\mw{1}}{\mw{1}}}
+\item \isVal{\isOf{\leaf}{\tttree{\mw{0}}{\mw{0}}}}{\tttree{\mw{0}}{\mw{0}}}
+\item \isVal{\isOf{\single{a}}{\tttree{\mw{1}}{\mw{1}}}}{\tttree{\mw{1}}{\mw{1}}}
   \begin{enumerate}
   \item \isVal{a}{A}
   \end{enumerate}
-\item \isVal{\ttwo{l}{r}}{\tttree{A}{s_l+s_r}{d+\mw{1}}}
+\item \isVal{\isOf{\ttwo{l}{r}}{\tttree{s}{d}}}{\tttree{s}{d}}
   \begin{enumerate}
-  \item \isVal{l}{\tttree{A}{s_l}{d}}
-  \item \isVal{r}{\tttree{A}{s_r}{d}}
+  \item \isVal{l}{\tttree{s_l}{d}}
+  \item \isVal{r}{\tttree{s_r}{d}}
+  \item \eval{s_l+s_r}{s}, \eval{d_l+\mw{1}}{d}, \eval{d_r+\mw{1}}{d}
   \end{enumerate}
 
-\item \isVal{\tthree{l}{m}{r}}{\tttree{A}{s_l+s_m+s_r}{d+\mw{1}}}
+\item \isVal{\isOf{\tthree{l}{m}{r}}{\tttree{s}{d}}}{\tttree{s}{d}}
   \begin{enumerate}
-  \item \isVal{l}{\tttree{A}{s_l}{d}}
-  \item \isVal{m}{\tttree{A}{s_m}{d}}
-  \item \isVal{r}{\tttree{A}{s_r}{d}}
+  \item \isVal{l}{\tttree{s_l}{d}}
+  \item \isVal{m}{\tttree{s_m}{d}}
+  \item \isVal{r}{\tttree{s_r}{d}}
+  \item \eval{s_l+s_m+s_r}{s}, \eval{d_l+\mw{1}}{d}, \eval{d_m+\mw{1}}{d}, \eval{d_r+\mw{1}}{d}
   \end{enumerate} 
+\end{itemize}
 
-\begin{lemma}(Depth)\label{lemma:depth}
+\iffalse
+\begin{lemma}(Balance)\label{lemma:depth}
   \isVal{\texttt{depth}}{\arr{\isOf{s}{\word}}{\zp}{
-    \arr{\isOf{d}{\word}}{\zp}{\arr{\tttree{A}{s}{d}}{\mathsf{to\_nat}\;d}{\word}{\zp}}{\zp}}{\zp}}
+    \arr{\isOf{d}{\word}}{\zp}{\arr{\tttree{s}{d}}{\constp{2}}{\word}{\zp}}{\zp}}{\zp}}
 \end{lemma}
+
+\begin{proof}
+  By 3 applications of Lemma~\ref{lemma:abs} and Lemma~\ref{lemma:ret}, 
+  it suffices to show that 
+  \gammaToComp{\cdot}{\mathsf{to\_nat}\;d}
+  {\ttrec{t}{\ret{0}}{\_}{\ret{0}}{dl}{dl+1}{dl}{dl+1}}{\word}{\zp}
+  given \isVal{s}{\word}, \isVal{t}{\word}, and \isVal{t}{\tttree{s}{d}}.
+  Case on $t$:
+  \begin{itemize}
+    \item $t = \isOf{\leaf}{\tttree{\mw{0}}{\mw{0}}}$:\\
+      Then \evalCost{\ttrec{t}{\ret{0}}{\_}{\ret{0}}{dl}{dl+1}{dl}{dl+1}}{1}{\mw{0}}, 
+      and \constp{2} suffices.
+    \item 
+  \end{itemize}
+\end{proof}
+\fi
+
 \begin{verbatim}
 
-to_nat = \d. WORDREC(d){zero; p.f. r <- f 1; ret(suc(r))}
+to_nat = \d. WREC(d){zero; p.f. r <- f 1; ret(suc(r))}
 
 if(v;M_t;M_f) @= rec(v){M_f; _,_.M_t}
 
-depth = \t. 23TREC(t){
-    leaf => ret(0);
-    single a => ret(1);
-    t2(...,dl,...) => dl + 1;
-    t3(...,dl,...) => dl + 1;
-  }
+size := (\t. tmatch(t){
+    s.d.ret(s)
+  | s.d.a.ret(s)
+  | s.d.l.r.ret(s)
+  | s.d.l.m.r.ret(s)
+});
 
-balance2 = \tr1.tr2.
-  23TREC(tr1){
-    leaf => ret(!);
-    single a => ret(t2(single(a),tr2));
-    t2(l,r,...) => ret(t3(l,r,tr2));
-    t3(l,m,r...) => ret(t2(t2(l,r),t2(m,tr2)));
-  }
+depth := (\t. tmatch(t){
+    s.d.ret(d)
+  | s.d.a.ret(d)
+  | s.d.l.r.ret(d)
+  | s.d.l.m.r.ret(d)
+});
 
-balance3 = \tr1.tr2.tr3.
-  23TREC(tr1){
-    leaf => ret(!);
-    single a => ret(single(a));
-    t2(l,r,...) => ret(t2(t2(l,r),t2(tr2,tr3)));
-    t3(l,m,r...) => ret(t2(t3(l,m,r),t2(tr2,tr3)));
-  }
+T := (t2(single(0):(1,1),single(1):(1,1)):(2,2));
+T1 := (t3(T,T,T):(6,3));
 
-insert_left = \x.t. 
-  23TREC(t){
-    leaf => ret(thunk(single(x)));
-    single(a) => ret(thunk(t2(single(x), single(a)));
-    t2(l,r,sl,sr,dl,dr,fl,fr) => 
+balance2 := (\T1. ret(\T2. tmatch(T1){
+    s.d.ret(0);
+  | s.d.a.ret(0);
+  | s.d.l.r.
+    s2 <- size T2; 
+    s' <- s + s2;
+    ret(t3(l,r,T2):(s',d));
+  | s.d.l.m.r.
+    sl <- size l; // 3
+    sm <- size m; // 3
+    sl' <- sl + sm; //2
+    sr <- size r; //3
+    s2 <- size T2; //3
+    sr' <- sr + s2; //2
+    d' <- d + 1; //2
+    s' <- sl' + sr'; //a 2
+    ret(t2(t2(l,m):(sl',d), t2(r,T2):(sr',d)):(s',d'));
+}));
+
+balance3 := (\T1. ret(\T2. ret(\T3.
+  tmatch(T1){
+    s.d.ret(0);
+  | s.d.a.ret(0);
+  | s.d.l.r.
+    s2 <- size T2;
+    s3 <- size T3;
+    s23 <- s2 + s3;
+    s' <- s + s23;
+    d' <- d + 1;
+    ret(t2(t2(l,r):(s,d),t2(T2,T3):(s23,d)):(s',d'));
+  | s.d.l.m.r.
+    sl <- size l; // 3
+    sm <- size m; // 3
+    sl' <- sl + sm; // 2
+    sr <- size r; // 3
+    s2 <- size T2; // 3
+    s3 <- size T3; // 3
+    s23 <- s2 + s3; // 2
+    d' <- d + 1; // 2
+    s' <- s + s23; // 2
+    ret(t2(t3(l,m,r):(s,d), t2(T2,T3):(s23,d)):(s',d'));
+})));
+
+insertleft := (\x.ret(\t. 
+  trec(t){
+     ret(thunk(ret(single(x):(1,1))));
+   | a.ret(thunk(ret(t2(single(x):(1,1), single(a):(1,1)):(2,2))));
+   | l.r.fl.fr.
       ret(thunk(
-        Fl <- fl; 
+        seq(fl; Fl.
         d <- depth Fl;
+        dl <- depth l;
         b <- d > dl;
-        if(b; 
-          balance2 Fl r;
-          t2(Fl,r)
-        )
+        if(b)
+        then{
+          balance2 Fl r
+          }
+        else{
+          sl <- size Fl;
+          sr <- size r;
+          s' <- sl + sr;
+          d' <- dl + 1;
+          ret(t2(Fl,r):(s',d'));
+          };)
       ));
 
-    t3(l,m,r,sl,sm,sr,dl,dm,dr,fl,fm,fr) => 
+   | l.m.r.fl.fm.fr. 
       ret(thunk(
-        Fl <- fl; 
+        seq(fl; Fl. 
         d <- depth Fl;
+        dl <- depth l;
         b <- d > dl;
-        if(b; 
-          balance3 Fl m r;
-          t3(Fl,m,r)
-        )
+        if(b) 
+        then{
+          balance3 Fl m r
+          }
+        else{
+          sl <- size Fl;
+          sm <- size m;
+          sr <- size r;
+          s' <- sl + sm;
+          s'' <- s' + sr;
+          d' <- dl + 1;
+          ret(t3(Fl,m,r):(s'',d'));
+          };)
       ));
-  }
+  };
+));
 
+// 6 defs
+T' <- insertleft 5 T1;
+seq(T'; t'.ret(t'));
+\end{verbatim}
+
+\iffalse
 full_left = \t.n. 
   23TREC(t){
     leaf => ret(zero);
@@ -312,8 +407,7 @@ join' = \tr1.
         )
       )
   }
-  
-\end{verbatim}
+\fi
 
 \iffalse
   \left
@@ -334,8 +428,7 @@ join' = \tr1.
           {\_,\_,f_l,f_r}{\bind{n-1}{n'}{f_r\; n'}}
         }\\
 \join \triangleq 
-  \lam{t_1}{\tttree{A}{s_1}{d_1}}{
-    \lam{t_2}{\tttree{A}{s_2}{d_2}}{
+  \lam{t_1}{\tttree{s_1}{d_1}}{
+    \lam{t_2}{\tttree{s_2}{d_2}}{
     }}
 \fi
-\end{itemize}

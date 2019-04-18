@@ -1,0 +1,119 @@
+size := (\t. tmatch(t){
+    s.d.ret(s)
+  | s.d.a.ret(s)
+  | s.d.l.r.ret(s)
+  | s.d.l.m.r.ret(s)
+});
+
+depth := (\t. tmatch(t){
+    s.d.ret(d)
+  | s.d.a.ret(d)
+  | s.d.l.r.ret(d)
+  | s.d.l.m.r.ret(d)
+});
+
+T := (t2(single(0):(1,1),single(1):(1,1)):(2,2));
+T1 := (t3(T,T,T):(6,3));
+
+balance2 := (\T1. ret(\T2. tmatch(T1){
+    s.d.ret(0);
+  | s.d.a.ret(0);
+  | s.d.l.r.
+    s2 <- size T2; 
+    s' <- s + s2;
+    ret(t3(l,r,T2):(s',d));
+  | s.d.l.m.r.
+    sl <- size l; // 3
+    sm <- size m; // 3
+    sl' <- sl + sm; //2
+    sr <- size r; //3
+    s2 <- size T2; //3
+    sr' <- sr + s2; //2
+    d' <- d + 1; //2
+    s' <- sl' + sr'; //a 2
+    ret(t2(t2(l,m):(sl',d), t2(r,T2):(sr',d)):(s',d'));
+}));
+
+balance3 := (\T1. ret(\T2. ret(\T3.
+  tmatch(T1){
+    s.d.ret(0);
+  | s.d.a.ret(0);
+  | s.d.l.r.
+    s2 <- size T2;
+    s3 <- size T3;
+    s23 <- s2 + s3;
+    s' <- s + s23;
+    d' <- d + 1;
+    ret(t2(t2(l,r):(s,d),t2(T2,T3):(s23,d)):(s',d'));
+  | s.d.l.m.r.
+    sl <- size l; // 3
+    sm <- size m; // 3
+    sl' <- sl + sm; // 2
+    sr <- size r; // 3
+    s2 <- size T2; // 3
+    s3 <- size T3; // 3
+    s23 <- s2 + s3; // 2
+    d' <- d + 1; // 2
+    s' <- s + s23; // 2
+    ret(t2(t3(l,m,r):(s,d), t2(T2,T3):(s23,d)):(s',d'));
+})));
+
+insertleft := (\x.ret(\t. 
+  trec(t){
+     ret(thunk(ret(single(x):(1,1))));
+   | a.ret(thunk(ret(t2(single(x):(1,1), single(a):(1,1)):(2,2))));
+   | l.r.fl.fr.
+      ret(thunk(
+        seq(fl; Fl.
+        d <- depth Fl;
+        dl <- depth l;
+        b <- d > dl;
+        if(b)
+        then{
+          balance2 Fl r
+          }
+        else{
+          sl <- size Fl;
+          sr <- size r;
+          s' <- sl + sr;
+          d' <- dl + 1;
+          ret(t2(Fl,r):(s',d'));
+          };)
+      ));
+
+   | l.m.r.fl.fm.fr. 
+      ret(thunk(
+        seq(fl; Fl. 
+        d <- depth Fl;
+        dl <- depth l;
+        b <- d > dl;
+        if(b) 
+        then{
+          balance3 Fl m r
+          }
+        else{
+          sl <- size Fl;
+          sm <- size m;
+          sr <- size r;
+          s' <- sl + sm;
+          s'' <- s' + sr;
+          d' <- dl + 1;
+          ret(t3(Fl,m,r):(s'',d'));
+          };)
+      ));
+  };
+));
+
+// 6 defs
+T' <- insertleft 5 T1;
+/*      
+
+t:
+    _____________
+   /       |     \ 
+   *       *      *
+ / | \    / \    / \
+5  0  1  0   1  0   1
+
+*/
+seq(T'; t. ret(t));

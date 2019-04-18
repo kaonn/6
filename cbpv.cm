@@ -2,19 +2,12 @@ Group
 is
   $/basis.cm
   $/ml-yacc-lib.cm
-  /home/prog/sml-typed-abts/abt.cm (bind:(anchor:libs value:lib))
-  /home/prog/sml-typed-abts/lib/cmlib.cm
-  /home/prog/sml-typed-abts/basis/basis.cm
+  sml-typed-abts/abt.cm (bind:(anchor:libs value:lib))
+  sml-typed-abts/lib/cmlib.cm
+  sml-typed-abts/basis/basis.cm
   
-  /home/prog/sml-dependent-lcf/lib/sml-telescopes/telescopes.cm (bind:(anchor:libs 
-    value:/home/prog/sml-dependent-lcf/lib))
-  /home/prog/sml-dependent-lcf/dependent_lcf.cm (bind:(anchor:libs value:/home/prog/sml-dependent-lcf/lib))
-  /home/prog/sml-dependent-lcf/lcf_abt.cm (bind:(anchor:libs value:/home/prog/sml-dependent-lcf/lib))
-
   cbpv/syntax.sml
   cbpv/cbpv.grm
   cbpv/cbpv.lex
   cbpv/cbpv.sml
   cbpv/main.sml
-
-  cbpv/example.sml
