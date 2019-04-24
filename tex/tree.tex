@@ -67,11 +67,11 @@ The semantics is extended with the computation rules:
   \eval{d_l+1}{d}\\
   \eval{d_r+1}{d}\\
   \eval{s_l+s_r}{s}\\\\
-  F_l \triangleq \ttrec{v_l}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3}\\
-  F_r \triangleq \ttrec{v_r}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3}\\
+  F_l \triangleq \thunk{\ttrec{v_l}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3}}\\
+  F_r \triangleq \thunk{\ttrec{v_r}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3}}\\
 }{
-  \ttrec{t}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3} \mapsto\\
-\lsub{F_l}{f_l}{\lsub{F_r}{f_r}{M_2}}
+  \ttrec{t}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3} \mapsto
+  \ret{\thunk{[v_l/l,v_r/r,F_l/f_l,F_r/f_r]M_2}}
 }
 
 \inferrule{
@@ -85,12 +85,12 @@ The semantics is extended with the computation rules:
   \eval{d_m+1}{d}\\
   \eval{d_r+1}{d}\\
   \eval{s_l+s_m+s_r}{s}\\\\
-  F_l \triangleq \ttrec{n_l}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3}\\
-  F_m \triangleq \ttrec{n_m}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3}\\
-  F_r \triangleq \ttrec{n_r}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3}\\
+  F_l \triangleq \thunk{\ttrec{n_l}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3}}\\
+  F_m \triangleq \thunk{\ttrec{n_m}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3}}\\
+  F_r \triangleq \thunk{\ttrec{n_r}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3}}\\
 }{
  \ttrec{t}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3} \mapsto\\
- \lsub{F_l}{f_l}{\lsub{F_m}{f_m}{\lsub{F_r}{f_r}{M_3}}}
+  \ret{\thunk{[v_l/l,v_m/m,v_r/r,F_l/f_l,F_m/f_m,F_r/f_r]M_3}}
 }
 
 \end{mathpar}

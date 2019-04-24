@@ -54,7 +54,7 @@ term
   : REC LPAREN atomicTerm SEMI term SEMI IDENT DOT IDENT DOT term RPAREN 
     (Ast.$$ (O.REC, [\ ([], atomicTerm1), \ ([], term1), \ ([IDENT1, IDENT2], term2)]))
   | IF LPAREN atomicTerm RPAREN THEN LBRACE term RBRACE ELSE LBRACE term RBRACE 
-    (Ast.$$ (O.REC, [\ ([], atomicTerm1), \ ([], term2), \ (["_p", "_f"], term1)]))
+    (Ast.$$ (O.IF, [\ ([], atomicTerm1), \ ([], term1), \ ([], term2)]))
   | TREC LPAREN atomicTerm RPAREN 
     LBRACE term 
     MID IDENT DOT term 

@@ -13,7 +13,7 @@ struct
   datatype node = LEAF | SINGLE | T2 | T3 
   datatype t = LAM | AP | LIT of int | THUNK | RET | REC | SEQ | ZERO |
   SUC | PLUS | MINUS | TREC | TMATCH | NODE of node 
-  | PAIR | FST | SND | GT
+  | PAIR | FST | SND | GT | IF
 
 
   val eq : t * t -> bool = op=
@@ -41,6 +41,7 @@ struct
      | FST => "fst"
      | SND => "snd"
      | GT => ">"
+     | IF => "if"
 
   local
     open Sort
@@ -80,6 +81,7 @@ struct
         mkValence [VAL,VAL,VAL,VAL] COMP,
         mkValence [VAL,VAL,VAL,VAL,VAL] COMP],
         COMP)
+      | IF => ([mkValence [] VAL, mkValence [] COMP, mkValence [] COMP], COMP)
 
   end
 end

@@ -19,9 +19,9 @@ balance2 := (\T1. ret(\T2. tmatch(T1){
     s.d.ret(0);
   | s.d.a.ret(0);
   | s.d.l.r.
-    s2 <- size T2; 
-    s' <- s + s2;
-    ret(t3(l,r,T2):(s',d));
+    s2 <- size T2; // 3
+    s' <- s + s2; // 2
+    ret(t3(l,r,T2):(s',d)); 
   | s.d.l.m.r.
     sl <- size l; // 3
     sm <- size m; // 3
@@ -32,7 +32,7 @@ balance2 := (\T1. ret(\T2. tmatch(T1){
     d' <- d + 1; //2
     s' <- sl' + sr'; //a 2
     ret(t2(t2(l,m):(sl',d), t2(r,T2):(sr',d)):(s',d'));
-}));
+})); // 20 steps 
 
 balance3 := (\T1. ret(\T2. ret(\T3.
   tmatch(T1){
@@ -60,60 +60,120 @@ balance3 := (\T1. ret(\T2. ret(\T3.
 
 insertleft := (\x.ret(\t. 
   trec(t){
-     ret(thunk(ret(single(x):(1,1))));
-   | a.ret(thunk(ret(t2(single(x):(1,1), single(a):(1,1)):(2,2))));
+     ret(single(x):(1,1));
+   | a.ret(t2(single(x):(1,1), single(a):(1,1)):(2,2));
    | l.r.fl.fr.
-      ret(thunk(
-        seq(fl; Fl.
-        d <- depth Fl;
-        dl <- depth l;
-        b <- d > dl;
-        if(b)
+        seq(fl; Fl. // 1
+        d <- depth Fl; // 3
+        dl <- depth l; // 3
+        b <- d > dl; // 2
+        if(b) // 1
         then{
-          balance2 Fl r
+          balance2 Fl r // 20 + 2 + 1 = 23 steps
           }
         else{
-          sl <- size Fl;
-          sr <- size r;
-          s' <- sl + sr;
-          d' <- dl + 1;
+          sl <- size Fl; // 3
+          sr <- size r; // 3
+          s' <- sl + sr; // 2
+          d' <- dl + 1; // 2
           ret(t2(Fl,r):(s',d'));
           };)
-      ));
 
-   | l.m.r.fl.fm.fr. 
-      ret(thunk(
-        seq(fl; Fl. 
-        d <- depth Fl;
-        dl <- depth l;
-        b <- d > dl;
-        if(b) 
+   | l.m.r.fl.fm.fr. // 24 steps
+        seq(fl; Fl. // 1
+        d <- depth Fl; // 3
+        dl <- depth l; // 3
+        b <- d > dl; // 2
+        if(b) // 1
         then{
           balance3 Fl m r
           }
         else{
-          sl <- size Fl;
-          sm <- size m;
-          sr <- size r;
-          s' <- sl + sm;
-          s'' <- s' + sr;
-          d' <- dl + 1;
+          sl <- size Fl; // 3
+          sm <- size m; // 3
+          sr <- size r; // 3
+          s' <- sl + sm; // 2
+          s'' <- s' + sr; // 2
+          d' <- dl + 1; // 2
           ret(t3(Fl,m,r):(s'',d'));
-          };)
-      ));
+          };) 
   };
 ));
 
-// 6 defs
-T' <- insertleft 5 T1;
-/*      
+map := (\f.ret(\t.
+  trec(t){
+    ret(leaf:(0,0));
+  | a.
+    r <- f a; // phi_f(a) + 2
+    ret(single(r):(1,1));
+  | l.r.fl.fr.
+    seq(fl; Fl. // 1
+      seq(fr; Fr. // 1
+        sl <- size Fl; // 3
+        sr <- size Fr; // 3
+        d <- depth Fl; // 3
+        s' <- sl + sr; // 2
+        d' <- d + 1; // 2
+        ret(t2(Fl,Fr):(s',d'));
+      )
+    )
+  | l.m.r.fl.fm.fr.
+  seq(fl; Fl.
+    seq(fm; Fm.
+      seq(fr; Fr.
+        sl <- size Fl;
+        sm <- size Fm;
+        sr <- size Fr;
+        d <- depth Fl;
+        s' <- sl + sm;
+        s'' <- s' + sr;
+        d' <- d + 1;
+        ret(t3(Fl,Fm,Fr):(s'',d'));
+      )
+    )
+  )
+  }
+));
 
+reduce := (\f.ret(\b.ret(\t.
+  trec(t){
+    ret(b);
+  | a.ret(a);
+  | l.r.fl.fr.
+    seq(fl; Fl. // 1
+      seq(fr; Fr. // 1
+        r <- f Fl Fr;
+        ret(r);
+      )
+    )
+  | l.m.r.fl.fm.fr.
+  seq(fl; Fl.
+    seq(fm; Fm.
+      seq(fr; Fr.
+        r <- f Fl Fm;
+        r' <- f r Fr;
+        ret(r');
+      )
+    )
+  )
+  }
+)));
+
+// 7 defs
+//T' <- insertleft 5 T;
+
+/*
 t:
     _____________
    /       |     \ 
    *       *      *
  / | \    / \    / \
 5  0  1  0   1  0   1
-
 */
-seq(T'; t. ret(t));
+
+f1 := (\x. x + 2);
+wordplus := (\x.ret(\y.x+y));
+//T' <- map f1 T; // 2 + 1 + 1
+T' <- reduce wordplus 0 T1;
+ret(T');
+

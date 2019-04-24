@@ -43,6 +43,8 @@ struct
     fun step abt = 
         let 
 
+          val stack_depth = ref 0 
+
           fun check_node v = 
             case out v of 
               NODE n $ children => (NODE n,children)
@@ -66,7 +68,8 @@ struct
                        | _ => raise EvalError ("applying a non lambda")
                     end
                 | RET => 
-                    let val [\([],v)] = l in 
+                    let val _ = stack_depth := Int.max(!stack_depth - 1,0)
+                        val [\([],v)] = l in 
                     (M,i)
                     end
                 | FST => 
@@ -93,6 +96,14 @@ struct
                            end
                        | _ => raise EvalError ("rec'ing on a non nat")
                     end
+                | IF => 
+                    let val [\([],v), \([],M0), \([],M1)] = l
+                    in case out v of
+                         ZERO $ _ => (M1, i+1)
+                       | SUC $ _ => (M0, i+1)
+                       | _ => raise EvalError ("if'ing on a non nat")
+                    end
+
                 | PLUS => 
                     let val [\([],v1),\([],v2)] = l 
                         val LIT n1 $ [] = out v1 
@@ -150,7 +161,8 @@ struct
                     end
 
                 | TREC => 
-                    let val [\([],v), \([],M0), \([x],M1),
+                    let val _ = stack_depth := !stack_depth + 1
+                        val [\([],v), \([],M0), \([x],M1),
                     \([l,r,fl,fr],M2),\([l3,m3,r3,fl3,fm3,fr3],M3)] = l
                         val (NODE n, children) = check_node v
                     in case n of 
@@ -168,10 +180,11 @@ struct
                                val Fr = THUNK $$ [\([], TREC $$ 
                                [\([],c2), \([],M0), \([x],M1),
                                 \([l,r,fl,fr],M2),\([l3,m3,r3,fl3,fm3,fr3],M3)])]
-                               val M2' = substVar (c2,r) (substVar (c1, l) M2)
-                               val seq = SEQ $$ [\([],Fl), \([fl], SEQ $$ [\([],
-                               Fr), \([fr], M2')])]
-                           in (seq,i+1)
+                               val M2' = substVar (Fr, fr) (substVar (Fl, fl)
+                               (substVar (c2,r) (substVar (c1, l) M2)))
+                               (* val ret = RET $$ [\([], THUNK $$ [\([],
+                               * M2')])] *)
+                           in (M2',i+1)
                            end
                        | T3 =>
                            let val [\([],S),\([],D),\([],c1),\([],c2),\([],c3)] = children 
@@ -184,11 +197,12 @@ struct
                                val Fr = THUNK $$ [\([], TREC $$ 
                                [\([],c3), \([],M0), \([x],M1),
                                 \([l,r,fl,fr],M2),\([l3,m3,r3,fl3,fm3,fr3],M3)])]
-                               val M3' = substVar (c3,r3) (substVar (c2,m3)
-                                   (substVar (c1, l3) M3))
-                               val seq = SEQ $$ [\([],Fl), \([fl3], SEQ $$ [\([],
-                               Fm), \([fm3], SEQ $$ [\([],Fr), \([fr3], M3')])])]
-                           in (seq,i+1)
+                               val M3' = substVar (Fr,fr3) (substVar (Fm,fm3)
+                                   (substVar (Fl,fl3) (substVar (c3,r3) (substVar (c2,m3)
+                                   (substVar (c1, l3) M3)))))
+                               (* val ret = RET $$ [\([], THUNK $$ [\([],
+                               * M3')])] *)
+                           in (M3',i+1)
                            end
                     end
                 | SEQ => 
@@ -214,15 +228,20 @@ struct
                 )
             | _ => raise EvalError ("meta variable found")
 
-          fun steps abt i = 
-            let val (M,c) = sstep abt i
-                val _ = print ("step " ^ Int.toString i ^ ": ") 
+          fun steps abt i  = 
+            let val (M,c) = sstep abt i 
+            handle EvalError msg => (print msg ; raise Fail "eval error")
+                val _ = print ("step " ^ Int.toString i ^ ": stack_depth " ^
+                Int.toString (!stack_depth) ^ "\n") 
+                val _ = print (implode (List.tabulate (!stack_depth, fn _ => #"#")))
                 val _ = print (ShowAbt.toString M ^ "\n\n")
-            in
+            in 
             case out M of
               RET $ _ => (M,c-1) 
             | _ => steps M (i+1)
+             
           end
+
 
         in
           steps abt 1
