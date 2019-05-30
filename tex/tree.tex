@@ -3,7 +3,7 @@
 \newcommand{\ttwo}[2]{\ensuremath{\mathtt{t2}(#1,#2)}}
 \newcommand{\tthree}[3]{\ensuremath{\mathtt{t3}(#1,#2,#3)}}
 \newcommand{\ttrec}[8]{\mathtt{23TREC}(#1)(#2 \mid #3.#4 \mid #5.#6 \mid #7.#8)}
-\newcommand{\tttree}[2]{\ensuremath{\mathtt{23tree}(#1,#2)}}
+\newcommand{\tttree}[3]{\ensuremath{\mathtt{23tree}(#1,#2,#3)}}
 \newcommand{\word}{\mathtt{word}}
 \newcommand{\mw}[1]{\mathtt{mw}(#1)}
 \newcommand{\wrec}[4]{\mathtt{WREC}(#1)(#2; #3.#4)}
@@ -13,6 +13,7 @@
 \newcommand{\const}[1]{\lam{\_}{\_}{#1}}
 \newcommand{\eq}{\mathsf{eq}}
 \newcommand{\macro}{@\!\!=}
+\newcommand{\wtonat}[1]{\mathsf{nat}(#1)}
 \section{Trees}
 
 Augment the language with the following values and commands:
@@ -24,8 +25,8 @@ Augment the language with the following values and commands:
     \mid \ttwo{v_l}{v_r}
     \mid \tthree{v_l}{v_m}{v_r}\\
     \mathsf{Val} \quad v &::= \dots
-    \mid \tttree{v}{w}
-    \mid (\isOf{n}{\tttree{v}{w}})
+    \mid \tttree{A}{v}{w}
+    \mid (\isOf{n}{\tttree{A}{v}{w}})
     \mid \word
     \mid \mw{0} \dots \mw{2^{64}-1}\\
     \mathsf{Comp} \quad M &::= 
@@ -43,9 +44,8 @@ The semantics is extended with the computation rules:
 }
 
 \inferrule{
-  F \triangleq \lam{d}{\_}{\bind{\mw{w}-d}{x}{\wrec{x}{M_0}{f}{M_1}}}
 }{
-  \step{\wrec{\mw{w}}{M_0}{f}{M_1}}{[F/f]M_1}
+  \step{\wtonat{\mw{w}}}{\toNum{w}}
 }
 
 \inferrule{
@@ -59,11 +59,11 @@ The semantics is extended with the computation rules:
 }
 
 \inferrule{
-  t = \isOf{\ttwo{l}{r}}{\tttree{s}{d}}\\
+  t = \isOf{\ttwo{l}{r}}{\tttree{A}{s}{d}}\\
   \eval{d > \mw{0}}{\suc{\zero}}\\
   \eval{s > \mw{0}}{\suc{\zero}}\\
-  v_l = \isOf{l}{\tttree{S_l}{D_l}}\\
-  v_r = \isOf{r}{\tttree{S_r}{D_r}}\\
+  v_l = \isOf{l}{\tttree{A}{S_l}{D_l}}\\
+  v_r = \isOf{r}{\tttree{A}{S_r}{D_r}}\\
   \eval{d_l+1}{d}\\
   \eval{d_r+1}{d}\\
   \eval{s_l+s_r}{s}\\\\
@@ -71,16 +71,16 @@ The semantics is extended with the computation rules:
   F_r \triangleq \thunk{\ttrec{v_r}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3}}\\
 }{
   \ttrec{t}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3} \mapsto
-  \ret{\thunk{[v_l/l,v_r/r,F_l/f_l,F_r/f_r]M_2}}
+  [v_l/l,v_r/r,F_l/f_l,F_r/f_r]M_2
 }
 
 \inferrule{
-  t = \isOf{\tthree{l}{m}{r}}{\tttree{s}{d}}\\
+  t = \isOf{\tthree{l}{m}{r}}{\tttree{A}{s}{d}}\\
   \eval{d > \mw{0}}{\suc{\zero}}\\
   \eval{s > \mw{0}}{\suc{\zero}}\\
-  v_l = \isOf{l}{\tttree{S_l}{D_l}}\\
-  v_m = \isOf{m}{\tttree{S_m}{D_m}}\\
-  v_r = \isOf{r}{\tttree{S_r}{D_r}}\\
+  v_l = \isOf{l}{\tttree{A}{S_l}{D_l}}\\
+  v_m = \isOf{m}{\tttree{A}{S_m}{D_m}}\\
+  v_r = \isOf{r}{\tttree{A}{S_r}{D_r}}\\
   \eval{d_l+1}{d}\\
   \eval{d_m+1}{d}\\
   \eval{d_r+1}{d}\\
@@ -97,54 +97,278 @@ The semantics is extended with the computation rules:
 
 Augment the types:
 \begin{itemize}
-\item \isType{\tttree{s}{d}} 
+\item \isType{\tttree{A}{s}{d}} 
   \begin{enumerate}
   \item \isType{A}
   \item \isVal{s}{\word}
   \item \isVal{d}{\word}
   \end{enumerate}
 
-\item \isVal{\isOf{\leaf}{\tttree{\mw{0}}{\mw{0}}}}{\tttree{\mw{0}}{\mw{0}}}
-\item \isVal{\isOf{\single{a}}{\tttree{\mw{1}}{\mw{1}}}}{\tttree{\mw{1}}{\mw{1}}}
+\item \isVal{\isOf{\leaf}{\tttree{A}{\mw{0}}{\mw{0}}}}{\tttree{A}{\mw{0}}{\mw{0}}}
+\item \isVal{\isOf{\single{a}}{\tttree{A}{\mw{1}}{\mw{1}}}}{\tttree{A}{\mw{1}}{\mw{1}}}
   \begin{enumerate}
   \item \isVal{a}{A}
   \end{enumerate}
-\item \isVal{\isOf{\ttwo{l}{r}}{\tttree{s}{d}}}{\tttree{s}{d}}
+\item \isVal{\isOf{\ttwo{l}{r}}{\tttree{A}{s}{d}}}{\tttree{A}{s}{d}}
   \begin{enumerate}
-  \item \isVal{l}{\tttree{s_l}{d}}
-  \item \isVal{r}{\tttree{s_r}{d}}
+  \item \isVal{l}{\tttree{A}{s_l}{d}}
+  \item \isVal{r}{\tttree{A}{s_r}{d}}
   \item \eval{s_l+s_r}{s}, \eval{d_l+\mw{1}}{d}, \eval{d_r+\mw{1}}{d}
   \end{enumerate}
 
-\item \isVal{\isOf{\tthree{l}{m}{r}}{\tttree{s}{d}}}{\tttree{s}{d}}
+\item \isVal{\isOf{\tthree{l}{m}{r}}{\tttree{A}{s}{d}}}{\tttree{A}{s}{d}}
   \begin{enumerate}
-  \item \isVal{l}{\tttree{s_l}{d}}
-  \item \isVal{m}{\tttree{s_m}{d}}
-  \item \isVal{r}{\tttree{s_r}{d}}
+  \item \isVal{l}{\tttree{A}{s_l}{d}}
+  \item \isVal{m}{\tttree{A}{s_m}{d}}
+  \item \isVal{r}{\tttree{A}{s_r}{d}}
   \item \eval{s_l+s_m+s_r}{s}, \eval{d_l+\mw{1}}{d}, \eval{d_m+\mw{1}}{d}, \eval{d_r+\mw{1}}{d}
   \end{enumerate} 
 \end{itemize}
 
-\iffalse
-\begin{lemma}(Balance)\label{lemma:depth}
-  \isVal{\texttt{depth}}{\arr{\isOf{s}{\word}}{\zp}{
-    \arr{\isOf{d}{\word}}{\zp}{\arr{\tttree{s}{d}}{\constp{2}}{\word}{\zp}}{\zp}}{\zp}}
+\begin{verbatim}
+map := (\f.ret(\t.
+  trec(t){
+    ret(leaf:(0,0));
+  | a.
+    r <- f a; // phi_f(a) + 2
+    ret(single(r):(1,1));
+  | l.r.fl.fr.
+    seq(fl; Fl. // 1
+      seq(fr; Fr. // 1
+        sl <- size Fl; // 3
+        sr <- size Fr; // 3
+        d <- depth Fl; // 3
+        s' <- sl + sr; // 2
+        d' <- d + 1; // 2
+        ret(t2(Fl,Fr):(s',d'));
+      )
+    )
+  | l.m.r.fl.fm.fr.
+  seq(fl; Fl. // 1
+    seq(fm; Fm. // 1
+      seq(fr; Fr. // 1
+        sl <- size Fl; // 3
+        sm <- size Fm; // 3
+        sr <- size Fr; // 3
+        d <- depth Fl; //3 
+        s' <- sl + sm; // 2
+        s'' <- s' + sr; // 2
+        d' <- d + 1; // 2
+        ret(t3(Fl,Fm,Fr):(s'',d'));
+      )
+    )
+  )
+  }
+));
+
+num2 := (\t. trec(t){
+    ret(0)
+  | a.ret(0)
+  | l.r.fl.fr.
+    seq(fl; Fl. // 1
+      seq(fr; Fr. // 1
+        n <- Fl + Fr;
+        n' <- n + 1;
+        ret(n');
+      )
+    )
+  | l.m.r.fl.fm.fr.
+  seq(fl; Fl. // 1
+    seq(fm; Fm. // 1
+      seq(fr; Fr. // 1
+        n <- Fl + Fm;
+        n' <- n + Fr;
+        ret(n');
+      )
+    )
+  )
+});
+
+num3 := (\t. trec(t){
+    ret(0)
+  | a.ret(0)
+  | l.r.fl.fr.
+    seq(fl; Fl. // 1
+      seq(fr; Fr. // 1
+        n <- Fl + Fr;
+        ret(n);
+      )
+    )
+  | l.m.r.fl.fm.fr.
+  seq(fl; Fl. // 1
+    seq(fm; Fm. // 1
+      seq(fr; Fr. // 1
+        n <- Fl + Fm;
+        n' <- n + Fr;
+        n'' <- n' + 1;
+        ret(n'');
+      )
+    )
+  )
+});
+\end{verbatim}
+
+\begin{lemma}(Map)\label{lemma:map}
+  $\isVal{\mathtt{map}}{\arr{\arr{\isOf{a}{A}}{\varphi_1}{\isOf{b}{B}}{\varrho_1}}{\zp}{\arr{\isOf{t}{\tttree{A}{s}{d}}}{\varphi}{\tttree{B}{s}{d}}{\varrho}}{\zp}}$
+  where $\varphi \triangleq \ttrec{t}{\zp^+}{a}{\bind{\varphi_1}{p}{\plus\;p\;\toNum{3}}}{l,r,f_l,f_r}{\bind{f_l}{F_l}{\bind{f_r}{F_r}{\bind{\plus\;F_l\;F_r}{p}{\plus\;p\;\toNum{16}}}}}{l,m,r,f_l,f_m,f_r}
+    {\bind{f_l}{F_l}{\bind{f_m}{F_m}{\bind{f_r}{F_r}{\bind{\plus\;F_l\;F_m}{p}{\bind{\plus\;p\;F_r}{p'}{\plus\;p'\;\toNum{22}}}}}}}$.
+  and $\varrho \triangleq \ttrec{t}{\zp}{a}{\varrho_1}{l,r,f_l,f_r}{\bind{f_l}{F_l}{\bind{f_r}{F_r}{\plus\;F_l\;F_r}}}{l,m,r,f_l,f_m,f_r}
+    {\bind{f_l}{F_l}{\bind{f_m}{F_m}{\bind{f_r}{F_r}{\bind{\plus\;F_l\;F_m}{p}{\plus\;p\;F_r}}}}}$.\\
+    Informally:
+    $\Phi(map)(t) = \begin{cases}
+      1 \text{ if } t = \leaf\\
+      \varphi_1 + 3 \text{ if } t = \single{a}\\ 
+      \Phi(map)(l) + \Phi(map)(r) + 16 \text{ if } t = \ttwo{l}{r}\\
+      \Phi(map)(l) + \Phi(map)(m) + \Phi(map)(r) + 22 \text{ if } t = \tthree{l}{m}{r}\\
+    \end{cases}$  
+\end{lemma}
+  Instantiate with \isVal{f}{\arr{\isOf{a}{A}}{\varphi_1}{\isOf{b}{B}}{\varrho_1}}. By Lemma~\ref{lemma:ret}, suffices to show 
+  \isVal{\lam{t}{\_}{\dots}}{\arr{\tttree{A}{s}{d}}{\varphi}{\tttree{B}{s}{d}}{\varrho}}. Instantiate with 
+  \isVal{t}{\tttree{A}{s}{d}}, and suffices to show 
+  \gammaToComp{\cdot}{\varphi}{\mathtt{trec}(\dots)}{\tttree{B}{s}{d}}{\zp}.
+\begin{proof}
+Induction on $t$.
+  \begin{itemize}
+    \item $t = \leaf$: then \evalCost{\texttt{trec(t){leaf => ret(leaf)\dots}}}{1}{\texttt{ret(leaf)}}. 
+      The potential $\zp^+$ suffices. 
+    \item $t = \single{a}$: then 
+      \begin{align*}
+        &\texttt{trec(t){r <- f a; ret(single(r));\dots}}\\
+        \mapsto& \texttt{r <- f a; ret(single(r));}\\
+        \mapsto& \texttt{r <- (...); ret(single(r));}\\
+        \mapsto^c& \texttt{r <- ret(v); ret(single(r));}\\
+        \mapsto& \texttt{ret(single(v));}
+      \end{align*}
+      and \eval{\varphi}{p}, \eval{\varrho}{p'}, such that $\toNat{p} \ge c + \toNat{p'}$.
+      Thus \eval{\bind{\varphi_1}{p}{\plus\;p\;\toNum{3}}}{\toNat{p}+3} suffices to cover the cost and
+      leaves the same the remaining potential $\varrho$.
+    \item $t = \ttwo{l}{r}$, for $\isVal{l}{\tttree{A}{s_1}{d'}}$ and $\isVal{r}{\tttree{A}{s_2}{d'}}$. Then 
+      \begin{align*}
+        &\texttt{trec(t){\dots}} \\
+        \mapsto& \texttt{seq(fl; Fl.\dots)}\\
+        \mapsto^{c_l}& \texttt{seq(thunk(ret(v1))); Fl.\dots}\\
+        \mapsto& \texttt{seq(fr; Fr.\dots)}\\
+        \mapsto^{c_r}& \texttt{seq(thunk(ret(v2)); Fr.\dots)}\\
+        \mapsto& \texttt{sl <- size Fl;\dots}\\
+        \mapsto^3& \texttt{sr <- size Fr;\dots}\\
+        \mapsto^3& \texttt{d <- depth Fl;\dots}\\
+        \mapsto^3& \texttt{s' <- sl + sr;\dots}\\
+        \mapsto^2& \texttt{d' <- d + 1;\dots}\\
+        \mapsto^2& \texttt{ret(t2(Fl,Fr):(s',d'));\dots}\\
+      \end{align*}
+      Hence the cost is $c = c_l+c_r + 16$.
+      Let $F_l,F_r$ be the recursive results of $\varphi$, and $G_l,G_r$ of $\varrho$.
+      . By induction, 
+      $\toNat{F_l} \ge c_l + \toNat{G_l}$ and $\toNat{F_r} \ge c_r + \toNat{G_r}$.
+      Thus the potential \eval{\varphi}{\toNat{F_l} + \toNat{F_r} + 16} is sufficient 
+      to cover the cost and remaining potential.
+    \item $t = \tthree{l}{m}{r}$: similar to above. 
+  \end{itemize}
+\end{proof}
+
+\begin{lemma}
+  Let \isVal{t}{\tttree{A}{s}{d}}, \eval{\texttt{size(t)}}{n}, \eval{\texttt{num2(t)}}{n_2}, and \eval{\texttt{num3(t)}}{n_3}.
+  Given \isVal{f}{\arr{\isOf{\_}{A}}{\varphi_1}{B}{\varrho_1}},
+  if \eval{\Phi(map_f)(t)}{v}, then \eval{\phi(map_f)(n,n_2,n_3)}{v}, where
+  $\phi(map_f)(n,n_2,n_3) \triangleq 1 + (3 + \varphi_1)\cdot n + 16n_2 + 22n_3$.
 \end{lemma}
 
 \begin{proof}
-  By 3 applications of Lemma~\ref{lemma:abs} and Lemma~\ref{lemma:ret}, 
-  it suffices to show that 
-  \gammaToComp{\cdot}{\mathsf{to\_nat}\;d}
-  {\ttrec{t}{\ret{0}}{\_}{\ret{0}}{dl}{dl+1}{dl}{dl+1}}{\word}{\zp}
-  given \isVal{s}{\word}, \isVal{t}{\word}, and \isVal{t}{\tttree{s}{d}}.
-  Case on $t$:
+  Induction on $t$.
   \begin{itemize}
-    \item $t = \isOf{\leaf}{\tttree{\mw{0}}{\mw{0}}}$:\\
-      Then \evalCost{\ttrec{t}{\ret{0}}{\_}{\ret{0}}{dl}{dl+1}{dl}{dl+1}}{1}{\mw{0}}, 
-      and \constp{2} suffices.
-    \item 
+    \item $t = \leaf$: then \eval{\Phi(map_f)(t)}{1}, and \eval{\texttt{size(t)}}{0}, \eval{\texttt{num2(t)}}{0}, and \eval{\texttt{num3(t)}}{0}.
+      Thus \eval{\phi(map_f)(0,0,0)}{1}. 
+    \item $t = \single{a}$:  then \step{\Phi(map_f)(t)}{3 + \varphi_1},  and \eval{\texttt{size(t)}}{1}, \eval{\texttt{num2(t)}}{0}, and \eval{\texttt{num3(t)}}{0}.
+      Thus \step{\phi(map_f)(1,0,0)}{3 + \varphi_1}. 
+    \item $t = \ttwo{l}{r}$: then \step{\Phi(map_f)(t)}{\Phi(map_f)(l) + \Phi(map_f)(r) + 16}, and \step{\texttt{size(t)}}{size(l) + size(r)}, 
+      \step{\texttt{num2(t)}}{1 + num2(l) + num2(r)}, and \step{\texttt{num3(t)}}{num3(l) + num3(r)}.
+      Thus 
+      \begin{align*}
+        & \phi(map_f)(size(l) + size(r),1 + num2(l) + num2(r),num3(l) + num3(r))\\
+        &\mapsto 1 + (3 + \varphi)(size(l) + size(r)) + 16(1 + num2(l) + num2(r)) + 22(num3(l) + num3(r))\\
+        &\mapsto \left(1 + (3 + \varphi)size(l) + 16(num2(l)) + 22(num3(l))\right) + \\
+                 &\left(1 + (3 + \varphi)size(r) + 16(num2(r)) + 22(num3(r))\right) + 16\\
+        &= \Phi(map_f)(l) + \Phi(map_f)(r) + 16 \tag{I.H.}
+      \end{align*}
+      \item $t = \tthree{l}{m}{r}$: symmetric.
   \end{itemize}
 \end{proof}
+
+\begin{verbatim}
+foldl := (\f. ret(\t. trec(t){
+    ret(\init. ret(init))
+  | a.ret(\init. r <- f(init,a); ret(r);)
+  | l.r.fl.fr.
+    ret(\init.
+    seq(fl; Fl. // 1
+      bl <- Fl init; // ?
+      seq(fr; Fr. // 1
+        br <- Fr bl;
+        ret(br);
+      );
+      )
+    )
+  | l.m.r.fl.fm.fr.
+  ret(\init.
+  seq(fl; Fl. // 1
+    bl <- Fl init; // ?
+    seq(fm; Fm. // 1
+      bm <- Fm bl;
+      seq(fr; Fr. // 1
+        br <- Fr bm;
+        ret(br);
+      );
+    );
+  ))
+}));
+\end{verbatim}
+
+\begin{lemma}(Fold?)
+  \isVal{\texttt{foldl}}{\arr{\arr{\isOf{\_}{\dprod{A}{B}}}{\varphi_1}{B}{\varrho_1}}{\zp}{\arr{\isOf{t}{\tttree{A}{s}{d}}}{\zp}{\arr{\isOf{init}{B}}{\varphi}{B}{\zp}}{\zp}}{\zp}}
+  where \\
+  $\varphi(\texttt{foldl}\;f\;init)(t) = \begin{cases}
+    1 \text{ if } t = \leaf\\
+    \varphi_1 + 2 \text{ if } t = \single{a} \\
+    \varphi(\texttt{foldl}\;f\;init)(l) + \varphi(\texttt{foldl}\;f\;b)(r) + 8 \text{ if } t = \ttwo{l}{r}\\
+    \varphi(\texttt{foldl}\;f\;init)(l) + \varphi(\texttt{foldl}\;f\;bl)(m) + \varphi(\texttt{foldl}\;f\;br)(r) + 11\text{ if } t = \tthree{l}{m}{r}
+  \end{cases}$
+\end{lemma}
+
+\iffalse
+
+\begin{lemma}(Tree Recursor)\label{lemma:trec}
+  Given 
+  \begin{gather*}
+    \gammaToVal{\cdot}{t}{\tttree{A}{s}{d}}\\
+    \gammaToComp{\cdot}{\varphi_0}{M_0}{[\leaf/x]B}{\varrho_0}\\
+    \gammaToComp{\isOf{a}{A}}{\varphi_1}{M_1}{[\single{a}/x]B}{\varrho_0}\\
+    \gammaToComp{\isOf{l}{\ret{\tttree{A}{s_1}{d}}},\isOf{r}{\ret{\tttree{A}{s_2}{d}}},\isOf{f_l}{\ccomp{\zp}{[l/x]B}{\zp}},\isOf{f_r}{\ccomp{\zp}{[r/x]B}{\zp}}}
+      {\varphi_2\\}{M_2}{[\ttwo{l}{r}/x]B}{\varrho_2} \tag{*}\\
+    \gammaToComp{\isOf{l}{\ret{\tttree{A}{s_1}{d}}},\isOf{m}{\ret{\tttree{A}{s_2}{d}}},\isOf{r}{\ret{\tttree{A}{s_3}{d}}},\isOf{f_l}{\ccomp{\zp}{[l/x]B}{\zp}},\\
+      \isOf{f_m}{\ccomp{\zp}{[m/x]B}{\zp}},\isOf{f_r}{\ccomp{\zp}{[r/x]B}{\zp}}}
+      {\varphi_3\\}{M_3}{[\tthree{l}{m}{r}/x]B}{\varrho_3}
+  \end{gather*}
+  Then \gammaToComp{\cdot}{\varphi}{\ttrec{t}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3}}{[t/x]B}{\varrho} where
+  \begin{gather*}
+  \varphi \triangleq \ttrec{t}{\varphi_0^+}{a}{\varphi_1^+}{l,r,f_l,f_r}{?\varphi_2^+}{l,m,r}{?\varphi_3^+}\\
+  \varrho \triangleq \ttrec{t}{\varrho_0}{a}{\varrho_1}{l,r,f_l,f_r}{\varrho_2}{l,m,r,f_l,f_m,f_r}{\varrho_3}
+  \end{gather*}
+\end{lemma}
+
+\begin{proof}
+Induction on structure of $t$:
+  \begin{itemize}
+    \item $t = \leaf$, $t = \single{a}$: similar to Lemma~\ref{lemma:recursor'}
+    \item $t = \ttwo{l}{r}$, for some \isOf{l}{\tttree{A}{s_1}{d}}, \isOf{r}{\tttree{A}{s_2}{d}}:
+      Then \step{\ttrec{t}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3}}{[v_l/l,v_r/r,F_l/f_l,F_r/f_r]M_2}. 
+      where $F_l \triangleq \thunk{\ret{\thunk{\ttrec{v_l}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3}}}}$ 
+      and $F_r \triangleq \thunk{\ret{\thunk{\ttrec{v_r}{M_0}{a}{M_1}{l,r,f_l,f_r}{M_2}{l,m,r,f_l,f_m,f_r}{M_3}}}}$. 
+      By Lemma~\ref{lemma:ret}, $\isOf{F_l}{\ccomp{\zp}{[l/x]B}{\zp}}$,
+      Instantiating * gives \evalCost{[v_l/l,v_r/r,F_l/f_l,F_r/f_r]M_2}{c}{}
+
+  \end{itemize}
+\end{proof}
+
 \fi
 
 \begin{verbatim}
@@ -428,7 +652,7 @@ join' = \tr1.
           {\_,\_,f_l,f_r}{\bind{n-1}{n'}{f_r\; n'}}
         }\\
 \join \triangleq 
-  \lam{t_1}{\tttree{s_1}{d_1}}{
-    \lam{t_2}{\tttree{s_2}{d_2}}{
+  \lam{t_1}{\tttree{A}{s_1}{d_1}}{
+    \lam{t_2}{\tttree{A}{s_2}{d_2}}{
     }}
 \fi
