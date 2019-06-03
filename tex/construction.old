@@ -1,0 +1,462 @@
+\newcommand{\sameType}[4]{\ensuremath{#1 \sim #2 \downarrow #3 \in #4}}
+\newcommand{\sameTypeOne}[6]{\ensuremath{\isOf{#1}{#2} \rhd #3 \sim #4 \downarrow #5 \in #6}}
+\newcommand{\sameComp}[4]{\ensuremath{#1 \rhd #2 \sim #3 \in #4}}
+\newcommand{\equivComp}[3]{\ensuremath{#1 \RHD #2 \asymp #3}}
+\newcommand{\CComp}[4]{\ensuremath{\diamond #1 \rhd #2 \in #3 \diamond #4}}
+\newcommand{\CCompOne}[6]
+{\ensuremath{\isOf{#1}{#2} \diamond #3  \rhd #4 \in #5 \diamond #6}}
+
+\newcommand{\type}[1]{\mathtt{Type}_{#1}}
+\newcommand{\term}{\mathsf{Term}}
+\newcommand{\evalTo}[1]{{#1}^{\Downarrow}}
+\newcommand{\class}[1]{\ensuremath{[#1]}}
+\newcommand{\cost}[1]{\ensuremath{\mathcal{C}}(#1)}
+\newcommand{\fequiv}[2]{\ensuremath{#1 \asymp #2}}
+\newcommand{\arrabt}[3]{\ensuremath{\Pi(#1; #2; #3)}}
+\newcommand{\relpot}[4]{\ensuremath{\mathtt{relpot}(#1.#2; #3.#4)}}
+\newcommand{\relpotty}[3]{\ensuremath{\mathtt{relpotty}(#1;#2.#3)}}
+\section{Construction}
+
+Notation:
+
+\begin{enumerate}
+  \item $A \sim A' \downarrow \alpha \in \tau$ when \eval{A}{v}, \eval{A'}{v'}, and 
+  $\tau(v,v',\alpha)$.
+  \item $a : \alpha \rhd B \sim B' \downarrow \beta \in \tau$ when 
+  for all $v,v'$ s.t. $\alpha(v,v')$, \sameType{[v/a]B}{[v'/a]B'}{\beta_{v,v'}}{\tau}.
+\item \sameComp{}{M}{M'}{\alpha} when \eval{M}{v}, \eval{M'}{v'}, $\alpha(v,v')$.
+  \item $a : \alpha \rhd M \sim M' \in \beta$ when 
+  for all $v,v'$ s.t. $\alpha(v,v')$, 
+  \eval{[v/a]M}{u}, \eval{[v'/a]M'}{u'}, and $\beta_{v,v'}(u,u')$.
+\item \sameComp{\isOf{a}{\alpha}, \isOf{b}{\beta}}{M}{M'}{\gamma} when 
+  for all $v,v'$ s.t. $\alpha(v,v')$, 
+  for all $u,u'$ s.t. $\beta_{v,v'}(u,u')$, 
+  \eval{[v/a,u/b]M}{w}, \eval{[v'/a,u'/b]M'}{w'}, and $\gamma_{{v,v}_{u,u'}}(w,w')$.
+  \item $\omega = \mu \alpha.\, \{(\zero,\zero)\} \cup \{(\suc{v},\suc{v'}) \mid \alpha(v,v')\}$
+  \item Given \sameComp{\isOf{a}{\alpha}}{P}{P}{\omega} and
+      \sameComp{\isOf{a}{\alpha}}{P'}{P'}{\omega}, 
+    \equivComp{\isOf{a}{\alpha}}{P}{P'} when \fequiv{\widehat{a.P}}{\widehat{a.P'}}
+  \item Given 
+      \sameComp{\isOf{a}{\alpha}, \isOf{b}{\beta}}{Q}{Q}{\omega}
+      and \sameComp{\isOf{a}{\alpha}, \isOf{b}{\beta}}{Q'}{Q'}{\omega}, 
+      \equivComp{\isOf{a}{\alpha},\isOf{b}{\beta}}{Q}{Q'} when \fequiv{\widehat{a,b.Q}}{\widehat{a,b.Q'}}
+  \item $\kappa(\alpha, a.\beta) =
+    \{(\relpot{a}{P}{a.b}{Q}, \relpot{a}{P'}{a.b}{Q'}) \mid \\
+      \sameComp{\isOf{a}{\alpha}}{P}{P}{\omega}\\
+      \land\sameComp{\isOf{a}{\alpha}}{P'}{P'}{\omega}\\
+      \land\sameComp{\isOf{a}{\alpha}, \isOf{b}{\beta}}{Q}{Q}{\omega}\\
+      \land\sameComp{\isOf{a}{\alpha}, \isOf{b}{\beta}}{Q'}{Q'}{\omega}\\
+      \land\equivComp{\isOf{a}{\alpha}}{P}{P'}\\
+      \land\equivComp{\isOf{a}{\alpha},\isOf{b}{\beta}}{Q}{Q'}\\
+    \}$
+\end{enumerate}
+
+Given a computation $\sameComp{\isOf{a}{\alpha}}{M}{M}{\beta}$, 
+define the graph of a computation: $\widehat{a.M} = \{(v,u) \mid \forall.\, \alpha(v,v) \land \evalCost{[v/a]M}{c}{u}\}$.
+Further, define its cost function: $\cost{a.M} = \{(v,c) \mid \forall.\, \alpha(v,v) \land \evalCost{[v/a]M}{c}{u}\}$.
+Note that $\widehat{a.M} : \term \to \term$ and $\cost{a.M} : \term \to \mathbb{N}$, 
+where $dom(\widehat{a.M}) = dom(\cost{a.M}) = \term \cap \{v \mid \alpha(v,v)\}$ and $codom(\widehat{a.M}) = \term \cap \{u \mid \exists v.\, \alpha(v,v) \land \beta_{v,v}(u,u)\}$.
+Thus we notate it as $\widehat{a.M} : \isOf{a}{\alpha} \to \beta$, $\cost{a.M} : \alpha \to \mathbb{N}$.
+
+For a computation with two free variables, $\sameComp{\isOf{a}{\alpha}, \isOf{b}{\beta}}{M}{M}{\gamma}$, define the graph as 
+$\widehat{M} = \{((v,u),w) \mid \forall v.\, \alpha(v,v) \land \forall u,u.\, \beta_{v,v}(u,u).\, \eval{[v/a,u/b]M}{w}\}$. 
+Thus $\widehat{a,b.M} : \term \times \term \to \term$, 
+where $dom(\widehat{a,b.M}) = \term \times \term \cap \{((v,u) \mid \alpha(v,v) \land \beta_{v,v}(u,u)\}$ and 
+$codom(\widehat{a,b.M}) = \term  \cap \{w \mid \exists v,v.\, \alpha(v,v) \land \exists u,u.\, \beta_{v,v}(u,u) \land \gamma_{v,v_{u,u}}(w,w)\}$.
+Notate this as $\widehat{a,b.M} : \isOf{a}{\alpha} \times \isOf{b}{\beta} \to \gamma$.
+
+\begin{definition}
+  Given functions $f, g : A \to \mathbb{N}$, 
+\fequiv{f}{g} iff there exists $C \in \mathbb{N}$ s.t. for all but finitely many $a \in A$,  
+ $f(a) \le C \cdot g(a)$ and $g(a) \le C \cdot f(a)$.
+\end{definition}
+
+\begin{lemma}\label{lemma:asymp}
+  $\fequiv{f}{g}$ is an equivalence relation.
+\end{lemma}
+
+\begin{proof}
+  Suffices to show reflexivity, symmetry, and transitivity.
+  \begin{itemize}
+    \item $\fequiv{f}{f}$: holds for $C = 1$.
+    \item $\fequiv{f}{g} \implies \fequiv{g}{f}$. Clearly holds since the definition of $\asymp$ is symmetric in $f$ and $g$.
+    \item $\fequiv{f}{g} \land \fequiv{g}{h} \implies \fequiv{f}{h}$. Suppose \fequiv{f}{g} and \fequiv{g}{h}.
+      Then there are $C_1,C_2 \in \mathbb{N}$ s.t. for all but finitely many $a \in A$, 
+      \begin{gather}
+        f(a) \le C_1 \cdot g(a) \text{ and } g(a) \le C_1 \cdot f(a) \label{eq:1}\\
+        g(a) \le C_2 \cdot h(a) \text{ and } h(a) \le C_2 \cdot g(a) \label{eq:2}
+      \end{gather}
+      It suffices to find $C_3$ s.t for all but finitely many $a \in A$,  $f(a) \le C_3 \cdot h(a)$ and $h(a) \le C_3 \cdot f(a)$.
+      By Eq~\ref{eq:2}, $C_1 \cdot g(a) \le C_1 C_2 \cdot h(a)$ for cofinitely many $a \in A$. Hence 
+      $f(a) \le C_1 C_2 h(a)$ for cofinitely many $a \in A$. Similarly, by Eq~\ref{eq:1}, $C_2 g(a) \le C_2 C_1 \cdot f(a)$ for cofinitely many $a \in A$. Hence 
+      $h(a) \le C_2 C_1 f(a)$. Thus the result holds by taking $C_3 = C_1 C_2$.
+  \end{itemize}
+\end{proof}
+
+\begin{corollary} \label{lemma:kappa}
+  Given that $\alpha$ is a PER and $\beta$ is a family of PERs,
+  $R \sim R' \in \kappa(\alpha, a.\beta)$ is also a PER.
+\end{corollary}
+
+\begin{lemma}
+  Given $f, f' : \isOf{a}{\alpha} \times \isOf{b}{\beta} \to \omega$, 
+  \fequiv{f}{f'} and \sameComp{\isOf{a}{\alpha}}{M}{M'}{\beta}, \fequiv{f\circ (\widehat{M},id) \circ dup}{f'\circ (\widehat{M'},id) \circ dup}, 
+  where $dup : A \to A \times A$, $a \mapsto (a,a)$.
+\end{lemma}
+
+\begin{proof}
+  By assumption, there is a $C \in \mathbb{N}$ s.t. for cofinitely $(a,b) \in \isOf{a}{\alpha} \times \isOf{b}{\beta}$, 
+  $f(a,b) \le C \cdot f'(a,b) \text{ and } f'(a,b) \le C \cdot f'(a,b)$. 
+  Let $\alpha(a,a)$. Then by definition, $\beta(\widehat{M}(a), \widehat{M'}(a))$. By previous, there can be only cofinitely many pairs 
+  s.t.   $(f \circ (\widehat{M},id) \circ dup)(a) \le C \cdot (f'\circ (\widehat{M'},id) \circ dup) (a)$ and 
+  $(f' \circ (\widehat{M'},id) \circ dup)(a) \le C \cdot (f\circ (\widehat{M},id) \circ dup) (a)$, hence the result holds.
+\end{proof}
+
+\begin{lemma}\label{lemma:asympsum}
+  Given functions $f_1, g_1, f_2, g_2 : A \to \mathbb{N}$ s.t. \fequiv{f_1}{g_1} and \fequiv{f_2}{g_2}, 
+  \fequiv{f_1 + f_2}{g_1 + g_2}.
+\end{lemma}
+
+\begin{proof}
+  Suppose \fequiv{f_1}{g_1} and \fequiv{f_2}{g_2}. Then:
+  \begin{enumerate}
+    \item $\exists C_1.\, f_1(a) \le C_1 \cdot g_1(a)$ and $g_1(a) \le C_1 \cdot f_1(a)$ for cofinitely many $a \in A$.
+    \item $\exists C_2.\, f_2(a) \le C_2 \cdot g_2(a)$ and $g_2(a) \le C_2 \cdot f_2(a)$ for cofinitely many $a \in A$.
+  \end{enumerate}
+  NTS there is a $C$ s.t. 
+  \begin{enumerate}
+    \item $(f_1 + f_2)(a) \le C \cdot (g_1 + g_2)(a)$ 
+    \item $(g_1 + g_2)(a) \le C \cdot (f_1 + f_2)(a)$ \label{req:2}
+  \end{enumerate}
+  for cofinitely many $a \in A$. Take $C = C_1 + C_2$. Then:
+  \begin{align*}
+    &f_1(a) \le C \cdot g_1(a) \tag{assumption}\\
+    &f_2(a) \le C \cdot g_2(a) \tag{assumption}\\
+    \implies& f_1(a) + f_2(a) \le C \cdot g_1(a) + C \cdot g_2(a)\\
+    \implies& (f_1 + f_2)(a) \le C \cdot (g_1 + g_2)(a)\\
+  \end{align*}
+  Requirement \ref{req:2} holds similarly.
+\end{proof}
+
+\begin{definition}
+  Given functions $f, g : A \to \mathbb{N}$, 
+$f \succeq g$ iff there exists $C \in \mathbb{N}$ s.t. for all but finitely many $a \in A$,  
+  $C \cdot f(a) \ge g(a)$.
+\end{definition}
+
+\begin{lemma}\label{lemma:dominance}
+  Given functions $f,f',g, g' : A \to \mathbb{N}$ s.t. \fequiv{g}{g'}, if 
+  $f \succeq g$, then $f' \succeq g'$.
+\end{lemma}
+
+\begin{proof}
+  Suppose  $f \succeq g$. Then there's a $C$ s.t. 
+  $C \cdot f(a) \ge g(a)$ for cofinitely many $a \in A$.
+  Suffices to give $D$ s.t. $D \cdot f'(a) \ge g'(a)$ for cofinitely many $a \in A$.
+  Since \fequiv{g}{g'}, there's a $C_1$ s.t. 
+  $g(a) \le C_1 \cdot g'(a)$ and $g'(a) \le C_1 \cdot g(a)$ for cofinitely $a \in A$.
+  Hence $C C_1 \cdot f(a) \ge C_1 \cdot g(a)$ for cofinitely many $a \in A$.
+  Thus $C C_1 \cdot f(a) \ge g'(a)$ for cofinitely many $a \in A$. 
+  Furthermore, since \fequiv{f}{f'}, there's a $C_2$ s.t. 
+  $f(a) \le C_2 \cdot f'(a)$ and $f'(a) \le C_2 \cdot f(a)$ for cofinitely $a \in A$.
+  Thus $C C_1 \cdot f(a) \le C C_1 C_2 \cdot f'(a)$ for cofinitely $a \in A$.
+  Hence $C C_1 C_2 \cdot f'(a) \ge g'(a)$ for cofinitely $a \in A$, and take $D = C C_1 C_2$.
+\end{proof}
+
+Construct the type systems $\tau_n$ as the least fixed-point(s) of the 
+monotone function defined by the various clauses: 
+
+\begin{align*}
+  \text{Nat} &= \{(\nat,\nat,\phi) \mid \phi = \omega\}\\
+  \text{Pot}(\tau,\pi) &= 
+    \{(\relpotty{A}{a}{B}, \relpotty{A'}{a}{B'}, \phi) \mid &\\
+    &\exists \alpha.\, \sameType{A}{A'}{\alpha}{\tau} \\
+    &\land\exists \beta.\, \sameTypeOne{a}{\alpha}{B}{B'}{\beta}{\pi} \\
+    &\land \phi = \kappa(\alpha,a.\beta)
+    \}\\
+  \text{Fun}(\tau, \pi) &=
+  \{(\arrabt{A}{a.B}{R}, \arrabt{A'}{a.B'}{R'}, \phi) 
+  \mid & \\
+  &\exists \alpha.\, \sameType{A}{A'}{\alpha}{\tau} \\
+  &\land\exists \beta.\, \sameTypeOne{a}{\alpha}{B}{B'}{\beta}{\pi} \\
+  &\land R \sim R' \in \kappa(\alpha, a.\beta)\\
+  \land\phi &= \{(\lam{a}{\_}{M}, \lam{a}{}{M'}) \mid \\
+  &\sameComp{\isOf{a}{\alpha}}{M}{M'}{\beta}\\
+  &\land \fequiv{\cost{a.M}}{\cost{a.M'}}\\
+  &\land \eval{R}{\relpot{a}{P}{a.b}{Q}}, \eval{R'}{\relpot{a}{P'}{a.b}{Q'}}\\
+  &\land \widehat{a.P} \succeq \cost{a.M} + \{(v, \widehat{a.Q}(v,\widehat{a.M}(v))) \mid \forall v.\, \alpha(v,v)\}\\
+  &\land \widehat{a.P'} \succeq \cost{a.M'} + \{(v, \widehat{a.Q'}(v,\widehat{a.M'}(v))) \mid \forall v.\, \alpha(v,v)\}
+   \}
+  \}\\
+  \text{Comp}(\tau) &= \{
+  (\ccomp{P}{\isOf{a}{A}}{Q}, \ccomp{P'}{\isOf{a}{A'}}{Q'}, \phi) \mid \\
+  &\exists \alpha.\, \sameType{A}{A'}{\alpha}{\tau}\\
+  &\land \sameComp{}{P}{P'}{\omega}\\ 
+  &\land \sameComp{\isOf{a}{\alpha}}{Q}{Q}{\omega}\\
+  &\land \sameComp{\isOf{a}{\alpha}}{Q'}{Q'}{\omega}\\
+  &\land \fequiv{\widehat{a.Q}}{\widehat{a.Q'}}\\
+  \land\phi &= \{(\thunk{M}, \thunk{M'}) \mid \\
+  &\sameComp{}{M}{M'}{\alpha}\\
+  &\land \evalCost{M}{c}{v}, \evalCost{M'}{c'}{v'}, \eval{P}{\bar{p}},  
+    \eval{P'}{\bar{p'}}, \eval{[v/a]Q}{\bar{q}}, \eval{[v'/a]Q'}{\bar{q'}}\\
+  &\land p \ge c + q \land p' \ge c' + q'\\
+  \}
+  \}\\
+  \text{Type}(\tau) &= \{(\type{i}, \type{i}, \phi) \mid \exists \phi.\, \tau(\type{i}, \type{i}, \phi)\}\\
+  v_n &= \{(\type{i}, \type{i}, \phi) \mid i < n \land \phi = \{(A,B) \mid \exists \alpha.\, \tau_i(A,B,\alpha)\}\}\\
+  \text{Types}(v,\tau) &= \text{Fun}(\tau,\tau) \cup \text{Pot}(\tau,\tau) \cup \text{Nat} \cup \text{Comp}(\tau) \cup \text{Type}(v)\\
+  \tau_n &= \mu \tau.\, \text{Types}(v_n,\tau)
+\end{align*}
+
+Let the set of possible type systems be $\mathcal{D} = 
+\mathcal{P}(\term \times \term \times \mathcal{P}(\term \times \term))$.
+Since the various clauses have disjoint images, it suffices to show that each is monotone.
+
+% TODO: monotone 
+\iffalse
+\begin{lemma}\label{lemma:monotone}
+For all $v \in \mathcal{D}$, $f : \mathcal{D} \to \mathcal{D}, \tau \mapsto \text{Types}(v,\tau)$ is a monotone function.
+\end{lemma}
+
+\begin{proof}
+
+\begin{itemize}
+\item $\text{Fun}$:\\
+Suppose $\tau \subseteq \tau'$. NTS $\text{Fun}(\tau,\tau) \subseteq \text{Fun}(\tau',\tau')$. 
+Suppose $(\arr{A}{\varphi}{B}{\varrho}, \arr{A'}{\varphi'}{B'}{\varrho'}, \phi)  \in \text{Fun}(\tau,\tau)$. 
+Unrolling the definition, we know:
+\begin{enumerate}
+  \item there is a $\alpha$ s.t. \sameType{A}{A'}{\alpha}{\tau}. Then by assumption, \sameType{A}{A'}{\alpha}{\tau'}. 
+  \item there is a $\beta$ s.t. \fact{\sameTypeOne{a}{\alpha}{B}{B'}{\beta}{\tau}}{1}. We show
+\sameTypeOne{a}{\alpha}{B}{B'}{\beta}{\tau'}. Let $v,v'$ s.t. $\alpha(v,v')$, and show 
+\sameType{[v/a]B}{[v'/a]B'}{\beta_{v,v'}}{\tau'}. But this holds by \applyAss{1}.
+\end{enumerate}
+Since the next three constraints are determined by $\alpha$ and $\beta$ which did not change, we conclude 
+$(\arr{A}{\varphi}{B}{\varrho}, \arr{A'}{\varphi'}{B'}{\varrho'}, \phi)  \in \text{Fun}(\tau',\tau')$.
+\end{itemize}
+\end{proof}
+\fi
+
+A type system is a possible type system $\tau$ which has the following properties:
+\begin{enumerate}
+\item Unicity: $\tau(A,B,\phi)$ and $\tau(A,B,\phi')$ implies $\phi = \phi'$.
+\item PER valuation: $\tau(A,B,\phi)$ implies $\phi$ is a PER.
+\item Symmetry: $\tau(A,B,\phi)$ implies $\tau(B,A,\phi)$. 
+\item Transitivity: $\tau(A,B,\phi)$ and $\tau(B,C,\phi)$ implies $\tau(A,C,\phi)$.
+\end{enumerate}
+
+\begin{lemma}
+If $v$ is a type system, then $\tau^* = \mu \tau.\, \text{Types}(v,\tau)$ is a type system.
+\end{lemma}
+
+\begin{proof}
+blah
+\begin{enumerate}
+\item Unicity:\\
+Since $\tau^*$ is the least (pre)-fixed point, for all $\tau$, if $\tau$ is a pre-fixed point 
+($\text{Types}(v,\tau) \subseteq \tau$), $\tau^* \subseteq \tau$. Thus define a $\tau$ such that all elements 
+satisfy unicity w.r.t $\tau^*$: 
+\[\tau = \{(A,B,\phi) \mid \forall \phi'.\, \tau^*(A,B,\phi') \implies \phi = \phi'\}\]
+and show that $\tau$ is a pre-fixed point, which suffices to show that $\tau^*$ satisfies unicity.
+
+Let $(S,T,\phi) \in \text{Types}(v,\tau)$. NTS $(S,T,\phi) \in \tau$.
+\begin{itemize}
+  \item $(S,T,\phi) = (\arrabt{A}{a.B}{R}, \arrabt{A'}{a.B'}{R'}, \phi)$:
+  Suppose $\tau^*(S,T,\phi')$ for some $\phi'$. STS $\phi = \phi'$.
+  Since $\tau^*$ is a fixed point, we have $\text{Types}(v,\tau^*)(S,T,\phi')$.
+  Then, by the definition of $\text{Fun}(\tau^*,\tau^*)$, we know:
+  \begin{enumerate}
+  \item $\exists \alpha^*.\, \sameType{A}{A'}{\alpha^*}{\tau^*}$. This means 
+  \eval{A}{A_0}, \eval{A'}{A'_0}, and $\tau^*(A_0,A'_0,\alpha^*)$.
+  \item $\exists \beta^*.\, \sameTypeOne{a}{\alpha^*}{B}{B'}{\beta^*}{\tau^*}$. This means
+  for all $v,v'$ s.t. $\alpha^*(v,v')$, \eval{[v/a]B}{B_0}, \eval{[v'/a]B'}{B'_0}, and $\tau^*(B_0,B'_0,\beta^*_{v,v'})$.
+  \end{enumerate}
+  Furthermore, by assumption and the definition of $\text{Fun}(\tau,\tau)$, we know:
+  \begin{enumerate}
+  \item $\exists \alpha.\, \sameType{A}{A'}{\alpha}{\tau}$. This means 
+  \eval{A}{A_0}, \eval{A'}{A'_0}, and $\tau(A_0,A'_0,\alpha)$. By definition of $\tau$, $\alpha = \alpha^*$.
+  \item $\exists \beta.\, \sameTypeOne{a}{\alpha}{B}{B'}{\beta}{\tau}$. This means
+  for all $v,v'$ s.t. $\alpha(v,v')$, \eval{[v/a]B}{B_0}, \eval{[v'/a]B'}{B'_0}, and $\tau(B_0,B'_0,\beta_{v,v'})$.
+  Let $v,v'$ s.t. $\alpha(v,v')$. By previous, $\alpha^*(v,v')$. Furthermore, we have
+  \eval{[v/a]B}{B_0}, \eval{[v'/a]B'}{B'_0}, and $\tau^*(B_0,B'_0,\beta^*_{v,v'})$.
+  By definition of $\tau$, we know $\beta_{v,v'} = \beta^*_{v,v'}$. Hence we know $\beta = \beta^*$.
+  \end{enumerate}
+  Since $\phi'$ is determined by $\alpha^* = \alpha$ and $\beta^* = \beta$ and so is $\phi$, we conclude $\phi = \phi'$.
+\end{itemize}
+\item PER valuation, Symmetry, Transitivity:\\
+Define $\tau$ where all elements have the above properties:
+\begin{align*}
+  \tau(A,B,\phi) &\iff \phi \text{ is a PER}\\
+& \land \tau^*(A,B,\phi) \land \tau^*(B,A,\phi)\\
+& \land \forall C,\phi'.\, \tau^*(B,C,\phi') \implies \tau^*(A,C,\phi') \land \phi = \phi'\\
+& \land \forall C,\phi'.\, \tau^*(C,A,\phi') \implies \tau^*(C,B,\phi') \land \phi = \phi'
+\end{align*}
+
+Let $(S,T,\phi) \in \text{Types}(v,\tau)$. NTS $(S,T,\phi) \in \tau$.
+\begin{itemize}
+\item $(S,T,\phi) =(\arrabt{A}{a.B}{R}, \arrabt{A'}{a.B'}{R'}, \phi)$\\
+    From the assumption, \fact{we know}{1} (some conditions omitted): 
+  \begin{enumerate}
+  \item $\exists \alpha.\, \sameType{A}{A'}{\alpha}{\tau}$. This means 
+  \eval{A}{A_0}, \eval{A'}{A'_0}, and $\tau(A_0,A'_0,\alpha)$. By definition of $\tau$, we know: 
+  \begin{enumerate}[label=\textbf{A.\arabic*}]
+    \item $\alpha$ is a PER
+    \item $\tau^*(A_0,A'_0,\alpha)$ and $\tau^*(A'_0,A_0,\alpha)$ 
+    \item $\forall C,\alpha'.\, \tau^*(A'_0,C,\alpha') \implies \tau^*(A_0,C,\alpha') \land \alpha = \alpha'$ \label{fact:1}
+    \item $\forall C,\alpha'.\, \tau^*(C,A_0,\alpha') \implies \tau^*(C,A'_0,\alpha') \land \alpha = \alpha'$
+   \end{enumerate}
+ \item $\exists \beta.\, \sameTypeOne{a}{\alpha}{B}{B'}{\beta}{\tau}$. \label{fact:10}
+  Let $v,v'$ s.t. $\alpha(v,v')$.
+  By definition, \eval{[v/a]B}{B_0}, \eval{[v'/a]B'}{B'_0}, and $\tau(B_0,B'_0,\beta_{v,v'})$.
+  By definition of $\tau$, we know:
+  \begin{enumerate}[label=\textbf{B.\arabic*}]
+    \item $\beta_{v,v'}$ is a PER \label{fact:7}
+    \item $\tau^*(B_0,B'_0,\beta_{v,v'})$ and $\tau^*(B'_0,B_0,\beta_{v,v'})$ \label{fact:11}
+    \item $\forall C,\beta'.\, \tau^*(B'_0,C,\beta') \implies \tau^*(B_0,C,\beta') \land \beta_{v,v'} = \beta'$ \label{fact:4}
+    \item $\forall C,\beta'.\, \tau^*(C,B_0,\beta') \implies \tau^*(C,B'_0,\beta') \land \beta_{v,v'} = \beta'$ \label{fact:5}
+   \end{enumerate}
+   \item $R \sim R' \in \kappa(\alpha, a.\beta)$
+  \item $\phi = \{(\lam{a}{\_}{M}, \lam{a}{}{M'}) \mid\\
+  \sameComp{\isOf{a}{\alpha}}{M}{M'}{\beta}\\
+  \land\fequiv{\cost{a.M}}{\cost{a.M'}}\\
+  \land\eval{R}{\relpot{a}{P}{a.b}{Q}}, \eval{R'}{\relpot{a}{P'}{a.b}{Q'}}\\
+  \land\widehat{a.P} \succeq \cost{a.M} + \{(v, \widehat{a.Q}(v,\widehat{a.M}(v))) \mid \forall v.\, \alpha(v,v)\}\\
+  \land\widehat{a.P'} \succeq \cost{a.M'} + \{(v, \widehat{a.Q'}(v,\widehat{a.M'}(v))) \mid \forall v.\, \alpha(v,v)\}$
+  \end{enumerate}
+  Recall to show $(S,T,\phi) \in \tau$, STS:
+  \begin{enumerate}
+    \item $\phi \text{ is a PER}$. For symmetry, assume $(\lam{a}{\_}{M}, \lam{a}{}{M'}) \in \phi$.
+      STS $(\lam{a}{\_}{M'}, \lam{a}{}{M}) \in \phi$:
+      \begin{itemize}
+        \item \sameComp{\isOf{a}{\alpha}}{M'}{M}{\beta}: let $\alpha(v,v')$. NTS 
+          \eval{[v/a]M'}{u}, \eval{[v'/a]M}{u'}, and $\beta_{v,v'}(u,u')$ for some $u,u'$. 
+          Since $\alpha$ is a PER, $\alpha(v',v)$.
+          By definition of $\phi$, we know \eval{[v/a]M'}{M'_0}, \eval{[v'/a]M}{M_0}, and $\beta_{v',v}(M_0,M'_0)$.
+          If we set $u = M_0$, $u' = M'_0$, it remains to show $\beta_{v,v'} = \beta_{v',v}$.
+          Instantiating Fact~\ref{fact:10} with $v',v'$, we have  
+          \eval{[v'/a]B}{B_{v'}}, \eval{[v'/a]B'}{B'_{v'}}, and $\tau(B_{v'},B'_{v'},\beta_{v',v'})$.
+          By Fact~\ref{fact:11}$_{v',v'}$, we know $\tau^*(B'_{v'},B_{v'},\beta_{v',v'})$.
+          Now instantiating Fact~\ref{fact:10} with $v,v'$, we have 
+          \eval{[v/a]B}{B_{v}}, \eval{[v'/a]B'}{B'_{v'}}, and $\tau(B_{v},B'_{v'},\beta_{v,v'})$.
+          Applying Fact~\ref{fact:4}$_{v,v'}$ with 
+          $C = B_{v'}$ and $\beta' = \beta_{v',v'}$, we know $\tau^*(B_v, B_{v'}, \beta_{v',v'})$ and 
+          $\beta_{v,v'} = \beta_{v',v'}$. 
+          Lastly, instantiate Fact~\ref{fact:10} with $v',v$, we have 
+          \eval{[v'/a]B}{B_{v'}}, \eval{[v/a]B'}{B'_{v}}, and $\tau(B_{v'},B'_{v},\beta_{v',v})$.
+          By Fact~\ref{fact:11}$_{v',v}$, we know $\tau^*(B'_{v},B_{v'},\beta_{v',v})$.
+          Applying Fact~\ref{fact:5}$_{v',v'}$ with 
+          $C = B'_{v}$ and $\beta' = \beta_{v',v}$, we know $\tau^*(B'_v, B_{v'}, \beta_{v',v})$ and 
+          $\beta_{v',v'} = \beta_{v',v}$. 
+          Hence $\beta_{v,v'} = \beta_{v',v}$ as required. We can instantiate Fact~\ref{fact:10} with 
+          $v',v'$ and $v',v$ since $\alpha$ is a PER and we assumed $\alpha(v,v')$.
+        \item \fequiv{\cost{a.M}}{\cost{a.M'}}: Lemma~\ref{lemma:asymp}
+        \item $\widehat{a.P} \succeq \cost{a.M'} + \{(v, \widehat{a.Q}(v,\widehat{a.M'}(v))) \mid \forall v.\, \alpha(v,v)\}$: Lemma~\ref{lemma:dominance}
+        \item $\widehat{a.P'} \succeq \cost{a.M} + \{(v, \widehat{a.Q'}(v,\widehat{a.M}(v))) \mid \forall v.\, \alpha(v,v)\}$: Lemma~\ref{lemma:dominance}
+      \end{itemize}
+      For transitivity, let $(\lam{a}{\_}{M}, \lam{a}{}{M'}) \in \phi$ and 
+      $(\lam{a}{\_}{M'}, \lam{a}{}{M''}) \in \phi$ 
+      STS $(\lam{a}{\_}{M}, \lam{a}{}{M''}) \in \phi$:
+      \begin{itemize}
+        \item \sameComp{\isOf{a}{\alpha}}{M}{M''}{\beta}: let $\alpha(v,v')$. NTS 
+        \eval{[v/a]M}{u}, \eval{[v'/a]M''}{u'}, and $\beta_{v,v'}(u,u')$ for some $u,u'$. 
+        By assumption, \sameComp{\isOf{a}{\alpha}}{M}{M'}{\beta}, and we know 
+          \eval{[v/a]M}{M_v}, \eval{[v'/a]M'}{M'_{v'}}, and $\beta_{v,v'}(M_v,M'_{v'})$.
+          Since $\alpha$ is a PER, $\alpha(v',v')$. 
+          By assumption, \sameComp{\isOf{a}{\alpha}}{M'}{M''}{\beta}, and we know
+          \eval{[v'/a]M'}{M_{v'}}, \eval{[v'/a]M''}{M''_{v'}}, and $\beta_{v',v'}(M'_{v'},M''_{v'})$.
+          By the previous argument, we know $\beta_{v,v'} = \beta_{v',v'}$, and thus
+          $\beta_{v,v'}(M'_{v'},M''_{v'})$.
+          Since $\beta_{v,v'}$ is a PER, $\beta_{v,v'}(M_{v},M''_{v'})$, as required.
+        \item \fequiv{\cost{a.M}}{\cost{a.M''}}: Lemma~\ref{lemma:asymp}
+        \item $\widehat{a.P} \succeq \cost{a.M''} + \{(v, \widehat{a.Q}(v,\widehat{a.M''}(v))) \mid \forall v.\, \alpha(v,v)\}$: Lemma~\ref{lemma:dominance}
+        \item $\widehat{a.P'} \succeq \cost{a.M} + \{(v, \widehat{a.Q'}(v,\widehat{a.M}(v))) \mid \forall v.\, \alpha(v,v)\}$: Lemma~\ref{lemma:dominance}
+      \end{itemize}
+
+    \item $\tau^*(S,T,\phi) \land \tau^*(T,S,\phi)$: the former follows directly from \applyAss{1} and the conditions entailed. 
+      For the latter, since $\alpha$ is a PER and $\beta$ is a family of PERs, 
+      the first two conditions follow. The rest folllow exactly from the \applyAss{1}
+      in conjunction with Lemma~\ref{lemma:asymp}.
+  \item $\forall C,\phi'.\, \tau^*(T,C,\phi') \implies \tau^*(S,C,\phi') \land \phi = \phi'$:\\
+   Suppose $\tau^*(T,C,\phi')$ for some $\phi'$. This means that: 
+  \begin{enumerate}[label=\textbf{C.\arabic*}]
+  \item $C = \arrabt{\isOf{a}{A''}}{B''}{R''}$ for some $A'',B'',R''$
+  \item $\exists \alpha^*.\, \sameType{A'}{A''}{\alpha^*}{\tau^*}$. This means 
+    \eval{A'}{A'_0}, \eval{A''}{A''_0}, and $\tau^*(A'_0,A''_0,\alpha^*)$. \label{fact:2}
+  \item $\exists \beta^*.\, \sameTypeOne{a}{\alpha^*}{B'}{B''}{\beta^*}{\tau^*}$. This means
+  for all $v,v'$ s.t. $\alpha^*(v,v')$, \eval{[v/a]B'}{B'_0}, \eval{[v'/a]B''}{B''_0}, and $\tau^*(B'_0,B''_0,\beta^*_{v,v'})$. \label{fact:3}
+  \item $R' \sim R'' \in \kappa(\alpha^*, a.\beta^*)$
+  \item $\phi' = \{(\lam{a}{\_}{M}, \lam{a}{}{M'}) \mid\\
+  \sameComp{\isOf{a}{\alpha^*}}{M}{M'}{\beta^*}\\
+  \land\fequiv{\cost{a.M}}{\cost{a.M'}}\\
+  \land\eval{R'}{\relpot{a}{P'}{a.b}{Q'}}, \eval{R''}{\relpot{a}{P''}{a.b}{Q''}}\\
+  \land\widehat{a.P'} \succeq \cost{a.M} + \{(v, \widehat{a.Q'}(v,\widehat{a.M}(v))) \mid \forall v.\, \alpha^*(v,v)\}\\
+  \land\widehat{a.P''} \succeq \cost{a.M'} + \{(v, \widehat{a.Q''}(v,\widehat{a.M'}(v))) \mid \forall v.\, \alpha^*(v,v)\}$
+  \end{enumerate}
+  Now STS $\tau^*(S,C,\phi') \land \phi = \phi'$. For the former, STS:
+      \begin{itemize}
+        \item $\exists \alpha'.\, \sameType{A}{A''}{\alpha'}{\tau^*}$. Take $\alpha' = \alpha^*$. Since $\Downarrow$ deterministic,
+          \eval{A}{A_0}, \eval{A''}{A''_0}, and STS $\tau^*(A_0,A''_0,\alpha^*)$. By Fact~\ref{fact:2}, we know  $\tau^*(A'_0,A''_0,\alpha^*)$, 
+          and applying Fact~\ref{fact:1} gives $\tau^*(A_0,A''_0,\alpha^*)$ and $\alpha = \alpha^* \triangleq \alpha'$. 
+        \item $\exists \beta'.\, \sameTypeOne{a}{\alpha'}{B}{B''}{\beta'}{\tau^*}$. Take $\beta' = \beta^*$. Let $v,v'$ s.t. $\alpha^*(v,v')$. Then STS
+          \eval{[v/a]B}{u}, \eval{[v'/a]B''}{u'}, and $\tau^*(u,u',\beta^*_{v,v'})$ for some $u,u'$. 
+          Since $\alpha(v',v')$, apply Fact~\ref{fact:3}, and we know 
+          \eval{[v'/a]B'}{B'_{v'}}, \eval{[v'/a]B''}{B''_{v'}}, and
+          $\tau^*(B'_{v'},B''_{v'},\beta^*_{v',v'})$.
+          Now, applying Fact~\ref{fact:10} with $v,v'$, we know
+          \eval{[v/a]B}{B_v}, \eval{[v'/a]B'}{B'_{v'}}, and $\tau(B_v,B'_{v'},\beta_{v,v'})$. 
+          Further, applying Fact~\ref{fact:4}$_{v,v'}$ with
+          $C = B''_{v'}$ and $\beta' = \beta^*_{v',v'}$, 
+          we know $\tau^*(B_v,B''_{v'},\beta^*_{v',v'})$ and $\beta_{v,v'} = \beta^*_{v',v'}$.
+          Hence the result holds by taking $u = B_v$ and $u' = B''_{v'}$ and showing
+          $\beta^*_{v',v'} = \beta^*_{v,v'}$. Note that we have shown $\beta_{v,v'} = \beta_{v',v}$, 
+          so STS $\beta_{v',v} = \beta^*_{v,v'}$. 
+          So, applying Fact~\ref{fact:10} with $v',v$, we know
+          \eval{[v'/a]B}{B_{v'}}, \eval{[v/a]B'}{B'_{v}}, and $\tau(B_{v'},B'_{v},\beta_{v',v})$. 
+          By Fact~\ref{fact:3}$_{v,v'}$, we know 
+          \eval{[v/a]B'}{B'_{v}}, \eval{[v'/a]B''}{B''_{v'}}, and $\tau^*(B'_{v},B''_{v'},\beta^*_{v,v'})$. 
+          Now by Fact~\ref{fact:4}$_{v',v}$ with $C =  B''_{v'}$ and $\beta' = \beta^*_{v,v'}$, 
+          we know $\tau^*(B_{v'}, B''_{v'}, \beta^*_{v,v'})$ and $\beta_{v',v} = \beta^*_{v,v'}$, as required.
+        \item $R \sim R'' \in \kappa(\alpha',a.\beta')$. Since $\alpha' \triangleq \alpha^* = \alpha$, 
+          to apply Lemma~\ref{lemma:kappa}, STS $\beta' \triangleq \beta^* = \beta$, which was shown above.
+        \item \begin{gather*}
+      \phi' = \{(\lam{a}{\_}{M}, \lam{a}{}{M'}) \mid \\
+  \sameComp{\isOf{a}{\alpha^*}}{M}{M'}{\beta^*}\\
+  \land\fequiv{\cost{a.M}}{\cost{a.M'}}\\
+  \land\eval{R}{\relpot{a}{P}{a.b}{Q}}, \eval{R''}{\relpot{a}{P''}{a.b}{Q''}}\\
+  \land\widehat{a.P} \succeq \cost{a.M} + \{(v, \widehat{a.Q}(v,\widehat{a.M}(v))) \mid \forall v.\, \alpha^*(v,v)\}\\
+        \land\widehat{a.P''} \succeq \cost{a.M'} + \{(v, \widehat{a.Q''}(v,\widehat{a.M'}(v))) \mid \forall v.\, \alpha^*(v,v)\}\} 
+      \end{gather*}
+          Thus STS
+          \begin{gather*}
+            \widehat{a.P} \succeq \cost{a.M} + \{(v, \widehat{a.Q}(v,\widehat{a.M}(v))) \mid \forall v.\, \alpha^*(v,v)\}\\
+          \iff \widehat{a.P'} \succeq \cost{a.M} + \{(v, \widehat{a.Q'}(v,\widehat{a.M}(v))) \mid \forall v.\, \alpha^*(v,v)\} 
+          \end{gather*}
+          Which holds by Lemma~\ref{lemma:dominance}.
+      \end{itemize}
+      Lastly, we NTS $\phi = \phi'$. Since the value PERs are determined by $\alpha^* = \alpha'$, $\beta^* = \beta'$, 
+      and 
+          \begin{gather*}
+            \widehat{a.P''} \succeq \cost{a.M'} + \{(v, \widehat{a.Q''}(v,\widehat{a.M}(v))) \mid \forall v.\, \alpha^*(v,v)\}\\
+          \iff \widehat{a.P'} \succeq \cost{a.M'} + \{(v, \widehat{a.Q'}(v,\widehat{a.M}(v))) \mid \forall v.\, \alpha^*(v,v)\} 
+          \end{gather*}
+          by Lemma~\ref{lemma:asympsum},
+      we conclude $\phi^* = \phi'$.
+  \item $\forall C,\phi'.\, \tau^*(C,S,\phi') \implies \tau^*(C,T,\phi') \land \phi = \phi'$. Similar to above.
+  \end{enumerate}
+
+\end{itemize}
+\end{enumerate}
+\end{proof}
+
+
+\begin{lemma}
+$\tau_n$ is a type system for all $n$.
+\end{lemma}
+
+\begin{proof}
+Induction on $n$.
+\begin{itemize}
+\item $n = 0$:\\
+Since $v_0 = \emptyset$, $\tau_0 = \mu \tau.\, \text{Types}(\emptyset, \tau)$. 
+\end{itemize}
+\end{proof}
