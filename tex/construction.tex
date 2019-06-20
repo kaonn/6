@@ -33,168 +33,44 @@ Notation:
   for all $u,u'$ s.t. $\beta_{v,v'}(u,u')$, 
   \eval{[v/a,u/b]M}{w}, \eval{[v'/a,u'/b]M'}{w'}, and $\gamma_{{v,v}_{u,u'}}(w,w')$.
   \item $\omega = \mu \alpha.\, \{(\zero,\zero)\} \cup \{(\suc{v},\suc{v'}) \mid \alpha(v,v')\}$
-  \item Given \sameComp{\isOf{a}{\alpha}}{P}{P}{\omega} and
-      \sameComp{\isOf{a}{\alpha}}{P'}{P'}{\omega}, 
-    \equivComp{\isOf{a}{\alpha}}{P}{P'} when \fequiv{\widehat{a.P}}{\widehat{a.P'}}
-  \item Given 
-      \sameComp{\isOf{a}{\alpha}, \isOf{b}{\beta}}{Q}{Q}{\omega}
-      and \sameComp{\isOf{a}{\alpha}, \isOf{b}{\beta}}{Q'}{Q'}{\omega}, 
-      \equivComp{\isOf{a}{\alpha},\isOf{b}{\beta}}{Q}{Q'} when \fequiv{\widehat{a,b.Q}}{\widehat{a,b.Q'}}
-  \item $\kappa(\alpha, a.\beta) =
-    \{(\relpot{a}{P}{a.b}{Q}, \relpot{a}{P'}{a.b}{Q'}) \mid \\
-      \sameComp{\isOf{a}{\alpha}}{P}{P}{\omega}\\
-      \land\sameComp{\isOf{a}{\alpha}}{P'}{P'}{\omega}\\
-      \land\sameComp{\isOf{a}{\alpha}, \isOf{b}{\beta}}{Q}{Q}{\omega}\\
-      \land\sameComp{\isOf{a}{\alpha}, \isOf{b}{\beta}}{Q'}{Q'}{\omega}\\
-      \land\equivComp{\isOf{a}{\alpha}}{P}{P'}\\
-      \land\equivComp{\isOf{a}{\alpha},\isOf{b}{\beta}}{Q}{Q'}\\
-    \}$
 \end{enumerate}
-
-Given a computation $\sameComp{\isOf{a}{\alpha}}{M}{M}{\beta}$, 
-define the graph of a computation: $\widehat{a.M} = \{(v,u) \mid \forall.\, \alpha(v,v) \land \evalCost{[v/a]M}{c}{u}\}$.
-Further, define its cost function: $\cost{a.M} = \{(v,c) \mid \forall.\, \alpha(v,v) \land \evalCost{[v/a]M}{c}{u}\}$.
-Note that $\widehat{a.M} : \term \to \term$ and $\cost{a.M} : \term \to \mathbb{N}$, 
-where $dom(\widehat{a.M}) = dom(\cost{a.M}) = \term \cap \{v \mid \alpha(v,v)\}$ and $codom(\widehat{a.M}) = \term \cap \{u \mid \exists v.\, \alpha(v,v) \land \beta_{v,v}(u,u)\}$.
-Thus we notate it as $\widehat{a.M} : \isOf{a}{\alpha} \to \beta$, $\cost{a.M} : \alpha \to \mathbb{N}$.
-
-For a computation with two free variables, $\sameComp{\isOf{a}{\alpha}, \isOf{b}{\beta}}{M}{M}{\gamma}$, define the graph as 
-$\widehat{M} = \{((v,u),w) \mid \forall v.\, \alpha(v,v) \land \forall u,u.\, \beta_{v,v}(u,u).\, \eval{[v/a,u/b]M}{w}\}$. 
-Thus $\widehat{a,b.M} : \term \times \term \to \term$, 
-where $dom(\widehat{a,b.M}) = \term \times \term \cap \{((v,u) \mid \alpha(v,v) \land \beta_{v,v}(u,u)\}$ and 
-$codom(\widehat{a,b.M}) = \term  \cap \{w \mid \exists v,v.\, \alpha(v,v) \land \exists u,u.\, \beta_{v,v}(u,u) \land \gamma_{v,v_{u,u}}(w,w)\}$.
-Notate this as $\widehat{a,b.M} : \isOf{a}{\alpha} \times \isOf{b}{\beta} \to \gamma$.
-
-\begin{definition}
-  Given functions $f, g : A \to \mathbb{N}$, 
-\fequiv{f}{g} iff there exists $C \in \mathbb{N}$ s.t. for all but finitely many $a \in A$,  
- $f(a) \le C \cdot g(a)$ and $g(a) \le C \cdot f(a)$.
-\end{definition}
-
-\begin{lemma}\label{lemma:asymp}
-  $\fequiv{f}{g}$ is an equivalence relation.
-\end{lemma}
-
-\begin{proof}
-  Suffices to show reflexivity, symmetry, and transitivity.
-  \begin{itemize}
-    \item $\fequiv{f}{f}$: holds for $C = 1$.
-    \item $\fequiv{f}{g} \implies \fequiv{g}{f}$. Clearly holds since the definition of $\asymp$ is symmetric in $f$ and $g$.
-    \item $\fequiv{f}{g} \land \fequiv{g}{h} \implies \fequiv{f}{h}$. Suppose \fequiv{f}{g} and \fequiv{g}{h}.
-      Then there are $C_1,C_2 \in \mathbb{N}$ s.t. for all but finitely many $a \in A$, 
-      \begin{gather}
-        f(a) \le C_1 \cdot g(a) \text{ and } g(a) \le C_1 \cdot f(a) \label{eq:1}\\
-        g(a) \le C_2 \cdot h(a) \text{ and } h(a) \le C_2 \cdot g(a) \label{eq:2}
-      \end{gather}
-      It suffices to find $C_3$ s.t for all but finitely many $a \in A$,  $f(a) \le C_3 \cdot h(a)$ and $h(a) \le C_3 \cdot f(a)$.
-      By Eq~\ref{eq:2}, $C_1 \cdot g(a) \le C_1 C_2 \cdot h(a)$ for cofinitely many $a \in A$. Hence 
-      $f(a) \le C_1 C_2 h(a)$ for cofinitely many $a \in A$. Similarly, by Eq~\ref{eq:1}, $C_2 g(a) \le C_2 C_1 \cdot f(a)$ for cofinitely many $a \in A$. Hence 
-      $h(a) \le C_2 C_1 f(a)$. Thus the result holds by taking $C_3 = C_1 C_2$.
-  \end{itemize}
-\end{proof}
-
-\begin{corollary} \label{lemma:kappa}
-  Given that $\alpha$ is a PER and $\beta$ is a family of PERs,
-  $R \sim R' \in \kappa(\alpha, a.\beta)$ is also a PER.
-\end{corollary}
-
-\begin{lemma}
-  Given $f, f' : \isOf{a}{\alpha} \times \isOf{b}{\beta} \to \omega$, 
-  \fequiv{f}{f'} and \sameComp{\isOf{a}{\alpha}}{M}{M'}{\beta}, \fequiv{f\circ (\widehat{M},id) \circ dup}{f'\circ (\widehat{M'},id) \circ dup}, 
-  where $dup : A \to A \times A$, $a \mapsto (a,a)$.
-\end{lemma}
-
-\begin{proof}
-  By assumption, there is a $C \in \mathbb{N}$ s.t. for cofinitely $(a,b) \in \isOf{a}{\alpha} \times \isOf{b}{\beta}$, 
-  $f(a,b) \le C \cdot f'(a,b) \text{ and } f'(a,b) \le C \cdot f'(a,b)$. 
-  Let $\alpha(a,a)$. Then by definition, $\beta(\widehat{M}(a), \widehat{M'}(a))$. By previous, there can be only cofinitely many pairs 
-  s.t.   $(f \circ (\widehat{M},id) \circ dup)(a) \le C \cdot (f'\circ (\widehat{M'},id) \circ dup) (a)$ and 
-  $(f' \circ (\widehat{M'},id) \circ dup)(a) \le C \cdot (f\circ (\widehat{M},id) \circ dup) (a)$, hence the result holds.
-\end{proof}
-
-\begin{lemma}\label{lemma:asympsum}
-  Given functions $f_1, g_1, f_2, g_2 : A \to \mathbb{N}$ s.t. \fequiv{f_1}{g_1} and \fequiv{f_2}{g_2}, 
-  \fequiv{f_1 + f_2}{g_1 + g_2}.
-\end{lemma}
-
-\begin{proof}
-  Suppose \fequiv{f_1}{g_1} and \fequiv{f_2}{g_2}. Then:
-  \begin{enumerate}
-    \item $\exists C_1.\, f_1(a) \le C_1 \cdot g_1(a)$ and $g_1(a) \le C_1 \cdot f_1(a)$ for cofinitely many $a \in A$.
-    \item $\exists C_2.\, f_2(a) \le C_2 \cdot g_2(a)$ and $g_2(a) \le C_2 \cdot f_2(a)$ for cofinitely many $a \in A$.
-  \end{enumerate}
-  NTS there is a $C$ s.t. 
-  \begin{enumerate}
-    \item $(f_1 + f_2)(a) \le C \cdot (g_1 + g_2)(a)$ 
-    \item $(g_1 + g_2)(a) \le C \cdot (f_1 + f_2)(a)$ \label{req:2}
-  \end{enumerate}
-  for cofinitely many $a \in A$. Take $C = C_1 + C_2$. Then:
-  \begin{align*}
-    &f_1(a) \le C \cdot g_1(a) \tag{assumption}\\
-    &f_2(a) \le C \cdot g_2(a) \tag{assumption}\\
-    \implies& f_1(a) + f_2(a) \le C \cdot g_1(a) + C \cdot g_2(a)\\
-    \implies& (f_1 + f_2)(a) \le C \cdot (g_1 + g_2)(a)\\
-  \end{align*}
-  Requirement \ref{req:2} holds similarly.
-\end{proof}
-
-\begin{definition}
-  Given functions $f, g : A \to \mathbb{N}$, 
-$f \succeq g$ iff there exists $C \in \mathbb{N}$ s.t. for all but finitely many $a \in A$,  
-  $C \cdot f(a) \ge g(a)$.
-\end{definition}
-
-\begin{lemma}\label{lemma:dominance}
-  Given functions $f,f',g, g' : A \to \mathbb{N}$ s.t. \fequiv{g}{g'}, if 
-  $f \succeq g$, then $f' \succeq g'$.
-\end{lemma}
-
-\begin{proof}
-  Suppose  $f \succeq g$. Then there's a $C$ s.t. 
-  $C \cdot f(a) \ge g(a)$ for cofinitely many $a \in A$.
-  Suffices to give $D$ s.t. $D \cdot f'(a) \ge g'(a)$ for cofinitely many $a \in A$.
-  Since \fequiv{g}{g'}, there's a $C_1$ s.t. 
-  $g(a) \le C_1 \cdot g'(a)$ and $g'(a) \le C_1 \cdot g(a)$ for cofinitely $a \in A$.
-  Hence $C C_1 \cdot f(a) \ge C_1 \cdot g(a)$ for cofinitely many $a \in A$.
-  Thus $C C_1 \cdot f(a) \ge g'(a)$ for cofinitely many $a \in A$. 
-  Furthermore, since \fequiv{f}{f'}, there's a $C_2$ s.t. 
-  $f(a) \le C_2 \cdot f'(a)$ and $f'(a) \le C_2 \cdot f(a)$ for cofinitely $a \in A$.
-  Thus $C C_1 \cdot f(a) \le C C_1 C_2 \cdot f'(a)$ for cofinitely $a \in A$.
-  Hence $C C_1 C_2 \cdot f'(a) \ge g'(a)$ for cofinitely $a \in A$, and take $D = C C_1 C_2$.
-\end{proof}
 
 Construct the type systems $\tau_n$ as the least fixed-point(s) of the 
 monotone function defined by the various clauses: 
 
 \begin{align*}
   \text{Nat} &= \{(\nat,\nat,\phi) \mid \phi = \omega\}\\
+  \iffalse
   \text{Pot}(\tau,\pi) &= 
     \{(\relpotty{A}{a}{B}, \relpotty{A'}{a}{B'}, \phi) \mid &\\
     &\exists \alpha.\, \sameType{A}{A'}{\alpha}{\tau} \\
     &\land\exists \beta.\, \sameTypeOne{a}{\alpha}{B}{B'}{\beta}{\pi} \\
     &\land \phi = \kappa(\alpha,a.\beta)
     \}\\
+    \fi
   \text{Fun}(\tau, \pi) &=
   \{(\arrabt{A}{a.B}{R}, \arrabt{A'}{a.B'}{R'}, \phi) 
   \mid & \\
   &\exists \alpha.\, \sameType{A}{A'}{\alpha}{\tau} \\
   &\land\exists \beta.\, \sameTypeOne{a}{\alpha}{B}{B'}{\beta}{\pi} \\
+  \iffalse
   &\land R \sim R' \in \kappa(\alpha, a.\beta)\\
+  \fi
   \land\phi &= \{(\lam{a}{\_}{M}, \lam{a}{}{M'}) \mid \\
   &\sameComp{\isOf{a}{\alpha}}{M}{M'}{\beta}\\
+  \iffalse
   &\land \fequiv{\cost{a.M}}{\cost{a.M'}}\\
   &\land \eval{R}{\relpot{a}{P}{a.b}{Q}}, \eval{R'}{\relpot{a}{P'}{a.b}{Q'}}\\
   &\land \widehat{a.P} \succeq \cost{a.M} + \{(v, \widehat{a.Q}(v,\widehat{a.M}(v))) \mid \forall v.\, \alpha(v,v)\}\\
   &\land \widehat{a.P'} \succeq \cost{a.M'} + \{(v, \widehat{a.Q'}(v,\widehat{a.M'}(v))) \mid \forall v.\, \alpha(v,v)\}
+  \fi
    \}
   \}\\
   \text{Comp}(\tau) &= \{
   (\ccomp{P}{\isOf{a}{A}}{Q}, \ccomp{P'}{\isOf{a}{A'}}{Q'}, \phi) \mid \\
   &\exists \alpha.\, \sameType{A}{A'}{\alpha}{\tau}\\
   &\land \sameComp{}{P}{P'}{\omega}\\ 
-  &\land \sameComp{\isOf{a}{\alpha}}{Q}{Q}{\omega}\\
-  &\land \sameComp{\isOf{a}{\alpha}}{Q'}{Q'}{\omega}\\
-  &\land \fequiv{\widehat{a.Q}}{\widehat{a.Q'}}\\
+  &\land \sameComp{\isOf{a}{\alpha}}{Q}{Q'}{\omega}\\
   \land\phi &= \{(\thunk{M}, \thunk{M'}) \mid \\
   &\sameComp{}{M}{M'}{\alpha}\\
   &\land \evalCost{M}{c}{v}, \evalCost{M'}{c'}{v'}, \eval{P}{\bar{p}},  
@@ -203,7 +79,8 @@ monotone function defined by the various clauses:
   \}
   \}\\
   \text{Type}(\tau) &= \{(\type{i}, \type{i}, \phi) \mid \exists \phi.\, \tau(\type{i}, \type{i}, \phi)\}\\
-  v_n &= \{(\type{i}, \type{i}, \phi) \mid i < n \land \phi = \{(A,B) \mid \exists \alpha.\, \tau_i(A,B,\alpha)\}\}\\
+  v_n &= \{(\type{i}, \type{i}, \phi) \mid i < n \land \phi = \{(A,B) 
+  \mid \exists \alpha.\, \sameType{A}{B}{\alpha}{\tau_i}\}\}\\
   \text{Types}(v,\tau) &= \text{Fun}(\tau,\tau) \cup \text{Pot}(\tau,\tau) \cup \text{Nat} \cup \text{Comp}(\tau) \cup \text{Type}(v)\\
   \tau_n &= \mu \tau.\, \text{Types}(v_n,\tau)
 \end{align*}
@@ -245,10 +122,11 @@ A type system is a possible type system $\tau$ which has the following propertie
 \item Transitivity: $\tau(A,B,\phi)$ and $\tau(B,C,\phi)$ implies $\tau(A,C,\phi)$.
 \end{enumerate}
 
-\begin{lemma}
+\begin{lemma}(TYPES)\label{lemma:types}
 If $v$ is a type system, then $\tau^* = \mu \tau.\, \text{Types}(v,\tau)$ is a type system.
 \end{lemma}
 
+\iffalse
 \begin{proof}
 blah
 \begin{enumerate}
@@ -294,6 +172,122 @@ Define $\tau$ where all elements have the above properties:
 
 Let $(S,T,\phi) \in \text{Types}(v,\tau)$. NTS $(S,T,\phi) \in \tau$.
 \begin{itemize}
+  \item $(S,T,\phi) = (\ccomp{P}{\isOf{a}{A}}{Q}, \ccomp{P'}{\isOf{a}{A'}}{Q'}, \phi)$\\
+  By assumption, we know:
+    \begin{enumerate}[label=\textbf{\Alph*)}]
+     \item $\exists \alpha.\, \sameType{A}{A'}{\alpha}{\tau}$. This means 
+  \eval{A}{A_0}, \eval{A'}{A'_0}, and $\tau(A_0,A'_0,\alpha)$. By definition of $\tau$, we know: 
+  \begin{enumerate}[label=\textbf{A1.\arabic*}]
+    \item $\alpha$ is a PER 
+    \item $\tau^*(A_0,A'_0,\alpha)$ and $\tau^*(A'_0,A_0,\alpha)$ \label{fact:alphaper}
+    \item $\forall C,\alpha'.\, \tau^*(A'_0,C,\alpha') \implies \tau^*(A_0,C,\alpha') \land \alpha = \alpha'$ \label{fact:propA}
+    \item $\forall C,\alpha'.\, \tau^*(C,A_0,\alpha') \implies \tau^*(C,A'_0,\alpha') \land \alpha = \alpha'$
+   \end{enumerate}
+     \item \sameComp{}{P}{P'}{\omega} \label{fact:peq}
+     \item \sameComp{\isOf{a}{\alpha}}{Q}{Q'}{\omega} \label{fact:qeq}
+     \item $\phi = \{(\thunk{M}, \thunk{M'}) \mid \\
+  \sameComp{}{M}{M'}{\alpha}\\
+  \land \evalCost{M}{c}{v}, \evalCost{M'}{c'}{v'}, \eval{P}{\bar{p}},  
+    \eval{P'}{\bar{p'}}, \eval{[v/a]Q}{\bar{q}}, \eval{[v'/a]Q'}{\bar{q'}}\\
+  \land p \ge c + q \land p' \ge c' + q'\\
+  \}$
+    \end{enumerate}
+    We NTS:
+    \begin{itemize}
+      \item $\phi$ is a PER. For symmetry, let $\phi(\thunk{M}, \thunk{M'})$. 
+        NTS $\phi(\thunk{M'}, \thunk{M})$. 
+        First, \sameComp{}{M}{M'}{\alpha} holds by assumption and the fact that 
+        $\alpha$ is a PER by \textbf{A1.1}. Next, given 
+        \begin{gather*}
+          \land \evalCost{M}{c}{v}, \evalCost{M'}{c'}{v'}, \eval{P}{\bar{p}},\\
+          \eval{P'}{\bar{p'}}, \eval{[v/a]Q}{\bar{q}}, \eval{[v'/a]Q'}{\bar{q'}},\\
+          p \ge c + q \land p' \ge c' + q'
+        \end{gather*}
+        we need to show 
+        $p \ge c'  + q$ and $p' \ge c + q'$. This is true since $p = p'$ and $q = q'$ 
+        by Fact~\ref{fact:peq} and ~\ref{fact:qeq}.
+        For transitivity, let $\phi(\thunk{M}, \thunk{M'})$ and 
+        $\phi(\thunk{M'}, \thunk{M''})$. NTS $\phi(\thunk{M}, \thunk{M''})$. Again,
+        \sameComp{}{M}{M''}{\alpha} holds by assumption and the fact that $\alpha$ is 
+        a PER. Next, given 
+        \begin{gather*}
+          \land \evalCost{M}{c}{v}, \evalCost{M'}{c'}{v'}, \evalCost{M''}{c''}{v''},\\
+          \eval{P}{\bar{p}}, \eval{P'}{\bar{p'}},\\ 
+          \eval{[v/a]Q}{\bar{q}}, \eval{[v'/a]Q'}{\bar{q'}}, 
+            \eval{[v'/a]Q}{\bar{q_1}} \eval{[v''/a]Q'}{\bar{q''}}\\
+          p \ge c + q \land p' \ge c' + q'\\
+          p \ge c' + q_1 \land p' \ge c'' + q''
+        \end{gather*}
+        we need to show $p \ge c  + q$ and $p' \ge c'' + q''$, which is the case.
+      \item $\tau^*(\ccomp{P}{\isOf{a}{A}}{Q}, \ccomp{P'}{\isOf{a}{A'}}{Q'}, \phi)$ and
+        $\tau^*(\ccomp{P'}{\isOf{a}{A'}}{Q'}, \ccomp{P}{\isOf{a}{A}}{Q}, \phi)$.
+        For the former, suffices to show:
+        \begin{itemize}
+           \item $\exists \alpha^*.\, \sameType{A}{A'}{\alpha^*}{\tau^*}$. This holds by 
+             taking $\alpha^* = \alpha$. 
+           \item \sameComp{}{P}{P'}{\omega}. This holds by Fact~\ref{fact:peq}.
+           \item \sameComp{\isOf{a}{\alpha}}{Q}{Q'}{\omega}. This holds by 
+             Fact~\ref{fact:qeq}.
+        \end{itemize}
+        For the latter:
+        \begin{itemize}
+           \item $\exists \alpha^*.\, \sameType{A'}{A}{\alpha^*}{\tau^*}$. This holds by 
+             taking $\alpha^* = \alpha$. 
+           \item \sameComp{}{P'}{P}{\omega}. This holds by Fact~\ref{fact:peq} and 
+             the fact that $\omega$ is a PER.
+           \item \sameComp{\isOf{a}{\alpha^*}}{Q'}{Q}{\omega}. 
+             Let $\alpha(v,v')$. Suffices to show that 
+             \eval{[v/a]Q'}{u}, \eval{[v'/a]Q}{u'}, and $\omega(u,u')$ for some $u,u'$. 
+             By Fact~\ref{fact:qeq}, we know \eval{[v'/a]Q}{Q_{v'}}, 
+             \eval{[v/a]Q'}{Q'_{v}}, and $\omega(Q_{v'}, Q'_v)$. Thus suffices to take 
+             $u = Q_{v'}, u' = Q'_v$.
+        \end{itemize}
+      \item Let $C, \phi'$ s.t. $\tau^*(\ccomp{P'}{\isOf{a}{A'}}{Q'},C,\phi')$. NTS
+        $\tau^*(\ccomp{P}{\isOf{a}{A}}{Q},C,\phi')$ and $\phi = \phi'$.
+        From the assumption, we know:
+        \begin{enumerate}
+          \item $C = \ccomp{P''}{\isOf{a}{A''}}{Q''}$ for some $P'',A'',Q''$.
+          \item $\exists \alpha^*.\, \sameType{A'}{A''}{\alpha^*}{\tau^*}$. This means  
+            \eval{A'}{A'_0}, \eval{A''}{A''_0}, and $\tau^*(A'_0,A''_0,\alpha^*)$. 
+            \label{fact:factA}
+          \item \sameComp{}{P'}{P''}{\omega} \label{fact:peq1}
+          \item \sameComp{\isOf{a}{\alpha^*}}{Q'}{Q''}{\omega} \label{fact:qeq1}
+          \item $\phi' = \{(\thunk{M}, \thunk{M'}) \mid \\
+  \sameComp{}{M}{M'}{\alpha^*}\\
+  \land \evalCost{M}{c}{v}, \evalCost{M'}{c'}{v'}, \eval{P'}{\bar{p'}},  
+    \eval{P''}{\bar{p''}}, \eval{[v/a]Q'}{\bar{q'}}, \eval{[v'/a]Q''}{\bar{q''}}\\
+  \land p' \ge c + q' \land p'' \ge c' + q''\\
+            \}$ \label{fact:phiprime}
+        \end{enumerate}
+        For $\tau^*(\ccomp{P}{\isOf{a}{A}}{Q}, \ccomp{P''}{\isOf{a}{A''}}{Q''},\phi')$, 
+        STS:
+        \begin{itemize}
+          \item $\exists \alpha'.\, \sameType{A}{A''}{\alpha'}{\tau^*}$. 
+            Since $\Downarrow$ is deterministic, this means  
+            \eval{A}{A_0}, \eval{A''}{A''_0}, and $\tau^*(A_0,A''_0,\alpha')$.
+            By Fact~\ref{fact:propA} and~\ref{fact:factA}, we know 
+            $\tau^*(A_0,A''_0,\alpha^*)$ and $\alpha = \alpha^*$.
+            Hence the result holds with $\alpha' = \alpha^*$.
+          \item \sameComp{}{P}{P''}{\omega}. Since $\omega$ is a PER, this follows from
+            Fact~\ref{fact:peq} and~\ref{fact:peq1}.
+          \item \sameComp{\isOf{a}{\alpha^*}}{Q}{Q''}{\omega}. By applying 
+            Lemma~\ref{omega:per} with Fact~\ref{fact:qeq} and~\ref{fact:qeq1}.
+          \item $\phi' = \{(\thunk{M}, \thunk{M'}) \mid \\
+  \sameComp{}{M}{M'}{\alpha'}\\
+  \land \evalCost{M}{c}{v}, \evalCost{M'}{c'}{v'}, \eval{P}{\bar{p}},  
+    \eval{P''}{\bar{p''}}, \eval{[v/a]Q}{\bar{q}}, \eval{[v'/a]Q''}{\bar{q''}}\\
+  \land p \ge c + q \land p'' \ge c' + q''\\
+            \}$.
+            First, \sameComp{}{M}{M'}{\alpha'} since $\alpha' = \alpha^*$ and 
+            by Fact~\ref{fact:phiprime}. Next, NTS
+            \[
+              p' \ge c + q' \land p'' \ge c' + q'' \iff
+              p \ge c + q \land p'' \ge c' + q''
+            \]
+            This is true since $p = p'$ by Lemma~\ref{omega:values} and 
+            $q = q'$ by Lemma~\ref{omega:values}.
+        \end{itemize}
+    \end{itemize}
 \item $(S,T,\phi) =(\arrabt{A}{a.B}{R}, \arrabt{A'}{a.B'}{R'}, \phi)$\\
     From the assumption, \fact{we know}{1} (some conditions omitted): 
   \begin{enumerate}
@@ -448,15 +442,12 @@ Let $(S,T,\phi) \in \text{Types}(v,\tau)$. NTS $(S,T,\phi) \in \tau$.
 \end{enumerate}
 \end{proof}
 
+\fi
 
 \begin{lemma}
 $\tau_n$ is a type system for all $n$.
 \end{lemma}
 
 \begin{proof}
-Induction on $n$.
-\begin{itemize}
-\item $n = 0$:\\
-Since $v_0 = \emptyset$, $\tau_0 = \mu \tau.\, \text{Types}(\emptyset, \tau)$. 
-\end{itemize}
+  Induction on $n$ with Lemma~\ref{lemma:types}
 \end{proof}

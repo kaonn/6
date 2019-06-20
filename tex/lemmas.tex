@@ -1,306 +1,198 @@
+\newcommand{\eqType}[2]{\ensuremath{#1 \doteq #2\; \mathsf{type}}}
+\newcommand{\eqComp}[3]{\ensuremath{#1 \doteq #2 \in #3}}
+\newcommand{\eqVal}[3]{\ensuremath{#1 \doteq #2 \in_0 #3}}
 
-\section{Lemmas}
-Define:
-\begin{gather*}
-    \zp \triangleq \ret{\zero}\\
-    \plus \triangleq \lam{x}{a}{\ret{\lam{y}{b}{\rec{x}{\ret{y}}{\_}{f}{\ret{\suc{f}}}}}}\\
-    \mult \triangleq \lam{x}{a}{\ret{\lam{y}{b}{\rec{x}{\ret{y}}{\_}{f}{\plus\; y\; f}}}}\\
-    \sub \triangleq \lam{x}{a}{\rec{x}{\ret{\lam{y}{b}{\ret{\zero}}}}{z}{f}{\ret{\lam{y}{b}{\rec{y}{\ret{\suc{p}}}{y'}{\_}{f y'}}}}}\\
-    \pmin \triangleq \lam{x}{a}{\ret{\lam{y}{b}{\seq{\sub\; x\; y}{d}{\rec{d}{\ret{x}}{\_}{\_}{\ret{y}}}}}}
-\end{gather*}
+\newcommand{\openEqComp}[4]{\ensuremath{#1 \gg #2 \doteq #3 \in #4}}
+\newcommand{\openEqVal}[4]{\ensuremath{#1 \gg #2 \doteq #3 \in_0 #4}}
+\newcommand{\openComp}[3]{\ensuremath{#1 \gg #2 \in #3}}
+\newcommand{\openTypeComp}[2]{\ensuremath{#1 \gg #2 \; \mathsf{type}}}
+\newcommand{\openEqTypeComp}[3]{\ensuremath{#1 \gg #2 \doteq  #3 \; \mathsf{type}}}
 
-\begin{lemma}\textnormal{(basis)}\label{lemma:basic}
-\isPot{\zp}, and for all \isVal{x}{\ret{\nat}} and \isVal{y}{\ret{\nat}}, \isPot{\plus\; x\; y}, 
- \isPot{\mult\; x\; y}, \isPot{\sub\; x\; y} and \isPot{\pmin\; x\; y}.
-\end{lemma}
+\newcommand{\eqCtx}[2]{\ensuremath{#1 \doteq #2}}
+\newcommand{\eqInst}[3]{\ensuremath{#1 \sim #2 \in #3}}
 
-Notation:
-\begin{gather*}
-\bind{M_1}{x}{M_2} \triangleq \seq{\thunk{M_1}}{x}{M_2}\\
-f\;v_1\;\dots\;v_n \triangleq \bind{f\;v_1}{r_1}{\bind{r_1\;v_2}{r_2}{\dots,\bind{r_{n-2}\;v_{n-1}}{r_{n-1}}{r_{n-1}\;v_n}}}\\
-\varphi^+ \triangleq \bind{\varphi}{v}{\ret{\suc{v}}}\\
-\end{gather*}
+\begin{definition}(Types and Equality)
+  Given a type system $\tau$, 
+  \begin{enumerate}
+    \item \eqType{A}{B} when \sameType{A}{B}{\alpha}{\tau} for some $\alpha$.
+    \item \eqComp{M}{M'}{A} when presupposing \eqType{A}{A},
+      \sameType{A}{A}{\alpha}{\tau} and \sameComp{}{M}{M'}{\alpha} for some $\alpha$.
+    \item \eqVal{v}{v'}{A} when presupposing \eqType{A}{A},
+      \sameType{A}{A}{\alpha}{\tau} and $\alpha(v,v')$ for some $\alpha$.
+  \end{enumerate}
+\end{definition}
 
-\begin{lemma}\textnormal{(Recursor)}\label{lemma:recursor}
-Given 
-\begin{gather}
-\gammaToPot{\isOf{x}{\ret{\nat}}}{\varphi_0},\\
-\gammaToPot{\isOf{x}{\ret{\nat}},\isOf{z}{\ret{\nat}}, \isOf{g}{\comp{\nat}}}{\varphi_1},\\
-\gammaToTypeComp{\isOf{x}{\ret{\nat}}}{\star}{B},\\
-\gammaToPot{\isOf{x}{\ret{\nat}},\isOf{y}{B}}{\varrho_0},\\
-\gammaToPot{\isOf{x}{\ret{\nat}}, \isOf{z}{\ret{\nat}}, \isOf{g}{\comp{\nat}}, \isOf{y}{B}}{\varrho_1},\\
-\gammaToComp{\cdot}{[\zero/x]\varphi_0}{M_0}{\isOf{y}{[\zero/x]B}}{[\zero/x]\varrho_0},\\
-\gammaToComp{\isOf{z}{\ret{\nat}}}{[\suc{z}/x]\lsub{\rec{z}{\varphi_0}{z}{g}{\varphi_1}}{g}{\varphi_1}}
-{\lsub{\rec{z}{M_0}{z}{f}{M_1}}{f}{M_1}\\}{\isOf{y}{[\suc{z}/x]B}}{[\suc{z}/x]\lsub{\rec{z}{\varrho_0}{z}{g}{\varrho_1}}{g}{\varrho_1}}
-\end{gather}
-Then 
-\gammaToComp{\isOf{x}{\ret{\nat}}}{\rec{x}{\varphi_0}{z}{g}{\varphi_1}^+}{\rec{x}{M_0}{z}{f}{M_1}}{\isOf{y}{B}}{
-\rec{x}{\varrho_0}{z}{g}{\varrho_1}}
-\end{lemma}
+\begin{definition}(Context)
+  \eqCtx{\Gamma}{\Gamma'} when
+  \begin{enumerate}
+    \item \eqCtx{\cdot}{\cdot}
+    \item \eqCtx{\isOf{a}{A},\Gamma}{\isOf{a}{A'},\Gamma'} when \eqType{A}{A'} and for all 
+      \eqVal{v}{v'}{A}, \eqCtx{[v/a]\Gamma}{[v'/a]\Gamma'}
+  \end{enumerate}
+\end{definition}
 
-\begin{proof}
-Presuppositions: assumed by given. Let \isVal{n}{\ret{\nat}}. STS \gammaToComp{\cdot}{[n/x]\rec{x}{\varphi_0}{z}{g}{\varphi_1}^+}{\rec{n}{M_0}{z}{f}{M_1}}{\isOf{y}{[n/x]B}}{
-[n/x]\rec{x}{\varrho_0}{z}{g}{\varrho_1}}
-. Presuppositions: 
-\begin{enumerate}
-    \item \isTypeComp{\star}{[n/x]B}. By instantiating (2) with $n$ for $x$. 
-    \item \isPot{[n/x]\rec{x}{\varphi_0}{z}{g}{\varphi_1}^+}. By instantiating (1) with $n$ for $x$. 
-    \item \gammaToPot{\isOf{y}{[n/x]B}}{[n/x]\rec{x}{\varrho_0}{z}{g}{\varrho_1}}
-\end{enumerate}
-Next, induction on $n$: 
-\begin{itemize}
-    \item $n$ is $\zero$:\\
-    Then \step{\rec{\zero}{M_0}{z}{f}{M_1}}{M_0}. By (6), we know \evalCost{M_0}{c}{u} for some \isVal{u}{[\zero/x]B}.
-    By head expansion, \evalCost{\rec{\zero}{M_0}{z}{f}{M_1}}{c+1}{u}. 
-    Furthermore, we know \eval{[\zero/x]\varphi_0}{p}, \eval{[\zero/x,u/y]\varrho_0}{p'}, and $\toNat{p} \ge c + \toNat{p'}$. Furthermore, we know that 
-    \begin{align*}
-        &[\zero/x]\rec{x}{\varphi_0}{z}{g}{\varphi_1}^+\\ 
-        \mapsto & [\zero/x]\varphi_0^+\\
-        \mapsto^* &\seq{\thunk{\ret{p}}}{v}{\ret{\suc{v}}}\\
-        \mapsto& \ret{\suc{p}}\\
-    \end{align*}. Since $\toNat{\suc{p}} = \toNat{p} + 1$, STS that\\
-    \eval{[\zero/x,u/y]\rec{x}{\varrho_0}{z}{g}{\varrho_1}}{p''}
-    and that $p' \ge p''$. Evidently this is the case since
-    \step{[\zero/x,u/y]\rec{x}{\varrho_0}{z}{g}{\varrho_1}}{\eval{[\zero/x,u/y]\varrho_0}{p'}}.
-    \item $n$ is $\suc{n'}$ for some $n'$:\\
-    Then \step{\rec{\suc{n'}}{M_0}{z}{f}{M_1}}{\lsub{\rec{n'}{M_0}{z}{f}{M_1}}{f}{[n'/z]M_1}}. 
-    Instantiating (7) with $[n'/z]$, we know that \evalCost{\lsub{\rec{n'}{M_0}{z}{f}{M_1}}{f}{[n'/z]M_1}}{c}{u}, 
-    and by head expansion, \evalCost{\rec{\suc{n'}}{M_0}{z}{f}{M_1}}{c+1}{u}. Furthermore, we know
-    \begin{align*}
-        &\rec{\suc{n'}}{[\suc{n'}/x]\varphi_0}{z}{g}{[\suc{n'}/x]\varphi_1}^+\\
-        \mapsto& [\suc{z}/x]\lsub{\rec{z}{\varphi_0}{z}{g}{\varphi_1}}{g}{\varphi_1}^+\\
-        \mapsto^*& \ret{p}^+\\
-        \mapsto& \ret{\suc{p}}
-    \end{align*} and that 
-    \begin{align*}
-        &\rec{\suc{n'}}{[\suc{n'}/x]\varrho_0}{z}{g}{[\suc{n'}/x]\varrho_1}\\
-        \mapsto &[\suc{z}/x]\lsub{\rec{z}{\varrho_0}{z}{g}{\varrho_1}}{g}{\varrho_1}\\
-        \mapsto^* & \ret{p'}
-    \end{align*}
-    such that $\toNat{p} \ge c + \toNat{p'}$, which suffices for 
-    $\toNat{\suc{p}} \ge c+1 + \toNat{p'}$.
-\end{itemize}
-\end{proof}
+\begin{definition}(Substitution)
+  \eqInst{\gamma}{\gamma'}{\Gamma} when
+  \begin{enumerate}
+    \item \eqInst{\cdot}{\cdot}{\cdot}
+    \item \eqInst{v,\gamma}{v',\gamma'}{\isOf{a}{A},\Gamma} when
+      \eqVal{v}{v'}{A}, \eqInst{\gamma}{\gamma'}{[v/a]\Gamma}
+  \end{enumerate}
+\end{definition}
 
-\newpage
-\begin{lemma}\textnormal{(Recursor')}\label{lemma:recursor'}
-Given 
-\begin{gather}
-\gammaToPot{\cdot}{\varphi_0},\\
-\gammaToPot{\isOf{z}{\ret{\nat}}}{\varphi_1},\\
-\gammaToTypeComp{\isOf{x}{\ret{\nat}}}{\star}{B},\\
-\gammaToPot{\cdot}{\varrho_0},\\
-\gammaToPot{\isOf{z}{\ret{\nat}}}{\varrho_1},\\
-\gammaToComp{\cdot}{\varphi_0}{M_0}{\isOf{y}{[\zero/x]B}}{\varrho_0},\\
-\gammaToComp{\isOf{z}{\ret{\nat}},\isOf{f}{\ret{\ccomp{\zp}{\isOf{w}{[z/x]B}}{\zp}}}}{\varphi_1}
-{M_1}{\isOf{y}{[\suc{z}/x]B}}{\varrho_1},\\
-\gammaToVal{\cdot}{n}{\ret{\nat}}
-\end{gather}
-Then 
-\gammaToComp{\cdot}{\rec{n}{\varphi_0^+}{z}{g}{\bind{\varphi_1}{\phi_1}{\plus\; g\; \phi_1}^+}}{\rec{n}{M_0}{z}{f}{M_1}}{\isOf{y}{[n/x]B}}{
-\rec{n}{\varrho_0}{z}{g}{\bind{\varrho_1}{\rho_1}{\plus\;\rho_1\; g}}}
+\begin{definition}(Open Judgments)
+  \begin{enumerate}
+    \item \openEqTypeComp{\Gamma}{A}{A'} when for all \eqInst{\gamma}{\gamma'}{\Gamma}, 
+      \eqType{\gamma A}{\gamma A'}
+    \item \openEqComp{\Gamma}{M}{M'}{A} when for all \eqInst{\gamma}{\gamma'}{\Gamma}, 
+      \eqComp{\gamma M}{\gamma M'}{\gamma A}
+    \item \openEqVal{\Gamma}{v}{v'}{A} when for all \eqInst{\gamma}{\gamma'}{\Gamma}, 
+      \eqVal{\gamma v}{\gamma v'}{\gamma A}
+  \end{enumerate}
+\end{definition}
+
+\begin{lemma}(Sequence)
+  If \isComp{M_1}{A_1} and \openComp{\isOf{x}{A_1}}{M_2}{A_2}, then 
+  \isComp{\seq{\thunk{M_1}}{x}{M_2}}{\seq{\thunk{M_1}}{x}{A_2}}.
 \end{lemma}
 
 \begin{proof}
-Presuppositions: 
-\begin{enumerate}
-    \item \isTypeComp{\star}{[n/x]B}. By instantiating (11) with $n$ for $x$. 
-    \item \isPot{\rec{n}{\varphi_0^+}{z}{g}{\bind{\varphi_1}{\phi_1}{\plus\;\phi_1\;g}^+}}. TODO
-    \item \isPot{\rec{n}{\varrho_0}{z}{g}{\bind{\varrho_1}{\rho_1}{\plus\;\rho_1\; g}}}. TODO
-\end{enumerate}
-Next, induction on $n$: 
-\begin{itemize}
-    \item $n$ is $\zero$:\\
-    Then \step{\rec{\zero}{M_0}{z}{f}{M_1}}{M_0}. By (14), we know \evalCost{M_0}{c}{u} 
-    for some \isVal{u}{[\zero/x]B}.
-    By head expansion, \evalCost{\rec{\zero}{M_0}{z}{f}{M_1}}{c+1}{u}. 
-    Furthermore, we know \eval{\varphi_0}{p}, \eval{[u/y]\varrho_0}{p'}, and $\toNat{p} \ge c + \toNat{p'}$. Furthermore, we know that 
-    \begin{align*}
-        &\rec{\zero}{\varphi_0^+}{z}{g}{\bind{\varphi_1}{\phi_1}{\plus\;\phi_1\;g}^+}\\ 
-        \mapsto & \varphi_0^+\\
-        \mapsto^* &\seq{\thunk{\ret{p}}}{v}{\ret{\suc{v}}}\\
-        \mapsto& \ret{\suc{p}}
-    \end{align*}
-    Since $\toNat{\suc{p}} = \toNat{p} + 1$, STS that
-    \eval{[u/y]\rec{\zero}{\varrho_0}{z}{g}{\bind{\varrho_1}{\rho_1}{\plus\;\rho_1\;g}}}{p''}
-    and that $p' \ge p''$. Evidently this is the case since
-    \step{[u/y]\rec{\zero}{\varrho_0}{z}{g}{\bind{\varrho_1}{\rho_1}{\plus\; \rho_1\; g}}}{\eval{[u/y]\varrho_0}{p'}}.
-    \item $n$ is $\suc{n'}$ for some $n'$:\\
-    Then \step{\rec{\suc{n'}}{M_0}{z}{f}{M_1}}{\lsub{\rec{n'}{M_0}{z}{f}{M_1}}{f}{[n'/p]M_1}}. 
-    By induction, we know that 
-    \gammaToComp{\cdot}{\rec{n'}{\varphi_0^+}{z}{g}{\bind{\varphi_1}{\phi_1}{\plus\;\phi_1\;g}^+}}
-    {\rec{n'}{M_0}{z}{f}{M_1}}{\isOf{y}{[n'/x]B}}
-    {\rec{n'}{\varrho_0}{z}{g}{\plus\;g\;\varrho_1}}. This implies that 
-    \begin{gather}
-    \evalCost{\rec{n'}{M_0}{z}{f}{M_1}}{c}{u}, \\
-    \eval{\rec{n'}{\varphi_0^+}{z}{g}{\bind{\varphi_1}{\phi_1}{\plus\;\phi_1\;g}^+}}{p},\\
-    \eval{\rec{n'}{\varrho_0}{z}{g}{\bind{\varrho_1}{\rho_1}{\plus\;\rho_1\;g}}}{p'}, \text{ and that}\\
-    \toNat{p} \ge c + \toNat{p'}
-    \end{gather}
-    Instantiating (15) with $[n'/p, \thunk{\ret{u}}/f]$, we know that
-    \evalCost{\lsub{\ret{u}}{f}{[n'/p]M_1}}{c'}{u'},
-    and by head expansion, \evalCost{\rec{\suc{n'}}{M_0}{z}{f}{M_1}}{c+1+c'}{u'}. Furthermore, we know
-    \begin{align}
-        &\eval{[n'/z]\varphi_1}{q},\\
-        &\eval{[n'/z]\varrho_1}{q'}, \text{ and that }\\
-        &q \ge c' + q'
-    \end{align}
-    Expanding our current potential, we have:
-    \begin{align*}
-        &\rec{\suc{n'}}{\varphi_0^+}{z}{g}{\bind{\varphi_1}{\phi_1}{\plus\;\phi_1\;g}^+}\\
-        \mapsto& \lsub{\rec{n'}{\varphi_0^+}{z}{g}{\bind{\varphi_1}{\phi_1}{\plus\;\phi_1\;g}^+}}{g}{[n'/p]\bind{\varphi_1}{\phi_1}{\plus\;\phi_1\;g}^+}\\
-        \mapsto^*& \lsub{\ret{p}}{g}{\bind{[n'/z]\varphi_1}{\phi_1}{\plus\;\phi_1\;g}^+}\\
-        \mapsto& \bind{[n'/z]\varphi_1}{\phi_1}{\plus\;\phi_1\;p}^+\\
-        \mapsto^*& \bind{\ret{q}}{\phi_1}{\plus\;\phi_1\;p}^+\\
-        \mapsto& \plus\; q \; p ^+
-    \end{align*} and that 
-    \begin{align*}
-        &\rec{\suc{n'}}{\varrho_0}{z}{g}{\bind{\varrho_1}{\rho_1}{\plus\;\rho_1\; g}}\\
-        \mapsto& \lsub{\rec{n'}{\varrho_0}{z}{g}{\bind{\varrho_1}{\rho_1}{\plus\;\rho_1\; g}}}{g}{[n'/z]\bind{\varrho_1}{\rho_1}{\plus\;\rho_1\; g}}\\
-        \mapsto^*& \lsub{\ret{p'}}{g}{\bind{[n'/z]\varrho_1}{\rho_1}{\plus\;\rho_1\; g}}\\
-        \mapsto& \bind{[n'/z]\varrho_1}{\rho_1}{\plus\;\rho_1\; p'}\\
-        \mapsto^*& \bind{\ret{q'}}{\rho_1}{\plus\;\rho_1\; p'}\\
-        \mapsto& \plus\;q'\; p'
-    \end{align*}
-    Now it suffices to show $\toNat{\plus\; q \; p ^+} \ge c + 1 + c' + \toNat{\plus\;q'\; p'}$,
-    which holds by (20) and (23).
-\end{itemize}
+  First, we need to show \eqType{\seq{\thunk{M_1}}{x}{A_2}}{\seq{\thunk{M_1}}{x}{A_2}}.
+  By definition, STS \sameType{\seq{\thunk{M_1}}{x}{A_2}}{\seq{\thunk{M_1}}{x}{A_2}}{\alpha}{\tau} for some $\alpha$. 
+  By assumption, we know \sameType{A_1}{A_1}{\alpha_1}{\tau} for some $\alpha_1$ and 
+  that \eval{M_1}{v_1} and $\alpha_1(v_1,v_1)$. Hence $\eqVal{v_1}{v_1}{A_1}$.
+  By definition, \eqInst{(v_1,\cdot)}{(v_1,\cdot)}{(\isOf{x}{A_1},\cdot)}.
+  The second assumption gives \openEqTypeComp{\isOf{x}{A_1}}{A_2}{A_2}. 
+  Applying the definition with the above instance gives 
+  \eqType{[v_1/x]A_2}{[v_1/x]A_2}. This means \sameType{[v_1/x]A_2}{[v_1/x]A_2}{\alpha}{\tau}
+  for some $\alpha$. Since
+  \stepIn{\seq{\thunk{M_1}}{x}{A_2}}{*}{[v_1/x]A_2}, we are done.
+
+  Next, we need to show \isComp{\seq{\thunk{M_1}}{x}{M_2}}{\seq{\thunk{M_1}}{x}{A_2}}.
+  STS \sameComp{}{\seq{\thunk{M_1}}{x}{M_2}}{\seq{\thunk{M_1}}{x}{A_2}}{\alpha} for the $\alpha$
+  above. By similar reasoning, we have \eqComp{[v_1/x]M_2}{[v_1/x]M_2}{[v_1/x]A_2}.
+  This implies $\sameComp{}{[v_1/x]M_2}{[v_1/x]M_2}{\alpha}$.
+  Since \stepIn{\seq{\thunk{M_1}}{x}{M_2}}{*}{[v_1/x]M_2}, we are done.
 \end{proof}
 
-\begin{lemma}\textnormal{(Return)}\label{lemma:ret}
-If \gammaToVal{\Gamma}{v}{B}, then \gammaToComp{\Gamma}{\zp}{\ret{v}}{\isOf{y}{B}}{\zp}
+\begin{lemma}(Nat Formation)
+  \eqType{\nat}{\nat}.
+\end{lemma}
+
+\begin{lemma}(Nat Introduction)
+  \begin{enumerate}
+    \item \eqVal{\zero}{\zero}{\nat}. 
+    \item \eqVal{\suc{n}}{\suc{n'}}{\nat} given \eqVal{n}{n'}{\nat}.
+  \end{enumerate}
+\end{lemma}
+
+\begin{lemma}(Comp Formation)
+  Given \eqType{A}{A'}, \eqComp{P}{P'}{\nat}, \openEqComp{\isOf{a}{A}}{Q}{Q'}{\nat}, then
+  \eqType{\ccomp{P}{\isOf{a}{A}}{Q}}{\ccomp{P'}{\isOf{a}{A'}}{Q'}}.
+\end{lemma}
+
+\begin{lemma}(Comp Introduction)
+  Given \eqComp{M}{M'}{A}, 
+  \eqVal{\thunk{M}}{\thunk{M'}}{\ccomp{P}{\isOf{a}{A}}{Q}} when 
+  \evalCost{M}{c}{v}, \evalCost{M'}{c'}{v'}, \eval{P}{\bar{p}}, 
+  \eval{[v/a]Q}{\bar{q}}, \eval{[v'/a]Q}{\bar{q'}}, and 
+  $p \ge c + q$ and $p \ge c' + q'$.
 \end{lemma}
 
 \begin{proof}
-Induction on the length of $\Gamma$.
-\begin{itemize}
-    \item $\Gamma = \cdot$\\
-    Suppose \gammaToVal{\cdot}{v}{B}. By definition, this means \isVal{v}{B}. STS 
-    \gammaToComp{\cdot}{\zp}{\ret{v}}{\isOf{y}{B}}{\zp}. We know that 
-    $\evalCost{\ret{v}}{0}{v}$, $\eval{\zp}{\zero}$, $\eval{[v/y]\zp}{\zero}$, and 
-    $\toNat{\zero} \ge 0 + \toNat{\zero}$.
-    \item $\Gamma = \isOf{x}{A},\Gamma'$\\
-    Suppose \gammaToVal{\isOf{x}{A},\Gamma'}{v}{B}. This means 
-    \fact{$[a/x]\left(\gammaToVal{\Gamma}{v}{B}\right)$ for all \isVal{a}{A}}{1}. 
-    NTS \gammaToComp{\isOf{x}{A},\Gamma'}{\zp}{\ret{v}}{\isOf{y}{B}}{\zp}. Let
-    \isVal{a}{A}. STS $[a/x]\left(\gammaToComp{\Gamma}{\varphi}{\ret{v}}{\isOf{y}{B}}{\varrho}\right)$, which 
-    holds by IH when instantiated with \applyAss{1}.
-\end{itemize}
+  Suppose \eqComp{M}{M'}{A} and 
+  \evalCost{M}{c}{v}, \evalCost{M'}{c'}{v'}, \eval{P}{\bar{p}}, 
+  \eval{[v/a]Q}{\bar{q}}, \eval{[v'/a]Q}{\bar{q'}}, and 
+  $p \ge c + q$ and $p \ge c' + q'$.
+  By definition, $\tau(\ccomp{P}{\isOf{a}{A}}{Q}, \ccomp{P}{\isOf{a}{A}}{Q}, \phi)$, and 
+  the above conditions suffice for $\phi(\thunk{M},\thunk{M'})$. Hence 
+  \eqVal{\thunk{M}}{\thunk{M'}}{\ccomp{P}{\isOf{a}{A}}{Q}}.
 \end{proof}
 
-\begin{lemma}\textnormal{(Context)}\label{lemma:ctx}
-If \isCtx{\Gamma[\isOf{x}{A}]\Gamma'}, then for all \isSub{\gamma}{\Gamma}, \isTypeComp{\star}{\subst{\gamma}{A}}.
+\begin{lemma}(Promise)
+  If \isVal{u}{\ccomp{P}{\isOf{a}{A}}{Q}}, 
+  then $u$ is $\thunk{M}$ for some $M$ s.t. \eqComp{M}{M}{A}, \evalCost{M}{c}{v},
+  \eval{P}{\bar{p}}, \eval{[v/a]Q}{\bar{q}}
+  s.t. $p \ge c + q$.
 \end{lemma}
 
 \begin{proof}
-Induction on length of $\Gamma$.
-\begin{itemize}
-    \item $\Gamma = \cdot$\\
-    Suppose \isCtx{[\isOf{x}{A}]\Gamma'} and \isSub{\gamma}{\cdot}. The former implies \isTypeComp{\star}{A},
-    together with the latter which implies $\gamma = \cdot$, we have \isTypeComp{\star}{A\gamma}.
-    \item $\Gamma = \isOf{x'}{A'},\Gamma''$\\
-    \isCtx{\isOf{x'}{A'},\Gamma''[\isOf{x}{A}]\Gamma'} and \isSub{\gamma}{\isOf{x'}{A'},\Gamma''}. 
-    Then $\gamma$ must 
-    be $x' \mapsto M, \gamma'$ for some \isVal{M}{A'} and \isSub{\gamma'}{[M/x']\Gamma''}. 
-    Further, \isCtx{[M/x'](\Gamma''[\isOf{x}{A}]\Gamma')}. By IH,
-    \isTypeComp{\star}{[\gamma'][M/x']A}. This suffices since $[\gamma]A = [\gamma'][M/x']A$.
-\end{itemize}
+  By assumption, $\tau(\ccomp{P}{\isOf{a}{A}}{Q}, \ccomp{P}{\isOf{a}{A}}{Q}, \phi)$ and 
+  $\phi(u,u)$ for some $\phi$. The result follows from the definition of $\phi$.
 \end{proof}
 
-\begin{lemma}\textnormal{(Abstraction)}\label{lemma:abs}
-If \gammaToComp{\Gamma[\isOf{x}{A}]}{\varphi}{M}{\isOf{y}{B}}{\varrho}, then 
-\gammaToVal{\Gamma}{\lam{x}{A}{M}}{\ret{\arr{\isOf{x}{A}}{\varphi}{\isOf{y}{B}}{\varrho}}}
+\begin{lemma}(Head Expansion)
+  \begin{enumerate}
+    \item \isTypeComp{A} and \stepIn{A}{*}{A'} implies \eqType{A}{A'}.
+    \item \isComp{M'}{A} and \stepIn{M}{*}{M'} implies \eqComp{M}{M'}{A}.
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof} \ 
+  \begin{enumerate}
+    \item Suppose \isTypeComp{A} and \stepIn{A}{*}{A'}. This means 
+      \sameType{A}{A}{\alpha}{\tau} for some $\alpha$, which means 
+      \eval{A}{A_0} and $\tau(A_0,A_0,\tau)$. Since $\Downarrow$ deterministic, 
+      \eval{A'}{A_0}, and hence also \sameType{A}{A'}{\alpha}{\tau}. By definition,
+      \eqType{A}{A'}.
+    \item Suppose \isComp{M'}{A} and \stepIn{M}{*}{M'}. This means 
+      \sameType{A}{A}{\alpha}{\tau} and \sameComp{}{M'}{M'}{\alpha} for some $\alpha$.
+      This means \eval{M'}{v'} and $\alpha(v',v')$. Again, since $\Downarrow$ is 
+      deterministic, \eval{M}{v'} and \sameComp{}{M}{M'}{\alpha}. Thus 
+      \eqComp{M}{M'}{A}.
+  \end{enumerate}
+\end{proof}
+
+\iffalse
+\begin{lemma}(Recursor)
+  Given 
+  \begin{gather*}
+    \isVal{n}{\ret{\nat}}\\
+    \openTypeComp{\isOf{x}{\ret{\nat}}}{B}\\
+    \isComp{M_0}{[\zero/x]B}\\
+    \openComp{\isOf{z}{\ret{\nat}}, \isOf{f}{\ret{\ccomp{\zp}{[z/x]B}{\zp}}}}{M_1}{[\suc{z}/x]B}\\
+    \isComp{P_0}{\ret{\nat}}\\
+    \openComp{\isOf{z}{\ret{\nat}}}{P_1}{\ret{\nat}}\\
+    \isComp{Q_0}{\ret{\nat}}\\
+    \openComp{\isOf{z}{\ret{\nat}}}{Q_1}{\ret{\nat}}\\
+    \evalCost{M_0}{c_0}{v_0}, \eval{P_0}{\bar{p_0}}, \eval{Q_0}{\bar{q_0}}, 
+    p_0 \ge c_0 + q_0\\
+    \forall \isVal{z}{\ret{\nat}}, \isVal{f}{\ret{\ccomp{\zp}{[z/x]B}{\zp}}}.\,
+    \evalCost{M_1}{c_1}{v_1}, \eval{P_1}{\bar{p_1}}, \eval{Q_1}{\bar{q_1}},
+    p_1 \ge c_1 + q_1
+  \end{gather*}
+  Then 
+  \begin{gather*}
+  \evalCost{\rec{n}{M_0}{z}{f}{M_1}}{c}{v},\\
+    \eval{\rec{n}{P_0^+}{z}{g}{\bind{P_1}{p_1}{\seq{g}{r}{\plus\;p_1\;r}}}^+}{\bar{p}},\\
+    \eval{\rec{n}{Q_0^+}{z}{g}{\bind{Q_1}{q_1}{\seq{g}{r}{\plus\;q_1\;r}}}^+}{\bar{q}}, 
+  \end{gather*}
+  and $p \ge c + q$.
 \end{lemma}
 
 \begin{proof}
-Induction on length of $\Gamma$.
-\begin{itemize}
-    \item $\Gamma = \cdot$\\
-    Suppose \gammaToComp{\isOf{x}{A}}{\varphi}{M}{\isOf{y}{B}}{\varrho}. This means
-     \fact{\gammaToComp{\cdot}{[a/x]\varphi}{[a/x]M}{\isOf{y}{[a/x]B}}{[a/x]\varrho} for all \isVal{a}{A}}{1}.
-     NTS \gammaToVal{\cdot}{\lam{x}{A}{M}}{\ret{\arr{A}{\varphi}{\isOf{y}{B}}{\varrho}}}. STS
-     \isVal{\lam{x}{A}{M}}{\ret{\arr{A}{\varphi}{\isOf{y}{B}}{\varrho}}}. First, NTS 
-     \isTypeComp{\star}{\arr{\isOf{x}{A}}{\varphi}{\isOf{y}{B}}{\varrho}}:
-     \begin{enumerate}
-         \item \isTypeComp{\star}{A} by presupposition with Lemma~\ref{lemma:ctx}
-         \item NTS \gammaToTypeCompFixed{\isOf{x}{A}}{1}{B}. Let \isVal{a}{A}. STS 
-         \isTypeComp{\star}{[a/x]B}. By presupposition, \gammaToTypeComp{\isOf{x}{A},\cdot}{\star}{B}. This implies
-         \gammaToTypeComp{\cdot}{\star}{[a/x]B}, which means \isTypeComp{\star}{[a/x]B}.
-         \item NTS \gammaToPotFixed{\isOf{x}{A}}{1}{\varphi}. Let \isVal{a}{A}. STS \isPot{[a/x]\varphi}. 
-         By presupposition, \gammaToPot{\isOf{x}{A},\cdot}{\varphi}.
-         This implies \gammaToPot{\cdot}{[a/x]\varphi}, which means \isPot{[a/x]\varphi}.
-         \item NTS \gammaToPotFixed{\isOf{x}{A},\isOf{y}{B}}{1}{\varrho}. 
-         Let \isVal{a}{A} and \isVal{b}{[a/x]B}. STS \isPot{[a/x,b/y]\varrho}. By presupposition, 
-         \gammaToPot{\isOf{x}{A},\cdot[\isOf{y}{B}]}{\varrho}. This implies 
-         \gammaToPot{\cdot[\isOf{y}{[a/x]B}]}{[a/x]\varrho}, which means \gammaToPot{\isOf{y}{[a/x]B}}{[a/x]\varrho}.
-         Next, this implies \gammaToPot{\cdot}{[b/y][a/x]\varrho}, which means \isPot{[b/y][a/x]\varrho}. 
-     \end{enumerate}
-     Next, NTS \gammaToCompFixed{\isOf{x}{A}}{\varphi}{1}{M}{\isOf{y}{B}}{\varrho}.
-     Let \isVal{a}{A}. NTS 
-     \begin{enumerate}
-         \item \eval{[a/x]\varphi}{p}. By presupposition on \applyAss{1}, \gammaToPot{\cdot}{[a/x]\varphi}. This 
-         means \isPot{[a/x]\varphi}, which ensures a return value. 
-         \item \evalCost{[a/x]M}{c}{v} for some \isVal{v}{[a/x]B}. By definition of \applyAss{1}, 
-         \evalCost{[a/x]M}{c}{v} and \isVal{v}{[a/x]B}
-         \item \eval{[a/x,v/y]\varrho}{p'}. By presupposition on \applyAss{1}, 
-         \gammaToPot{\isOf{y}{[a/x]B}}{[a/x]\varrho}. This 
-         means \isPot{[a/x,b/y]\varrho} for all \isVal{b}{B}. Thus take $b$ to be $v$, and we are guaranteed a $p'$.
-         \item $\toNat{p} \ge c + \toNat{p'}$. Follows from definition of \applyAss{1}.
-     \end{enumerate}
-    \item $\Gamma = \isOf{x'}{A'},\Gamma'$\\
-    Suppose \gammaToComp{\isOf{x'}{A'},\Gamma'[\isOf{x}{A}]}{\varphi}{M}{\isOf{y}{B}}{\varrho}. This means
-    \fact{$[a'/x']\left(\gammaToComp{\Gamma'[\isOf{x}{A}]}{\varphi}{M}{\isOf{y}{B}}{\varrho}\right)$ for all \isVal{a'}{A'}}{2}. 
-    NTS \gammaToVal{\isOf{x'}{A'},\Gamma'}{\lam{x}{A}{M}}{\ret{\arr{\isOf{x}{A}}{\varphi}{\isOf{y}{B}}{\varrho}}}. 
-    This means 
-    $[a'/x']\left(\gammaToVal{\Gamma'}{\lam{x}{A}{M}}{\ret{\arr{\isOf{x}{A}}{\varphi}{\isOf{y}{B}}{\varrho}}}\right)$
-    for all \isVal{a'}{A'}. Suppose \isVal{a'}{A'}. Then the result holds by \applyAss{2} on IH.
-\end{itemize}
+  Induction on $n$.
+  \begin{itemize}
+    \item $n = \zero$:
+      \begin{align*}
+        &\rec{\zero}{M_0}{z}{f}{M_1}\\
+        \mapsto& M_0\\
+        \mapsto^{c_0}& \ret{v_0}\\
+      \end{align*}
+      Further,
+  \eval{\rec{\zero}{P_0^+}{z}{g}{\bind{P_1}{p_1}{\seq{g}{r}{\plus\;p_1\;r}}}^+}{\overline{p_0+1}},
+      \eval{\rec{\zero}{Q_0^+}{z}{g}{\bind{Q_1}{q_1}{\seq{g}{r}{\plus\;q_1\;r}}}^+}{\overline{q_0+1}}, 
+      
+  and the result holds since $p_0 \ge c_0 + q_0$.
+\item $n = \suc{n'}$ for \isVal{n'}{\ret{\nat}}:\\
+  Then \step{\rec{\suc{n'}}{M_0}{z}{f}{M_1}}{[n'/z, \thunk{\rec{n'}{M_0}{z}{f}{M_1}}/f]M_1}.
+  By induction: 
+  \begin{gather*}
+  \evalCost{\rec{n'}{M_0}{z}{f}{M_1}}{c'}{v'},\\
+    \eval{\rec{n'}{P_0^+}{z}{g}{\bind{P_1}{p_1}{\seq{g}{r}{\plus\;p_1\;r}}}^+}{\bar{p'}},\\
+    \eval{\rec{n'}{Q_0^+}{z}{g}{\bind{Q_1}{q_1}{\seq{g}{r}{\plus\;q_1\;r}}}^+}{\bar{q'}}, 
+  \end{gather*}
+      and $p' \ge c' + q'$.
+  \end{itemize}
 \end{proof}
-
-\begin{lemma}\textnormal{(Application)}
-If \isVal{f}{\ret{\arr{\isOf{x}{A}}{\varphi}{\isOf{y}{B}}{\varrho}}} and \isVal{a}{A}, then 
-\gammaToComp{\cdot}{[a/x]\varphi^+}{f\;v}{\isOf{y}{[a/x]B}}{[a/x]\varrho}.
-\end{lemma}
-
-\begin{proof}
-Given \isVal{f}{\ret{\arr{\isOf{x}{A}}{\varphi}{\isOf{y}{B}}{\varrho}}} and \isVal{a}{A}, 
-we know that $f = \lam{x}{a}{M}$ s.t. 
-\[
-    \gammaToCompFixed{\isOf{x}{A}}{\varphi}{1}{M}{\isOf{y}{B}}{\varrho}
-\]
-Instantiating this with $[a/x]$, we know
-\begin{enumerate}
-    \item \eval{[a/x]\varphi}{p}
-    \item \evalCost{[a/x]M}{c}{v} for some \isVal{v}{[a/x]B}
-    \item \eval{[a/x,v/y]\varrho}{p'}
-    \item $\toNat{p} \ge c + \toNat{p'}$
-\end{enumerate}
-
-Since \step{\lam{x}{a}{M}\; a}{[a/x]M}, it suffices to show 
-$\step{[a/x]\varphi^+}{q}$ s.t $\toNat{q} \ge \toNat{p} + 1$, which 
-holds since $\eval{[a/x]\varphi^+}{\suc{p}}$. 
-
-\end{proof}
-
-\begin{lemma}\textnormal{(Sequence)}\label{lemma:seq}
-If \gammaToComp{\cdot}{\varphi}{M_1}{\isOf{x}{A}}{\varrho} and 
-\gammaToComp{\isOf{x}{A}}{\varrho}{M_2}{\isOf{y}{B}}{\varsigma}, then 
-\gammaToComp{\isOf{x}{A}}{\varphi^+}{\seq{\thunk{M_1}}{x}{M_2}}{\isOf{y}{B}}{\varsigma}.
-\end{lemma}
-
-\begin{proof}
-
-\end{proof}
-
-\begin{corollary}\textnormal{(Potential Sequence)}\label{cor:potseq}
-If \isPot{\varphi} and
-\gammaToPot{\isOf{x}{\ret{\nat}}}{\varrho}, then 
-\isPot{\seq{\thunk{\varphi}}{x}{\varrho}}.
-\end{corollary}
-
-\begin{lemma}\textnormal{(Pair)}\label{lemma:pair}
-If \gammaToVal{\cdot}{v}{A}, \gammaToTypeComp{\isOf{x}{A}}{\star}{B}, and \gammaToVal{\cdot}{w}{[v/x]B},
-then \gammaToVal{\cdot}{\pair{v}{w}}{\ret{\dprod{\isOf{x}{A}}{B}}}. 
-\end{lemma}
-
-
+\fi
