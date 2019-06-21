@@ -1,4 +1,62 @@
+\newcommand{\nseq}[1]{\ensuremath{\mathcal{B}_{#1}}}
+\newcommand{\baire}{\mathcal{B}}
+\newcommand{\squash}[1]{\downarrow \! #1}
+\newcommand{\sigmaty}[2]{\Sigma #1.#2}
+\newcommand{\pity}[2]{\Pi #1.#2}
+\newcommand{\intty}[2]{\cap #1. #2}
+\newcommand\independent{\protect\mathpalette{\protect\independenT}{\perp}}
+\def\independenT#1#2{\mathrel{\rlap{$#1#2$}\mkern2mu{#1#2}}}
+\newcommand{\empseq}{\independent}
+\newcommand{\dbr}[6]{\mathtt{dbr}(#1,#2,#3,#4,#5,#6)}
+
 \section{Bar Induction}
 
-\begin{definition}(Bar Induction)
+\begin{definition}(Admissibility of Bar Induction)
+  If 
+  \begin{align*}
+    &\text{(wfb)}\quad \openTypeComp{\Gamma, \isOf{n}{\nat}, \isOf{s}{\nseq{n}}}{B}\\
+    &\text{(wfs)}\quad \openTypeComp{\Gamma, \isOf{n}{\nat}, \isOf{s}{\nseq{n}}}{R}\\
+    &\text{(init)}\quad \openComp{\Gamma}{M_0}{R(\zero,\empseq)}\\
+    &\text{(bar)}\quad \openComp{\Gamma,\isOf{s}{\baire}, 
+      \isOf{z}{\intty{\isOf{m}{\nat}}{\squash{R(m,s)}}}}{M_1}
+      {\squash{\sigmaty{\isOf{n}{\nat}}{B(n,s)}}}\\ 
+    &\text{(base)}\quad \openComp{\Gamma,\isOf{n}{\nat}, \isOf{s}{\nseq{n}},
+    \isOf{z}{\squash{R(n,s)}}, \isOf{b}{B(n,s)}}{M_2}{P(n,s)}\\
+    &\text{(ind)} \quad \openComp{\Gamma,\isOf{n}{\nat}, \isOf{s}{\nseq{n}},
+    \isOf{z}{\squash{R(n,s)}}, 
+    \isOf{i}{\pity{\isOf{m}{\nat}}{R(\suc{n}, s \oplus_n m) \to P(\suc{n}, s \oplus_n m)}}}{M_2}{P(n,s)}
+  \end{align*}
+  Then 
+  \[
+  \openComp{\Gamma}{\_}{\squash{P(0,\empseq)}}
+  \]
 \end{definition}
+
+\begin{definition}(DBR)
+  \begin{mathpar}
+  \inferrule{}{
+    \dbr{dec}{base}{ind}{n}{s}{r} \mapsto \\
+  \seq{\thunk{dec\;n\;s}}{x}{
+    \case{x}{p}{base\;n\;s\;r\;p}{\_}{ind\;n\;s\;\;r\;(\lam{t,r'}{}{\dbr{dec}{base}{ind}{\suc{n}}{s\oplus_n t}{r'}})}
+}}
+  \end{mathpar}
+\end{definition}
+
+\begin{lemma}
+  $\mathtt{dbr}$ implements the following induction principle: 
+  \begin{align*}
+    \mathsf{BID} = &\pity{\isOf{R,B,P}{\pity{\isOf{n}{\nat}}{\nseq{n} \to \type{}}}}{\\
+          &\pity{\isOf{s}{\baire}}{\intty{\isOf{m}{\nat}}{\squash{R(m,s)}} \to \squash{\sigmaty{\isOf{n}{\nat}}{B(n,s)}}}\\
+      \to &(\pity{\isOf{n}{\nat}}{\pity{\isOf{s}{\nseq{n}}}
+      {\squash{R(n,s)} \to (\pity{\isOf{m}{\nat}}{R(\suc{n}, s \oplus_n m) \to P(\suc{n}, s \oplus_n m)}) 
+      \to P(n,s)}})\\
+      \to &(\pity{\isOf{n}{\nat}}{\pity{\isOf{s}{\nseq{n}}{B(n,s) + \neg B(n,s)}}}) \\
+      \to &(\pity{\isOf{n}{\nat}}{\pity{\isOf{s}{\nseq{n}}}{\squash{R(n,s)} \to 
+      B(n,s) \to P(n,s)}})\\
+      \to & P(0,\empseq)
+    }
+  \end{align*}
+\end{lemma}
+
+\begin{proof}
+\end{proof}
