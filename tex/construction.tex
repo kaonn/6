@@ -12,7 +12,7 @@
 \newcommand{\class}[1]{\ensuremath{[#1]}}
 \newcommand{\cost}[1]{\ensuremath{\mathcal{C}}(#1)}
 \newcommand{\fequiv}[2]{\ensuremath{#1 \asymp #2}}
-\newcommand{\arrabt}[3]{\ensuremath{\Pi(#1; #2; #3)}}
+\newcommand{\arrabt}[3]{\ensuremath{\Pi(#1; #2)}}
 \newcommand{\relpot}[4]{\ensuremath{\mathtt{relpot}(#1.#2; #3.#4)}}
 \newcommand{\relpotty}[3]{\ensuremath{\mathtt{relpotty}(#1;#2.#3)}}
 \section{Construction}
@@ -77,6 +77,26 @@ monotone function defined by the various clauses:
     \eval{P'}{\bar{p'}}, \eval{[v/a]Q}{\bar{q}}, \eval{[v'/a]Q'}{\bar{q'}}\\
   &\land p \ge c + q \land p' \ge c' + q'\\
   \}
+  \}\\
+  \text{Eq}(\tau) &= \{
+    (\eqty{A}{M}{N}, \eqty{A'}{M'}{N'}, \phi) \mid \\
+  &\exists \alpha.\, \sameType{A}{A'}{\alpha}{\tau}\\
+  &\land\sameComp{}{M}{M'}{\alpha}\\
+  &\land\sameComp{}{N}{N'}{\alpha}\\
+  \land\phi &= \{(\triv, \triv) \mid \sameComp{}{M}{N}{\alpha}
+  \}
+  \}\\
+  \text{Intersection}(\tau) &= \{
+    (\intty{\isOf{x}{A}}{B}, \intty{\isOf{x}{A'}}{B'},\phi) \mid \\
+    &\exists \alpha.\, \sameType{A}{A'}{\alpha}{\tau} \\
+    &\land\exists \beta.\, \sameTypeOne{a}{\alpha}{B}{B'}{\beta}{\tau} \\
+    \land\phi &= \{(u,u') \mid \forall \alpha(v,v').\, \beta_{v,v'}(u,u')\}
+  \}\\
+  \text{Subset}(\tau) &= \{
+    (\subsetty{\isOf{x}{A}}{B}, \subsetty{\isOf{x}{A'}}{B'},\phi) \mid \\
+    &\exists \alpha.\, \sameType{A}{A'}{\alpha}{\tau} \\
+    &\land\exists \beta.\, \sameTypeOne{a}{\alpha}{B}{B'}{\beta}{\tau} \\
+    \land\phi &= \{(v,v') \mid \alpha(v,v') \land \exists u,u'.\beta_{v,v'}(u,u')\}
   \}\\
   \text{Type}(\tau) &= \{(\type{i}, \type{i}, \phi) \mid \exists \phi.\, \tau(\type{i}, \type{i}, \phi)\}\\
   v_n &= \{(\type{i}, \type{i}, \phi) \mid i < n \land \phi = \{(A,B) 

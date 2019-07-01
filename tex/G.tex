@@ -58,7 +58,8 @@
 \newcommand{\rec}[5]{\mathtt{rec}(#1)(#2;#3.#4.#5)}
 \newcommand{\case}[5]{\mathtt{case}(#1)(#2.#3; #4.#5)}
 \newcommand{\thunk}[1]{{\color{red}{\mathtt{thunk}}}(#1)}
-\newcommand{\comp}[1]{{\color{red}{\mathtt{comp}}}(#1)}
+\newcommand{\comp}[1]{{\color{red}{\lift{\mathtt{comp}}}}(#1)}
+\newcommand{\compc}[1]{{\color{red}{\mathtt{comp}}}(#1)}
 \newcommand{\ccomp}[3]{{\color{red}{\mathtt{comp}}}(#1, #2 \diamond #3)}
 \newcommand{\force}[1]{\mathtt{force}(#1)}
 \newcommand{\ret}[1]{\mathtt{ret}(#1)}
@@ -69,7 +70,12 @@
 \newcommand{\pure}[2]{#1 \rhd #2}
 \newcommand{\arr}[4]{\ensuremath{(#1\diamond#2) \to (#3\diamond#4)}}
 \newcommand{\dprod}[2]{\ensuremath{#1 \times #2}}
+\newcommand{\unit}{\mathtt{unit}}
+\newcommand{\dprodc}[2]{\ensuremath{#1 \lift{\times} #2}}
+\newcommand{\eqty}[3]{\ensuremath{\mathtt{eq}_{#1}(#2, \allowbreak #3)}}
+\newcommand{\eqtyc}[3]{\ensuremath{\lift{\mathtt{eq}}_{#1}(#2, \allowbreak #3)}}
 
+\newcommand{\z}{\ensuremath{\mathtt{int}}}
 \newcommand{\step}[2]{\ensuremath{#1 \mapsto #2}}
 \newcommand{\stepIn}[3]{\ensuremath{#1 \mapsto^{#2} #3}}
 \newcommand{\eqto}[2]{#1 \Rightarrow #2}
@@ -127,6 +133,31 @@
 
 \newcommand{\eqCtx}[2]{\ensuremath{#1 \doteq #2}}
 \newcommand{\eqInst}[3]{\ensuremath{#1 \sim #2 \in #3}}
+
+\newbox\qqBoxA
+\newdimen\qqCornerHgt
+\setbox\qqBoxA=\hbox{$\ulcorner$}
+\global\qqCornerHgt=\ht\qqBoxA
+\newdimen\qqArgHgt
+\def\Quinequote #1{%
+    \setbox\qqBoxA=\hbox{$#1$}%
+    \qqArgHgt=\ht\qqBoxA%
+    \ifnum     \qqArgHgt<\qqCornerHgt \qqArgHgt=0pt%
+    \else \advance \qqArgHgt by -\qqCornerHgt%
+    \fi \raise\qqArgHgt\hbox{$\ulcorner$} \box\qqBoxA %
+    \raise\qqArgHgt\hbox{$\urcorner$}}
+\newcommand{\lift}[1]{\ensuremath{\Quinequote{#1}}}
+
+\newcommand{\triv}{\star}
+\newcommand{\inl}[1]{\mathtt{inl}(#1)}
+\newcommand{\inr}[1]{\mathtt{inr}(#1)}
+\newcommand{\sigmaty}[2]{\Sigma #1.#2}
+\newcommand{\sigmatyc}[2]{\lift{\Sigma} #1.#2}
+\newcommand{\pityc}[2]{\ensuremath{\lift{\Pi} #1.#2}}
+\newcommand{\intty}[2]{\cap #1. #2}
+\newcommand{\inttyc}[2]{\ensuremath{\lift{\cap} #1. #2}}
+\newcommand{\subsetty}[2]{\{ #1 \mid #2\}}
+
 \begin{document}
  
 % --------------------------------------------------------------
