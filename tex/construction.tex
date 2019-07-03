@@ -1,20 +1,4 @@
-\newcommand{\sameType}[4]{\ensuremath{#1 \sim #2 \downarrow #3 \in #4}}
-\newcommand{\sameTypeOne}[6]{\ensuremath{\isOf{#1}{#2} \rhd #3 \sim #4 \downarrow #5 \in #6}}
-\newcommand{\sameComp}[4]{\ensuremath{#1 \rhd #2 \sim #3 \in #4}}
-\newcommand{\equivComp}[3]{\ensuremath{#1 \RHD #2 \asymp #3}}
-\newcommand{\CComp}[4]{\ensuremath{\diamond #1 \rhd #2 \in #3 \diamond #4}}
-\newcommand{\CCompOne}[6]
-{\ensuremath{\isOf{#1}{#2} \diamond #3  \rhd #4 \in #5 \diamond #6}}
 
-\newcommand{\type}[1]{\mathtt{Type}_{#1}}
-\newcommand{\term}{\mathsf{Term}}
-\newcommand{\evalTo}[1]{{#1}^{\Downarrow}}
-\newcommand{\class}[1]{\ensuremath{[#1]}}
-\newcommand{\cost}[1]{\ensuremath{\mathcal{C}}(#1)}
-\newcommand{\fequiv}[2]{\ensuremath{#1 \asymp #2}}
-\newcommand{\arrabt}[3]{\ensuremath{\Pi(#1; #2)}}
-\newcommand{\relpot}[4]{\ensuremath{\mathtt{relpot}(#1.#2; #3.#4)}}
-\newcommand{\relpotty}[3]{\ensuremath{\mathtt{relpotty}(#1;#2.#3)}}
 \section{Construction}
 
 Notation:
@@ -24,10 +8,18 @@ Notation:
   $\tau(v,v',\alpha)$.
   \item $a : \alpha \rhd B \sim B' \downarrow \beta \in \tau$ when 
   for all $v,v'$ s.t. $\alpha(v,v')$, \sameType{[v/a]B}{[v'/a]B'}{\beta_{v,v'}}{\tau}.
-\item \sameComp{}{M}{M'}{\alpha} when \eval{M}{v}, \eval{M'}{v'}, $\alpha(v,v')$.
-  \item $a : \alpha \rhd M \sim M' \in \beta$ when 
+\item \sameCComp{}{M}{M'}{\alpha}{P}{a.Q} when \evalCost{M}{c}{v}, \evalCost{M'}{c'}{v'}, 
+  $\alpha(v,v')$. 
+    Furthermore, \eval{P}{\bar{p}}, \eval{[v/a]Q}{\bar{q}}, and 
+    $p \ge c + q$ and $p \ge c' + q$.
+  \item \sameComp{}{M}{M'}{\alpha} when \sameCComp{}{M}{M'}{\alpha}{P}{a.Q} for some 
+    $P$ and $a.Q$. 
+  \item $\sameCComp{\isOf{a}{\alpha}}{M}{M'}{\beta}{P}{b.Q}$ when 
   for all $v,v'$ s.t. $\alpha(v,v')$, 
-  \eval{[v/a]M}{u}, \eval{[v'/a]M'}{u'}, and $\beta_{v,v'}(u,u')$.
+    \evalCost{[v/a]M}{c}{u}, \evalCost{[v'/a]M'}{c'}{u'}, and 
+    $\beta_{v,v'}(u,u')$.
+    Furthermore, \eval{[v/a]P}{\bar{p}}, \eval{[v/a,u/b]Q}{\bar{q}}, and 
+    $p \ge c + q$ and $p \ge c' + q$.
 \item \sameComp{\isOf{a}{\alpha}, \isOf{b}{\beta}}{M}{M'}{\gamma} when 
   for all $v,v'$ s.t. $\alpha(v,v')$, 
   for all $u,u'$ s.t. $\beta_{v,v'}(u,u')$, 
@@ -146,7 +138,6 @@ A type system is a possible type system $\tau$ which has the following propertie
 If $v$ is a type system, then $\tau^* = \mu \tau.\, \text{Types}(v,\tau)$ is a type system.
 \end{lemma}
 
-\iffalse
 \begin{proof}
 blah
 \begin{enumerate}
@@ -433,12 +424,8 @@ Let $(S,T,\phi) \in \text{Types}(v,\tau)$. NTS $(S,T,\phi) \in \tau$.
         \item $R \sim R'' \in \kappa(\alpha',a.\beta')$. Since $\alpha' \triangleq \alpha^* = \alpha$, 
           to apply Lemma~\ref{lemma:kappa}, STS $\beta' \triangleq \beta^* = \beta$, which was shown above.
         \item \begin{gather*}
-      \phi' = \{(\lam{a}{\_}{M}, \lam{a}{}{M'}) \mid \\
-  \sameComp{\isOf{a}{\alpha^*}}{M}{M'}{\beta^*}\\
-  \land\fequiv{\cost{a.M}}{\cost{a.M'}}\\
-  \land\eval{R}{\relpot{a}{P}{a.b}{Q}}, \eval{R''}{\relpot{a}{P''}{a.b}{Q''}}\\
-  \land\widehat{a.P} \succeq \cost{a.M} + \{(v, \widehat{a.Q}(v,\widehat{a.M}(v))) \mid \forall v.\, \alpha^*(v,v)\}\\
-        \land\widehat{a.P''} \succeq \cost{a.M'} + \{(v, \widehat{a.Q''}(v,\widehat{a.M'}(v))) \mid \forall v.\, \alpha^*(v,v)\}\} 
+      \phi' = \{(\lam{a}{\_}{M}, \lam{a}{}{M'}) \mid 
+          \sameComp{\isOf{a}{\alpha^*}}{M}{M'}{\beta^*}\}\\
       \end{gather*}
           Thus STS
           \begin{gather*}
@@ -462,7 +449,6 @@ Let $(S,T,\phi) \in \text{Types}(v,\tau)$. NTS $(S,T,\phi) \in \tau$.
 \end{enumerate}
 \end{proof}
 
-\fi
 
 \begin{lemma}
 $\tau_n$ is a type system for all $n$.

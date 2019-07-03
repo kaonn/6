@@ -2,9 +2,9 @@ Group
 is
   $/basis.cm
   $/ml-yacc-lib.cm
-  sml-typed-abts/abt.cm (bind:(anchor:libs value:lib))
-  sml-typed-abts/lib/cmlib.cm
-  sml-typed-abts/basis/basis.cm
+  /home/prog/sml-typed-abts/abt.cm (bind:(anchor:libs value:lib))
+  /home/prog/sml-typed-abts/lib/cmlib.cm
+  /home/prog/sml-typed-abts/basis/basis.cm
   
   cbpv/syntax.sml
   cbpv/cbpv.grm

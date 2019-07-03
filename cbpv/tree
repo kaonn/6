@@ -140,12 +140,12 @@ reduce := (\f.ret(\b.ret(\t.
     ret(b);
   | a.ret(a);
   | l.r.fl.fr.
-    seq(fl; Fl. // 1
+    seq(fl; Fl. // Fl = (trec...)
       seq(fr; Fr. // 1
         r <- f Fl Fr;
         ret(r);
+        )
       )
-    )
   | l.m.r.fl.fm.fr.
   seq(fl; Fl.
     seq(fm; Fm.
@@ -156,6 +156,7 @@ reduce := (\f.ret(\b.ret(\t.
       )
     )
   )
+  
   }
 )));
 
@@ -171,9 +172,84 @@ t:
 5  0  1  0   1  0   1
 */
 
-f1 := (\x. x + 2);
-wordplus := (\x.ret(\y.x+y));
+num2 := (\t. trec(t){
+    ret(0)
+  | a.ret(0)
+  | l.r.fl.fr.
+    seq(fl; Fl. // 1
+      seq(fr; Fr. // 1
+        n <- Fl + Fr;
+        n' <- n + 1;
+        ret(n');
+      )
+    )
+  | l.m.r.fl.fm.fr.
+  seq(fl; Fl. // 1
+    seq(fm; Fm. // 1
+      seq(fr; Fr. // 1
+        n <- Fl + Fm;
+        n' <- n + Fr;
+        ret(n');
+      )
+    )
+  )
+});
+
+num3 := (\t. trec(t){
+    ret(0)
+  | a.ret(0)
+  | l.r.fl.fr.
+    seq(fl; Fl. // 1
+      seq(fr; Fr. // 1
+        n <- Fl + Fr;
+        ret(n);
+      )
+    )
+  | l.m.r.fl.fm.fr.
+  seq(fl; Fl. // 1
+    seq(fm; Fm. // 1
+      seq(fr; Fr. // 1
+        n <- Fl + Fm;
+        n' <- n + Fr;
+        n'' <- n' + 1;
+        ret(n'');
+      )
+    )
+  )
+});
+
+foldl := (\f. ret(\t. trec(t){
+    ret(\init. ret(init))
+  | a.ret(\init. r <- f(init,a); ret(r);)
+  | l.r.fl.fr.
+    ret(\init.
+    seq(fl; Fl. // 1
+      bl <- Fl init; // 2
+      seq(fr; Fr. // 1
+        br <- Fr bl; // 2
+        ret(br);
+      );
+      )
+    )
+  | l.m.r.fl.fm.fr.
+  ret(\init.
+  seq(fl; Fl. // 1
+    bl <- Fl init; // 2
+    seq(fm; Fm. // 1
+      bm <- Fm bl; // 2
+      seq(fr; Fr. // 1
+        br <- Fr bm; // 2
+        ret(br);
+      );
+    );
+  ))
+}));
+
+//f1 := (\x. x + 2);
+//wordplus := (\x.ret(\y.x+y));
 //T' <- map f1 T; // 2 + 1 + 1
-T' <- reduce wordplus 0 T1;
+//T' <- reduce wordplus 0 T1;
+wordplus' := (\xy.x <- xy.fst; y <- xy.snd; r <- x + y; ret(r););
+T' <- foldl wordplus' T1 0;
 ret(T');
 

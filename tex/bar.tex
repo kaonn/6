@@ -168,7 +168,7 @@ Define the spread $R$, bar $B$, and $P$:
         s(0) =_{\nat} \ret{x} \lift{\times} s(1) =_{\nat} \ret{y}\\
       }{
         &s(0) =_{\nat} \ret{x} \lift{\times} s(1) =_{\nat} \ret{y}
-        \lift{\times} s(n-3) - s(n-2) =_{\nat} s(n-1)
+        \lift{\times} mod\, s(n-3)\, s(n-2) =_{\nat} s(n-1)
       }
     }
   }\\
@@ -216,7 +216,7 @@ Additionally, we need to show the following:
           s(\suc{j}) - s(\suc{\suc{j}}) =_{\nat} s(\suc{\suc{\suc{j}}})
         \end{gather*}
         Let \eval{s(j) + s(\suc{j})}{v} and \eval{s(\suc{\suc{j}}) + s(\suc{\suc{\suc{j}}})}{u}.
-        we case on $s(\suc{j})$ and $s(\suc{\suc{j}})$. If \eval{s(\suc{j})}{\zero}, 
+        We case on $s(\suc{j})$ and $s(\suc{\suc{j}})$. If \eval{s(\suc{j})}{\zero}, 
         again \isComp{\ret{(\triv, \triv)}}{B(\suc{\suc{j}},s)}.
         Otherwise, we know $u < v \le \suc{i'}$, and hence $u \le i'$. 
         Then \isComp{f\,\suc{\suc{j}}\, s\,a\,\triv}{\squash{\lift{\sigmaty{\isOf{n}{\lift{\nat}}}{B(n,s)}}}}

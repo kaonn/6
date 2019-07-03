@@ -4,8 +4,9 @@
   Given a type system $\tau$, 
   \begin{enumerate}
     \item \eqType{A}{B} when \sameType{A}{B}{\alpha}{\tau} for some $\alpha$.
-    \item \eqComp{M}{M'}{A} when presupposing \eqType{A}{A},
-      \sameType{A}{A}{\alpha}{\tau} and \sameComp{}{M}{M'}{\alpha} for some $\alpha$.
+    \item \eqCComp{M}{M'}{A}{P}{a.Q} when presupposing \eqType{A}{A},
+      \sameType{A}{A}{\alpha}{\tau} and \sameCComp{}{M}{M'}{\alpha}{P}{a.Q} 
+      for some $\alpha$.
     \item \eqVal{v}{v'}{A} when presupposing \eqType{A}{A},
       \sameType{A}{A}{\alpha}{\tau} and $\alpha(v,v')$ for some $\alpha$.
   \end{enumerate}

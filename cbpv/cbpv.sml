@@ -45,6 +45,10 @@ struct
 
           val stack_depth = ref 0 
 
+          fun ret v = RET $$ [\([],v)]
+
+          fun thunk M = THUNK $$ [\([],M)]
+
           fun check_node v = 
             case out v of 
               NODE n $ children => (NODE n,children)

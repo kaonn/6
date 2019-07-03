@@ -123,6 +123,7 @@
 
 \newcommand{\eqType}[2]{\ensuremath{#1 \doteq #2\; \mathsf{type}}}
 \newcommand{\eqComp}[3]{\ensuremath{#1 \doteq #2 \in #3}}
+\newcommand{\eqCComp}[5]{\ensuremath{#1 \doteq #2 \in #3 {\color{purple}{\;[#4; #5]}}}}
 \newcommand{\eqVal}[3]{\ensuremath{#1 \doteq #2 \in_0 #3}}
 
 \newcommand{\openEqComp}[4]{\ensuremath{#1 \gg #2 \doteq #3 \in #4}}
@@ -158,6 +159,21 @@
 \newcommand{\inttyc}[2]{\ensuremath{\lift{\cap} #1. #2}}
 \newcommand{\subsetty}[2]{\{ #1 \mid #2\}}
 
+\newcommand{\sameType}[4]{\ensuremath{#1 \sim #2 \downarrow #3 \in #4}}
+\newcommand{\sameTypeOne}[6]{\ensuremath{\isOf{#1}{#2} \rhd #3 \sim #4 \downarrow #5 \in #6}}
+\newcommand{\sameComp}[4]{\ensuremath{#1 \rhd #2 \sim #3 \in #4}}
+\newcommand{\equivComp}[3]{\ensuremath{#1 \rhd #2 \asymp #3}}
+\newcommand{\sameCComp}[6]{\ensuremath{#1 \rhd #2 \sim #3 \in #4\; {\color{purple}{[#5; #6]}}}}
+
+\newcommand{\type}[1]{\mathtt{Type}_{#1}}
+\newcommand{\term}{\mathsf{Term}}
+\newcommand{\evalTo}[1]{{#1}^{\Downarrow}}
+\newcommand{\class}[1]{\ensuremath{[#1]}}
+\newcommand{\cost}[1]{\ensuremath{\mathcal{C}}(#1)}
+\newcommand{\fequiv}[2]{\ensuremath{#1 \asymp #2}}
+\newcommand{\arrabt}[3]{\ensuremath{\Pi(#1; #2)}}
+\newcommand{\relpot}[4]{\ensuremath{\mathtt{relpot}(#1.#2; #3.#4)}}
+\newcommand{\relpotty}[3]{\ensuremath{\mathtt{relpotty}(#1;#2.#3)}}
 \begin{document}
  
 % --------------------------------------------------------------
@@ -172,7 +188,7 @@
  
 %\maketitle
 
-%\input{setup.tex}
+\input{setup.tex}
 %\input{ground.tex}
 %\input{types.tex}
 %\input{hypothetical.tex}
@@ -180,7 +196,7 @@
 %\input{arith.tex}
 
 %\input{tree.tex}
-\input{construction.tex}
+%\input{construction.tex}
 \input{bar.tex}
 \input{lemmas.tex}
 
