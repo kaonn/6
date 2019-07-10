@@ -1,0 +1,93 @@
+\section{Stack Machine}
+
+\begin{mathpar}
+\inferrule{}{
+  \final{\retState{\cdot}{\ret{v}}}
+}
+
+\inferrule{}{
+  \doState{k}{\ret{v}} \mapsto \retState{k}{\ret{v}}
+}
+
+\inferrule{}{
+  \retState{k;\seq{\thunkcst{\_}}{x}{M}}{\ret{v}} \mapsto \doState{k}{[v/x]M}
+}
+
+\inferrule{}{
+  \doState{k}{\dbr{dec}{base}{ind}{n}{s}{r}} \mapsto \\\\
+  \doState{k; \seq{\thunkcst{\_}}{x}{\case{x}{p}{base\;n\;s\;r\;p}{\_}{ind\;n\;s\;\;r\;(\lam{t,r'}{}{\dbr{dec}{base}{ind}{\suc{n}}{s\oplus_n t}{r'}})}
+}}{dec\,n\,s}
+}
+
+\inferrule{}{
+  \doState{k}{\dbrp{dec}{base}{ind}{n}{s}{r}} \mapsto \\\\
+  \doState{k; \seq{\thunkcst{\_}}{x}{\case{x}{p}{base\;n\;s\;r\;p}{\_}{ind\;n\;s\;\;r\;(\lam{t,r'}{}{\dbrp{dec}{base}{ind}{\suc{n}}{s\oplus_n t}{r'}})}
+}}{dec\,n\,s}
+}
+
+\end{mathpar}
+
+Recall the first spread law: 
+\begin{gather*}
+\isVal{S_1}{\pityc{\isOf{n}{\lift{\nat}}}{
+\pityc{\isOf{s}{\lift{\nseq{n}}}}{R(n,s) \tolr \sigmatyc{\isOf{m}{\lift{\nat}}}{R(\suc{n},s \oplus_n m)}}}}
+\end{gather*}
+
+Given a spread $R$ and an admissible prefix \isVal{s}{\nseq{n}} with \isVal{r}{\squash{R(n,s)}}, 
+we can extend it to an infinite sequence. 
+\begin{align*}
+\extSeq{s}{r} \triangleq \lam{k}{}{
+  &\ifthen{k <_b n}{s(k)}{
+  \bind{
+  \rec{k+1-n}{(s,r)}{p}{f\\}{
+  \bind{\fst{f}\\}{&s'}{
+    \bind{\snd{f}\\}{&r'}{
+      \bind{S_1\,(p+n)\,s'\,r'}{&x}{
+        \bind{\fst{x}}{m}{
+          \bind{\snd{x}}{r''}{
+            (s' \oplus_(p+n) m, r'')
+          }
+        }
+      }
+      }
+    }
+  }\\
+  }{s'}{&s'(k)}
+  }
+}
+\end{align*}
+\begin{lemma}
+If
+\begin{align*}
+    &\isVal{R}{\pityc{\isOf{n}{\lift{\nat}}}{\embed\nseq{n} \tolr \embed\type{}}}\\
+    &\isVal{B}{\pityc{\isOf{n}{\lift{\nat}}}{\embed\nseq{n} \tolr \embed\type{}}}\\
+    &\isVal{P}{\pityc{\isOf{n}{\lift{\nat}}}{\embed\nseq{n} \tolr \embed\type{}}}\\
+    &\isVal{bar}{\pityc{\isOf{s}{\lift{\baire}}}{\intty{\isOf{m}{\lift{\nat}}}{\squash{R(m,s)}} 
+      \tolr \squash{\lift{\sigmaty{\isOf{n}{\lift{\nat}}}{B(n,s)}}}}}\\
+    &\isVal{ind}{\pityc{\isOf{n}{\lift{\nat}}}{\pityc{\isOf{s}{\lift{\nseq{n}}}}
+      {\\
+      &\qquad\squash{R(n,s)} \tolr (\pityc{\isOf{m}{\lift{\nat}}}{R(\suc{n}, s \oplus_n m) 
+        \tolr P(\suc{n}, s \oplus_n m)}) \tolr P(n,s)}}}\\
+    &\isVal{dec}{\pityc{\isOf{n}{\lift{\nat}}}{\pityc{\isOf{s}{\lift{\nseq{n}}}}{\lift{B(n,s) + \neg B(n,s)}}}}\\
+    &\isVal{base}{\pityc{\isOf{n}{\lift{\nat}}}{\pityc{\isOf{s}{\lift{\nseq{n}}}}{\squash{R(n,s)} \tolr 
+      B(n,s) \tolr P(n,s)}}}\\
+    &\isVal{r}{R(0,\empseq)}
+  \end{align*}
+
+Then $\doState{k}{\dbrp{dec}{base}{ind}{0}{\empseq}{r}} \mapsto^* \retState{k}{\ret{v}}$ and
+\isVal{v}{P(0,\empseq)}. 
+Suppose the inductive argument is fully applied in the body of $ind$, i.e. the 4th argument is 
+fully applied. Let 
+\doState{k}{\dbrp{dec}{base}{ind}{n}{s}{r}} be the last 
+distinguished dbr state for some $n,s,r$ in the computation.
+Then there are exactly $n$ distinguished dbr states in the computation. 
+Furthermore, $n$ is bounded by the bar for the extended sequence \extSeq{s}{r}:
+$n \le_b b$, where \eval{\bind{bar\,(\extSeq{s}{r})\,\triv}{x}{\fst{x}}}{b}.
+\end{lemma}
+
+\begin{proof}
+  The first part follows from Lemma~\ref{lemma:dbr} and ~\ref{lemma:stack}.
+  For the second part, proceed by induction on $n$. If $n = 0$, 
+
+\end{proof}
+

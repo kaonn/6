@@ -174,6 +174,28 @@
 \newcommand{\arrabt}[3]{\ensuremath{\Pi(#1; #2)}}
 \newcommand{\relpot}[4]{\ensuremath{\mathtt{relpot}(#1.#2; #3.#4)}}
 \newcommand{\relpotty}[3]{\ensuremath{\mathtt{relpotty}(#1;#2.#3)}}
+
+%bar.tex
+\newcommand{\nseq}[1]{\ensuremath{\mathcal{B}_{#1}}}
+\newcommand{\baire}{\mathcal{B}}
+\newcommand{\squash}[1]{\ensuremath{\downarrow \! #1}}
+
+\newcommand\independent{\protect\mathpalette{\protect\independenT}{\perp}}
+\def\independenT#1#2{\mathrel{\rlap{$#1#2$}\mkern2mu{#1#2}}}
+\newcommand{\empseq}{\independent}
+\newcommand{\dbr}[6]{\mathtt{dbr}(#1,#2,#3,#4,#5,#6)}
+\newcommand{\dbrp}[6]{\underline{\mathtt{dbr}}(#1,#2,#3,#4,#5,#6)}
+\newcommand{\tol}{\ulcorner\to}
+\newcommand{\tor}{\to\urcorner}
+\newcommand{\tolr}{\lift{\to}}
+\newcommand{\embed}{\Uparrow}
+\newcommand{\ifthen}[3]{\mathtt{if}(#1;#2;#3)}
+
+% stack.tex
+\newcommand{\doState}[2]{\ensuremath{#1\,\rhd\, #2}}
+\newcommand{\retState}[2]{\ensuremath{#1\,\lhd\, #2}}
+\newcommand{\thunkcst}[1]{\ensuremath{\{#1\}}}
+\newcommand{\extSeq}[2]{\ensuremath{#1 \nearrow #2}}
 \begin{document}
  
 % --------------------------------------------------------------
@@ -197,6 +219,7 @@
 
 %\input{tree.tex}
 %\input{construction.tex}
+\input{stack.tex}
 \input{bar.tex}
 \input{lemmas.tex}
 

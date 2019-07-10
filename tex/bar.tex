@@ -1,16 +1,4 @@
-\newcommand{\nseq}[1]{\ensuremath{\mathcal{B}_{#1}}}
-\newcommand{\baire}{\mathcal{B}}
-\newcommand{\squash}[1]{\ensuremath{\downarrow \! #1}}
 
-\newcommand\independent{\protect\mathpalette{\protect\independenT}{\perp}}
-\def\independenT#1#2{\mathrel{\rlap{$#1#2$}\mkern2mu{#1#2}}}
-\newcommand{\empseq}{\independent}
-\newcommand{\dbr}[6]{\mathtt{dbr}(#1,#2,#3,#4,#5,#6)}
-\newcommand{\tol}{\ulcorner\to}
-\newcommand{\tor}{\to\urcorner}
-\newcommand{\tolr}{\lift{\to}}
-\newcommand{\embed}{\Uparrow}
-\newcommand{\ifthen}[3]{\mathtt{if}(#1;#2;#3)}
 
 
 \section{Bar Induction}
@@ -67,7 +55,7 @@
   \end{mathpar}
 \end{definition}
 
-\begin{lemma}
+\begin{lemma}\label{lemma:dbr}
   $\mathtt{dbr}$ implements the following induction principle: 
   \begin{align*}
     \mathsf{BID} = 
@@ -183,39 +171,51 @@ Additionally, we need to show the following:
 \begin{enumerate}
   \item \isVal{bar}{\pityc{\isOf{s}{\lift{\baire}}}{\intty{\isOf{m}{\lift{\nat}}}{\squash{R(m,s)}} 
       \tolr \squash{\lift{\sigmaty{\isOf{n}{\lift{\nat}}}{B(n,s)}}}}}:\\
-    Strengthen the property by considering the starting sum of the sequence: 
-    \[
-    \pityc{\isOf{i,j}{\lift{\nat}}}{
-      \pityc{\isOf{s}{\lift{\baire}}}{\intty{\isOf{m}{\lift{\nat}}}{\squash{R(m,s)}} 
-      \tolr \bind{s(j) + s(\suc{j})}{v}{v \le i}
-      \tolr \squash{\lift{\sigmaty{\isOf{n}{\lift{\nat}}}{B(n,s)}}}}}
-  \]
+    Strengthen the property by considering any value of the sequence: 
+    \begin{align*}
+      &\pityc{\isOf{i,j}{\lift{\nat}}}{
+        \pityc{\isOf{s}{\lift{\baire}}}{\intty{\isOf{m}{\lift{\nat}}}{\squash{R(m,s)}}
+      \tolr \bind{s(j)}{v}{v \le i}
+      \tolr\\ &\squash{\lift{\sigmaty{\isOf{n}{\lift{\nat}}}{
+      B(n-j,s) \lift{\times} s(j+1) \ge F_{n-j-1} \lift{\times} s(j+2) \ge F_{n-j-2}}}}}}
+    \end{align*}
     Let \isVal{j}{\lift{\nat}},
     \isVal{s}{\lift{\baire}}, \isVal{a}{\inttyc{\isOf{m}{\lift{\nat}}}{\squash{R(m,s)}}}, and 
-    \isVal{p}{\bind{s(j) + s(\suc{j})}{v}{v \le i}}.
+    \isVal{p}{\bind{s(j)}{v}{v \le i}}.
     Proceed by induction:
     \begin{itemize}
       \item $i = \zero$: 
-    Need to show a term in \squash{\lift{\sigmaty{\isOf{n}{\lift{\nat}}}{B(n,s)}}}.
-    Let \eval{s(j) + s(\suc{j})}{v}. \isVal{p}{\bind{s(j) + s(\suc{j})}{v}{v \le \zero}} implies that 
-    $\ret{v} =_{\nat} \ret{\zero}$, which implies $s(j) =_{\nat} \ret{\zero}$ and 
-    $s(\suc{j}) =_{\nat} \ret{\zero}$. 
-    Hence we know \isComp{\ret{(\triv, \triv)}}{B(\suc{\suc{j}},s)}.
+        Induction on $j$. Case $j = 0$:
+        Need to find a \isVal{n}{\lift{\nat}} s.t. $B(n,s)$, $s(1) \ge F_{n-1}$, and 
+        $s(2) \ge F_{n-2}$. By assumption, $s(0) \le 0$, which means $s(0) = 0$.
+        Then $n = 1$ suffices, since $F_{1-1} = F_{1-2} = 0$.
+        For $j = j' + 1$, suppose $s(j'+1) \le 0$. Now need to find $n$ s.t. 
+        $B(n- j' -1,s)$, $s(j'+2) \ge F_{n -j' - 2}$, and $s(j'+3) \ge F_{n-j'-3}$. 
+    Let \eval{s(j)}{v}. \isVal{p}{\bind{s(j)}{v}{v \le \zero}} implies that 
+    $\ret{v} =_{\nat} \ret{\zero}$, which implies $s(j) =_{\nat} \ret{\zero}$.
+    If $j = \zero$, by the spread law we know $s(\suc{\suc{j}}) =_{\nat} \ret{\zero}$,
+    and we know \isComp{\ret{(\triv, \triv)}}{B(\suc{\suc{\suc{j}}},s)}.
+    Otherwise, \isComp{\ret{(\triv, \triv)}}{B(\suc{j},s)} since $\suc{j} > 1$.
       \item $i = \suc{i'}$ for some \isVal{i'}{\lift{\nat}}:
     By induction we have a term $f$ inhabiting
         \begin{align*}
   \compc{
     &\pityc{\isOf{j}{\lift{\nat}}}{\\
           &\pityc{\isOf{s}{\lift{\baire}}}{\intty{\isOf{m}{\lift{\nat}}}{\squash{R(m,s)}} 
-        \tolr \bind{s(j) + s(\suc{j})}{v}{v \le i'}
+        \tolr \bind{s(j)}{v}{v \le i'}
         \tolr \squash{\lift{\sigmaty{\isOf{n}{\lift{\nat}}}{B(n,s)}}}}}}
         \end{align*}
     By the spread law, we know:
         \begin{gather*}
-          s(j) - s(\suc{j}) =_{\nat} s(\suc{\suc{j}})\\
-          s(\suc{j}) - s(\suc{\suc{j}}) =_{\nat} s(\suc{\suc{\suc{j}}})
+          mod\, s(j) \, s(\suc{j}) =_{\nat} s(\suc{\suc{j}})\\
         \end{gather*}
-        Let \eval{s(j) + s(\suc{j})}{v} and \eval{s(\suc{\suc{j}}) + s(\suc{\suc{\suc{j}}})}{u}.
+        Case $s(j+1) < s(j)$: if $s(j+1) =_{\nat} \ret{\zero}$, then we can take
+        \isComp{\ret{(\triv, \triv)}}{B(\suc{\suc{j}},s)}.
+        Else, we know $s(j+2) < s(j)$ by Lemma~\ref{mod:prop}, and we can apply the 
+        induction hypothesis: \isComp{f\,(j+2)\,s\,a\,\triv}
+        {\squash{\lift{\sigmaty{\isOf{n}{\lift{\nat}}}{B(n,s)}}}}.
+        In the case that $s(j+1) = s(j)$, we know $s(j+2) = 0$ by the spread law.
+
         We case on $s(\suc{j})$ and $s(\suc{\suc{j}})$. If \eval{s(\suc{j})}{\zero}, 
         again \isComp{\ret{(\triv, \triv)}}{B(\suc{\suc{j}},s)}.
         Otherwise, we know $u < v \le \suc{i'}$, and hence $u \le i'$. 
