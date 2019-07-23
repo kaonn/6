@@ -34,16 +34,25 @@
   \begin{enumerate}
     \item \openEqTypeComp{\Gamma}{A}{A'} when for all \eqInst{\gamma}{\gamma'}{\Gamma}, 
       \eqType{\gamma A}{\gamma A'}
-    \item \openEqComp{\Gamma}{M}{M'}{A} when for all \eqInst{\gamma}{\gamma'}{\Gamma}, 
-      \eqComp{\gamma M}{\gamma M'}{\gamma A}
+    \item \openEqCComp{\Gamma}{M}{M'}{A}{P}{a.Q} when for all \eqInst{\gamma}{\gamma'}{\Gamma}, 
+      \eqCComp{\gamma M}{\gamma M'}{\gamma A}{\gamma P}{a.\gamma Q}
     \item \openEqVal{\Gamma}{v}{v'}{A} when for all \eqInst{\gamma}{\gamma'}{\Gamma}, 
       \eqVal{\gamma v}{\gamma v'}{\gamma A}
   \end{enumerate}
 \end{definition}
 
 \begin{lemma}(Sequence)
-  If \isComp{M_1}{A_1} and \openComp{\isOf{x}{A_1}}{M_2}{A_2}, then 
-  \isComp{\seq{\thunk{M_1}}{x}{M_2}}{\seq{\thunk{M_1}}{x}{A_2}}.
+  If \isCComp{M_1}{A_1}{P_1}{a_1.Q_1} and 
+  \openCComp{\isOf{x}{A_1}}{M_2}{A_2}{P_2}{a_2.Q_2},\\ then 
+  \isCComp{\seq{\thunk{M_1}}{x}{M_2}}{\seq{\thunk{M_1}}{x}{A_2}}
+  {\fst{R}^+}{\_.\snd{R}}
+  where 
+  \[ 
+  R \triangleq 
+\seq{\thunk{M_1}}{x}{\seq{\thunk{M_2}}{y}{
+    (P_1,[x/a_1]Q_1) \cdot (P_2,[y/a_2]Q_2)
+  }}
+  \]
 \end{lemma}
 
 \begin{proof}
@@ -58,15 +67,55 @@
   for some $\alpha$. Since
   \stepIn{\seq{\thunk{M_1}}{x}{A_2}}{*}{[v_1/x]A_2}, we are done.
 
-  Next, we need to show \isComp{\seq{\thunk{M_1}}{x}{M_2}}{\seq{\thunk{M_1}}{x}{A_2}}.
-  STS \sameComp{}{\seq{\thunk{M_1}}{x}{M_2}}{\seq{\thunk{M_1}}{x}{A_2}}{\alpha} for the $\alpha$
-  above. By similar reasoning, we have \eqComp{[v_1/x]M_2}{[v_1/x]M_2}{[v_1/x]A_2}.
-  This implies $\sameComp{}{[v_1/x]M_2}{[v_1/x]M_2}{\alpha}$.
-  Since \stepIn{\seq{\thunk{M_1}}{x}{M_2}}{*}{[v_1/x]M_2}, we are done.
+  Next, we need to show 
+  \isCComp{\seq{\thunk{M_1}}{x}{M_2}}{\seq{\thunk{M_1}}{x}{A_2}}
+  {\fst{R}}{\_.\snd{R}}.
+  STS 
+  \sameCComp{}{\seq{\thunk{M_1}}{x}{M_2}}{\seq{\thunk{M_1}}{x}{M_2}}{\alpha}
+  {\fst{R}}{\snd{R}} for the $\alpha$
+  above. By assumption, we have 
+  \eqCComp{[v_1/x]M_2}{[v_1/x]M_2}{[v_1/x]A_2}{[v_1/x]P_2}{a_2.[v_1/x]Q_2}.
+  Hence we know 
+  \begin{mathpar}
+    \eval{P_1}{\bar{p_1}}
+
+    \eval{[v_1/a_1]A_1}{\bar{q_1}}
+
+    \eval{[v_1/x]P_2}{\bar{p_2}}
+
+    \eval{[v_1/x]M_2}{v_2} 
+    
+    \eval{[v_1/x, v_2/a_2]}{Q_2}
+
+    \eval{R}{(\bar{r},\bar{s})}
+  \end{mathpar}
+  Note that 
+  \begin{align*}
+    &\seq{\thunk{M_1}}{x}{M_2}\\
+    \mapsto^{c_1}& \seq{\thunk{\ret{v_1}}}{x}{M_2}\\
+    \mapsto &[v_1/x]M_2\\
+    \mapsto^{c_2}& v_2
+  \end{align*}
+  where 
+  $\alpha(v_2,v_2)$, 
+  $p_1 \ge c_1 + q_1$, and $p_2 \ge c_2 + q_2$. 
+  If $p_2 > q_1$, then $r = p_1 - q_1 + p_2$ and $s = q_2$, and it suffices 
+  to show 
+  \[
+    p_1 - q_1 + p_2 + 1\ge c_1 + 1 + c_2 + q_2 
+  \]
+  which holds given the two equations from the assumption.
+  Otherwise, $r = p_1$ and $s = q_1 - p_2 + q_2$, and we need to show
+  \[
+  p_1 + 1\ge c_1 + 1 + c_2 + q_1 - p_2 + q_2
+  \]
+  which also holds. Thus 
+  \sameCComp{}{\seq{\thunk{M_1}}{x}{M_2}}{\seq{\thunk{M_1}}{x}{M_2}}{\alpha}
+  {\fst{R}^+}{\snd{R}}, and we are done.
 \end{proof}
 
 \begin{lemma}(Nat Formation)
-  \eqType{\nat}{\nat}.
+  \eqType{\lift{\nat}}{\lift{\nat}}.
 \end{lemma}
 
 \begin{lemma}(Nat Introduction)
@@ -82,15 +131,12 @@
 \end{lemma}
 
 \begin{lemma}(Comp Introduction)
-  Given \eqComp{M}{M'}{A}, 
-  \eqVal{\thunk{M}}{\thunk{M'}}{\ccomp{P}{\isOf{a}{A}}{Q}} when 
-  \evalCost{M}{c}{v}, \evalCost{M'}{c'}{v'}, \eval{P}{\bar{p}}, 
-  \eval{[v/a]Q}{\bar{q}}, \eval{[v'/a]Q}{\bar{q'}}, and 
-  $p \ge c + q$ and $p \ge c' + q'$.
+  If \eqCComp{M}{M'}{A}{P}{a.Q}, then
+  \eqVal{\thunk{M}}{\thunk{M'}}{\ccomp{P}{\isOf{a}{A}}{Q}}.
 \end{lemma}
 
 \begin{proof}
-  Suppose \eqComp{M}{M'}{A} and 
+  Suppose \eqCComp{M}{M'}{A}{P}{a.Q}. This means
   \evalCost{M}{c}{v}, \evalCost{M'}{c'}{v'}, \eval{P}{\bar{p}}, 
   \eval{[v/a]Q}{\bar{q}}, \eval{[v'/a]Q}{\bar{q'}}, and 
   $p \ge c + q$ and $p \ge c' + q'$.
@@ -101,9 +147,7 @@
 
 \begin{lemma}(Promise)
   If \isVal{u}{\ccomp{P}{\isOf{a}{A}}{Q}}, 
-  then $u$ is $\thunk{M}$ for some $M$ s.t. \eqComp{M}{M}{A}, \evalCost{M}{c}{v},
-  \eval{P}{\bar{p}}, \eval{[v/a]Q}{\bar{q}}
-  s.t. $p \ge c + q$.
+  then $u$ is $\thunk{M}$ for some $M$ s.t. \eqCComp{M}{M}{A}{P}{a.Q}.
 \end{lemma}
 
 \begin{proof}
@@ -114,7 +158,8 @@
 \begin{lemma}(Head Expansion)\label{lemma:headexp}
   \begin{enumerate}
     \item \isTypeComp{A} and \stepIn{A}{*}{A'} implies \eqType{A}{A'}.
-    \item \isComp{M'}{A} and \stepIn{M}{*}{M'} implies \eqComp{M}{M'}{A}.
+    \item \isCComp{M'}{A}{P}{a.Q} and \step{M}{M'} implies 
+      \eqCComp{M}{M'}{A}{P^+}{a.Q}.
   \end{enumerate}
 \end{lemma}
 
@@ -125,11 +170,17 @@
       \eval{A}{A_0} and $\tau(A_0,A_0,\tau)$. Since $\Downarrow$ deterministic, 
       \eval{A'}{A_0}, and hence also \sameType{A}{A'}{\alpha}{\tau}. By definition,
       \eqType{A}{A'}.
-    \item Suppose \isComp{M'}{A} and \stepIn{M}{*}{M'}. This means 
-      \sameType{A}{A}{\alpha}{\tau} and \sameComp{}{M'}{M'}{\alpha} for some $\alpha$.
-      This means \eval{M'}{v'} and $\alpha(v',v')$. Again, since $\Downarrow$ is 
-      deterministic, \eval{M}{v'} and \sameComp{}{M}{M'}{\alpha}. Thus 
-      \eqComp{M}{M'}{A}.
+    \item Suppose \isCComp{M'}{A}{P}{a.Q} and \step{M}{M'}. This means 
+      \sameType{A}{A}{\alpha}{\tau} and 
+      \sameCComp{}{M'}{M'}{\alpha}{P}{a.Q} for some $\alpha$.
+      This means \evalCost{M'}{c}{v}, $\alpha(v,v)$, 
+      \eval{P}{\bar{p}}, \eval{[v'/a]Q}{\bar{q}}, and 
+      $p \ge c + q$. 
+      Again, since $\Downarrow$ is 
+      deterministic, \step{M}{M'} and 
+      \evalCost{M'}{c}{v}. Hence 
+      \sameCComp{}{M}{M'}{\alpha}{P^+}{a.Q}. Thus 
+      \eqCComp{M}{M'}{A}{P^+}{a.Q}.
   \end{enumerate}
 \end{proof}
 

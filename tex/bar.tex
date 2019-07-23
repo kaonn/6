@@ -3,6 +3,12 @@
 
 \section{Bar Induction}
 
+We follow the formulation of bar induction in CTT as described by authors in 
+~\cite{Rahli:2019:BIC:3318168.3305261}, giving a brief recap of the relevant results 
+in the CBPV setting. For convenience we write $\lift{}$ for embedding type constructors as 
+computations, i.e. $A \lift{\to} B \triangleq \lift{A \to B}$, and write 
+$\Uparrow A$ for $\ret{A}$.
+
 \begin{definition}(Admissibility of Bar Induction)\label{lemma:birule}
   If 
   \begin{align*}
@@ -151,20 +157,23 @@ Define the spread $R$, bar $B$, and $P$:
 \begin{align*}
   R(n,s) \triangleq &
   \ifthen{eq_b\;n\;0}{\ret{\top}\\}{
-    &\ifthen{eq_b\;n\;1}{s(0) =_{\nat} \ret{x}\\}{
+    &\ifthen{eq_b\;n\;1}{s(0) =_{\nat} \ret{max(x,y)}\\}{
       &\ifthen{eq_b\;n\;2}{
-        s(0) =_{\nat} \ret{x} \lift{\times} s(1) =_{\nat} \ret{y}\\
+        s(0) =_{\nat} \ret{max(x,y)} \lift{\times} s(1) =_{\nat} \ret{min(x,y)} \\
       }{
-        &s(0) =_{\nat} \ret{x} \lift{\times} s(1) =_{\nat} \ret{y}
-        \lift{\times} mod\, s(n-3)\, s(n-2) =_{\nat} s(n-1)
+        &s(0) =_{\nat} \ret{max(x,y)} \lift{\times} s(1) =_{\nat} \ret{min(x,y)}\\
+        &\lift{\times} \pityc{\isOf{j}{\lift{\nat}}}{
+          {1 \le j \le n-2 \to mod\, s(n-3)\, s(n-2) =_{\nat} s(n-1)}
+        }
       }
     }
   }\\
-  B(n,s) \triangleq & n > 1 \lift{\times} (s(n-1) =_{\nat} \ret{\zero}) \\
-  P(n,s) \triangleq &\bind{n \le_b 2\\}{x}{
-    &\ifthen{x}{gcdProp(x,y)}
+  B(n,s) \triangleq & n \ge 1 \lift{\times} (s(n-1) =_{\nat} \ret{\zero}) \\
+  P(n,s) \triangleq &\bind{n \le_b 2\\}{b}{
+    &\ifthen{b}{gcdProp(max(x,y),min(x,y))}
   {\bind{s(n-1)}{s_1}{\bind{s(n-2)}{s_2}{gcdProp(s_2,s_1)}}}}
 \end{align*}
+
 
 The predicates $R,B,P$ are well-formed by the various formation rules. 
 Additionally, we need to show the following: 
@@ -177,50 +186,95 @@ Additionally, we need to show the following:
         \pityc{\isOf{s}{\lift{\baire}}}{\intty{\isOf{m}{\lift{\nat}}}{\squash{R(m,s)}}
       \tolr \bind{s(j)}{v}{v \le i}
       \tolr\\ &\squash{\lift{\sigmaty{\isOf{n}{\lift{\nat}}}{
-      B(n-j,s) \lift{\times} s(j+1) \ge F_{n-j-1} \lift{\times} s(j+2) \ge F_{n-j-2}}}}}}
+        B(n,s) \lift{\times} G(n,j,s)
+    }}}}}
     \end{align*}
+    where 
+    \[
+      G(n,j,s) \triangleq 
+      n > j \lift{\times}
+      \ifthen{s(j) >_b s(j+1)}{
+        s(j) \ge F_{n-j} \lift{\times} s(j+1) \ge F_{n-j-1}
+      }{
+        s(j+1) \ge F_{n-j} \lift{\times} s(j) \ge F_{n-j-1}
+      }
+    \]
+    
+And $F_n$ is defined as the Fibonacci sequence prepended with a 0, i.e.
+$F = 0,0,1,1,2,3,5...$.
     Let \isVal{j}{\lift{\nat}},
     \isVal{s}{\lift{\baire}}, \isVal{a}{\inttyc{\isOf{m}{\lift{\nat}}}{\squash{R(m,s)}}}, and 
     \isVal{p}{\bind{s(j)}{v}{v \le i}}.
     Proceed by induction:
     \begin{itemize}
       \item $i = \zero$: 
-        Induction on $j$. Case $j = 0$:
-        Need to find a \isVal{n}{\lift{\nat}} s.t. $B(n,s)$, $s(1) \ge F_{n-1}$, and 
-        $s(2) \ge F_{n-2}$. By assumption, $s(0) \le 0$, which means $s(0) = 0$.
-        Then $n = 1$ suffices, since $F_{1-1} = F_{1-2} = 0$.
-        For $j = j' + 1$, suppose $s(j'+1) \le 0$. Now need to find $n$ s.t. 
-        $B(n- j' -1,s)$, $s(j'+2) \ge F_{n -j' - 2}$, and $s(j'+3) \ge F_{n-j'-3}$. 
-    Let \eval{s(j)}{v}. \isVal{p}{\bind{s(j)}{v}{v \le \zero}} implies that 
-    $\ret{v} =_{\nat} \ret{\zero}$, which implies $s(j) =_{\nat} \ret{\zero}$.
-    If $j = \zero$, by the spread law we know $s(\suc{\suc{j}}) =_{\nat} \ret{\zero}$,
-    and we know \isComp{\ret{(\triv, \triv)}}{B(\suc{\suc{\suc{j}}},s)}.
-    Otherwise, \isComp{\ret{(\triv, \triv)}}{B(\suc{j},s)} since $\suc{j} > 1$.
+        $p$ implies that $s(j) = 0$. We need to show $n$ s.t. $B(n,s)$ and 
+        $G(n,j,s)$. Taking $n = j+1$ suffices since $F_0 = F_1 = 0$.
       \item $i = \suc{i'}$ for some \isVal{i'}{\lift{\nat}}:
     By induction we have a term $f$ inhabiting
         \begin{align*}
   \compc{
     &\pityc{\isOf{j}{\lift{\nat}}}{\\
           &\pityc{\isOf{s}{\lift{\baire}}}{\intty{\isOf{m}{\lift{\nat}}}{\squash{R(m,s)}} 
-        \tolr \bind{s(j)}{v}{v \le i'}
-        \tolr \squash{\lift{\sigmaty{\isOf{n}{\lift{\nat}}}{B(n,s)}}}}}}
+        \tolr\\ 
+          &\bind{s(j)}{v}{v \le i'}
+          \tolr \squash{\lift{\sigmaty{\isOf{n}{\lift{\nat}}}{B(n,s) \lift{\times} G(n,s)
+          }}}}}}
         \end{align*}
     By the spread law, we know:
         \begin{gather*}
           mod\, s(j) \, s(\suc{j}) =_{\nat} s(\suc{\suc{j}})\\
         \end{gather*}
         Case $s(j+1) < s(j)$: if $s(j+1) =_{\nat} \ret{\zero}$, then we can take
-        \isComp{\ret{(\triv, \triv)}}{B(\suc{\suc{j}},s)}.
-        Else, we know $s(j+2) < s(j)$ by Lemma~\ref{mod:prop}, and we can apply the 
+        \isComp{\ret{(\triv, \triv)}}{B(\suc{\suc{j}},s)}. Furthermore, 
+        we need to show $G(j+2,j,s) \mapsto^*
+        j + 2 > j \lift{\times} s(j) \ge F_2 \lift{\times} s(j+1) \ge F_1$. This holds since 
+        \[ s(j) > 0 \implies s(j) \ge 1 = F_2 \text{ and } s(j+1) = 0 = F_1\]
+        Else, we know $s(j+2) < s(j+1) < s(j)$ by Lemma~\ref{mod:prop}, 
+        and we can apply the 
         induction hypothesis: \isComp{f\,(j+2)\,s\,a\,\triv}
-        {\squash{\lift{\sigmaty{\isOf{n}{\lift{\nat}}}{B(n,s)}}}}.
-        In the case that $s(j+1) = s(j)$, we know $s(j+2) = 0$ by the spread law.
+        {\squash{\lift{\sigmaty{\isOf{n}{\lift{\nat}}}{B(n,s) \lift{\times} G(n,j+2,s)}}}}.
+        If $s(j+2) > s(j+3)$, we know $G(n,j+2,s) \mapsto^* n > j+2 \lift{\times}
+        s(j+2) \ge F_{n-j-2} \lift{\times} s(j+3) \ge F_{n-j-3}$. 
+        We can take $n$ directly, and then it suffices to show
+        $n > j$ and $s(j) \ge F_{n-j} \lift{\times} s(j+1) \ge F_{n-j-1}$.
+        Note that 
+        \begin{align*}
+          s(j+1) - s(j+2) &\ge mod\,(s(j+1))\,(s(j+2)) \\
+          & = s(j+3)\\
+          &\ge F_{n-j-3}\\
+          &\implies s(j+1) \ge s(j+2) + F_{n-j-3}\\
+          &\implies s(j+1) \ge F_{n-j-2} + F_{n-j-3}\\
+          &\implies s(j+1) \ge F_{n-j-1}
+        \end{align*}
+        Similary, 
+        \begin{align*}
+          s(j) - s(j+1) &\ge s(j+2) \\
+                        &\ge F_{n-j-2}\\
+                        &\implies s(j) \ge s(j+1) + F_{n-j-2}\\
+                        &\implies s(j) \ge F_{n-j-1} + F_{n-j-2}\\
+                        &\implies s(j) \ge F_{n-j}
+        \end{align*}
+        So $G(n,j,s)$ holds.
 
-        We case on $s(\suc{j})$ and $s(\suc{\suc{j}})$. If \eval{s(\suc{j})}{\zero}, 
-        again \isComp{\ret{(\triv, \triv)}}{B(\suc{\suc{j}},s)}.
-        Otherwise, we know $u < v \le \suc{i'}$, and hence $u \le i'$. 
-        Then \isComp{f\,\suc{\suc{j}}\, s\,a\,\triv}{\squash{\lift{\sigmaty{\isOf{n}{\lift{\nat}}}{B(n,s)}}}}
-        .
+        If $s(j+2) \le s(j+3)$, by Lemma~\ref{lemma:mod}, it must be the case that 
+        $s(j+2) = 0$. The condition $s(j+2) \ge F_{n-j-2}$ implies that 
+        $F_{n-j-2} = 0$ which means $n = j+3$. Hence it suffices to show 
+        $s(j) \ge F_3$ and $s(j+1) \ge F_2$. The former holds since 
+        \[s(j) > s(j+1) > s(j+2) \implies s(j) \ge 2 \ge 1 = F_3\]. The latter since
+        \[s(j+1) > s(j+2) \implies s(j+1) \ge 1 = F_2\].
+
+        Now consider the case $s(j) = s(j+1)$. By the spread law, this means $s(j+2) = 0$.
+        If $s(j) = s(j+1) = 0$, we can take $n = j+1$. Clearly, $j+1 > j$, so we just 
+        need to show $s(j+1) \ge F_{1} \lift{\times} s(j) \ge F_{0}$, which holds since
+        $F_1 = F_0 = 0$. Else, we know $s(j) = s(j+1) \ge 1$, 
+        and we can take $n = j+3$, and need to show $s(j+1) \ge F_{3} \lift{\times} s(j) \ge F_{2}$. Again, this holds since $F_3 = F_2 = 1$.
+
+        Lastly, consider $s(j) < s(j+1)$. By the spread law, this means $s(j+2) = s(j)$. 
+        If $s(j) = 0$, we can take $n = j+1$ and show that $s(j+1) \ge F_1$ and 
+        $s(j) \ge F_0$ since $F_1 = F_0 = 0$. Else, we have $j = 0$, since otherwise 
+        $mod\,(s(j-1))\, (s(j)) = s(j+1)$, which is impossible. But then this is
+        a contradiction since the spread law requires $s(0) \ge s(1)$.
     \end{itemize}
   \item \isVal{ind}{\pityc{\isOf{n}{\lift{\nat}}}{\pityc{\isOf{s}{\lift{\nseq{n}}}} {\\
       \qquad\squash{R(n,s)} \tolr (\pityc{\isOf{m}{\lift{\nat}}}{R(\suc{n}, s \oplus_n m) 
@@ -230,97 +284,104 @@ Additionally, we need to show the following:
     \isVal{i}{\pityc{\isOf{m}{\lift{\nat}}}{R(\suc{n}, s \oplus_n m)
         \tolr P(\suc{n}, s \oplus_n m)}},
     need to show $P(n,s)$. Proceed with induction on $n$.
+            Let $a = max(x,y)$ and $b = min(x,y)$.
     \begin{itemize}
       \item $n = \zero$:
-        Suffices to show $P(0,s) \mapsto^* gcdProp(x,y)$.
-        Note that \isComp{i\, x\, \triv}{P(1,[x])}, since 
-        $R(1,[x]) \mapsto^* s(0) =_{\nat} \ret{x} \mapsto^* 
-        \ret{x} =_{\nat} \ret{x}$. Thus 
-        \isComp{i\, x\, \triv}{gcdProp(x,y)} since $P(0,s) \mapsto^* gcdProp(x,y)$.
+        Suffices to show $P(0,s) \mapsto^* gcdProp(a,b)$.
+        Note that \isComp{i\, a\, \triv}{P(1,[a])}, since 
+        $R(1,[a]) \mapsto^* s(0) =_{\nat} \ret{a} \mapsto^* 
+        \ret{a} =_{\nat} \ret{a}$. Thus 
+        \isComp{i\, a\, \triv}{gcdProp(a,b)} since 
+        $P(0,s) \mapsto^* gcdProp(a,b)$.
       \item $n = \suc{n'}$ for \isVal{n'}{\lift{\nat}}:
-        By induction, we have a term 
-        \begin{gather*}
-        \isVal{f}{\pityc{\isOf{s'}{\lift{\nseq{n'}}}} {
-          \squash{R(n',s')} \tolr (\pityc{\isOf{m}{\lift{\nat}}}{R(\suc{n'}, s' \oplus_{n'} m) \tolr P(\suc{n'}, s' \oplus_{n'} m)})\\ \tolr P(n',s')}}
-        \end{gather*}
         Suffices to show a term inhabiting $P(\suc{n'}, s)$.
         Now case on $n'$: 
-        \begin{itemize}
           \item $n' = \zero$: then again it suffices to show 
-            $P(\suc{n'}, s) \mapsto^* gcdProp(x,y)$.
+            $P(\suc{n'}, s) \mapsto^* gcdProp(a,b)$.
             Since \isVal{r}{\squash{R(\suc{\zero},s)}}, we know
-            $s(0) =_{\nat} \ret{x}$.
-            Note that \isComp{i\, y\, (\triv,\triv)}{P(\suc{\suc{\zero}},[x,y])}, since 
-            \[R(\suc{\suc{\zero}}, [x,y]) \mapsto^* s(0) =_{\nat} \ret{x} \lift{\times}
-            s(1) =_{\nat} \ret{y}\]. Done since 
-            $P(\suc{\suc{\zero}},[x,y]) \mapsto^* gcdProp(x,y)$.
+            $s(0) =_{\nat} \ret{a}$.
+            Note that \isComp{i\, b\, (\triv,\triv)}
+            {P(\suc{\suc{\zero}},[a,b])}, since 
+            \begin{gather*}
+              R(\suc{\suc{\zero}}, [a,b]) \\
+              \mapsto^* \ret{a} =_{\nat} \ret{a} \lift{\times}
+              \ret{b} =_{\nat} \ret{b}
+            \end{gather*}
+            Done since 
+            $P(\suc{\suc{\zero}},[a,b]) \mapsto^* gcdProp(a,b)$.
           \item $n' = \suc{\zero}$: suffices to show
             $P(\suc{\suc{n'}}, s) \mapsto^* gcdProp(x,y)$.
             Since \isVal{r}{\squash{R(\suc{\suc{\zero}},s)}}, we know
-            $s(0) =_{\nat} \ret{x}$ and $s(1) =_{\nat} \ret{y}$.
-            Let \eval{x-y}{v}.
-            Note that \isComp{\bind{x-y}{d}{i\, d\, (\triv,\triv,\triv)}}{
-              \bind{x-y}{d}{P(3,[x,y,d])}}, since 
-            \[R(3,s\oplus_3 v) \mapsto^* \ret{x} =_{\nat} \ret{x} \lift{\times} 
-            \ret{y} =_{\nat} \ret{y} \lift{\times} \ret{v} =_{\nat} v\].
+            $s(0) =_{\nat} \ret{a}$ and $s(1) =_{\nat} \ret{b}$.
+            Let \eval{mod\,a\,b}{v}.
+            Note that \isComp{\bind{mod\,a\,b}{d}{i\, d\, (\triv,\triv,\triv)}}{
+              \bind{mod\,a\,b}{d}{P(3,[a,b,d])}}, since 
+            \[R(3,s\oplus_3 v) \mapsto^* \ret{a} =_{\nat} \ret{a} \lift{\times} 
+            \ret{b} =_{\nat} \ret{b} \lift{\times} \ret{v} =_{\nat} \ret{v}\].
             Furthermore, note that 
             \begin{align*} 
-              &\bind{x-y}{d}{P(3,[x,y,d])} \\
-              \mapsto &gcdProp(y,v)
+              &\bind{mod\,a\,b}{d}{P(3,[a,b,d])} \\
+              \mapsto &gcdProp(b,v)
             \end{align*}
-            Hence \isComp{\bind{x-y}{d}{\bind{i\, d\, (\triv,\triv,\triv)}{r}{
-              \fst{\snd{r}}}}}{gcdProp(y,v)}.
-            So we know the type $gcdProp(y,v) = 
-            \sigmatyc{\isOf{d,k,l}{\lift{\z}}}{d =_{\z} k x + l v}$ is inhabited.
-            To obtain $gcdProp(x,y)$, we case on $x \ge_b y$. If this is the case,
+            Hence \isComp{\bind{mod\,a\,b}{d}{\bind{i\, d\, (\triv,\triv,\triv)}{r}{
+              \fst{\snd{r}}}}}{gcdProp(b,v)}.
+            So we know the type $gcdProp(b,v) = 
+            \sigmatyc{\isOf{d,k,l}{\lift{\z}}}{d =_{\z} k b + l v}$ is inhabited.
+            To obtain $gcdProp(a,b)$, we case on $x \ge_b y$. If this is the case,
             then: 
             \begin{align*}
-              d &=_{\z} k y + l v\\
-                &= k y + l (x - y)\\
-                & = k y + l x - l y\\
-                & = k y - l y + l x\\
-                & = (k - l)y + l x\\
-                & = l x + (k-l)y
+              d &=_{\z} k b + l v\\
+                &=_{\z} k (min(x,y)) + l v\\
+                &=_{\z} k y + l v\\
+                &= k y + l (mod\,x\, y)\\
+                & = k y + l (x - qy) \tag{ where  $x = qy + r$}\\
+                & = k y + l x - l qy \\
+                & = k y - l qy + l x\\
+                & = (k - lq)y + l x\\
+                & = l x + (k - lq)y
             \end{align*}
-            Similarly for $x <_b y$, we know $d = (-l) x + (k+l)y$.
+            Similarly for $x <_b y$, we know $d = l y + (k - lq)$ where
+            $y = qx + r$.
             So given \isVal{g}{gcdProp(y,v)}, we know 
             \begin{align*}
               \isComp{\bind{\fst{g}\\}{&d}{
                 \bind{\fst{\snd{g}}\\}{&k}{
                   \bind{\fst{\snd{\snd{g}}}\\}{&l}{
-                    &\ifthen{x \ge_b y}{(d,l,k-l,\triv)}{(d,-l,k+l,\triv)}}
-            }}}{gcdProp(x,y)}
+                    &(d,l,k-lq,\triv)}
+            }}}{gcdProp(a,b)}
             \end{align*}
             Hence 
             \begin{align*}
               \isComp{
-                \bind{\bind{x-y}{d}{i\, d\, (\triv,\triv,\triv)\\}}{&g}{
+                \bind{divmod\,a\,b\\}{&q,r}{
+                \bind{i\, r\, (\triv,\triv,\triv)\\}{&g}{
               \bind{\fst{g}\\}{&d}{
                 \bind{\fst{\snd{g}}\\}{&k}{
                   \bind{\fst{\snd{\snd{g}}}\\}{&l}{
-                    &\ifthen{x \ge_b y}{(d,l,k-l,\triv)}{(d,-l,k+l,\triv)}}}
-            }}}{gcdProp(x,y)}
+                    &(d,l,k-lq,\triv)}}
+              }}}}{gcdProp(a,b)}
             \end{align*}
           \item $n' > \suc{\zero}$:
             Let \eval{s(n-1)}{s_1} and \eval{s(n-2)}{s_2}.
-            Now we need show 
+            Now we to need show 
             \begin{align*}
               P(\suc{n'},s) \mapsto^* gcdProp(s_2,s_1)
             \end{align*}
             is inhabited. Then we have 
-            \isComp{\bind{|s_2 - s_1|}{d}{i\, d\, (\triv,\triv,\triv)}}{
+            \isComp{\bind{mod\,s_2\,s_1}{d}{i\, d\, (\triv,\triv,\triv)}}{
               P(\suc{\suc{n'}}, s \oplus_{\suc{n'}} d)}. 
             Note that $P(\suc{\suc{n'}}, s \oplus_{\suc{n'}} d) \mapsto^* 
-            gcdProp(s_1,v)$, where \eval{|s_2 - s_1|}{v}.
-            Similar to above, we case on $s_2 \ge s_1$, and derive the following:
+            gcdProp(s_1,v)$, where \eval{mod\,s_2\,s_1}{v}.
+            Similar to above, we derive the following:
             \begin{align*}
               \isComp{
-                \bind{\bind{|s_2-s_1|}{d}{i\, d\, (\triv,\triv,\triv)\\}}{&g}{
+                \bind{divmod\,s_2\,s_1\\}{&q,r}{
+                \bind{i\, r\, (\triv,\triv,\triv)\\}{&g}{
               \bind{\fst{g}\\}{&d}{
                 \bind{\fst{\snd{g}}\\}{&k}{
                   \bind{\fst{\snd{\snd{g}}}\\}{&l}{
-                    &\ifthen{s_2 \ge_b s_1}{(d,l,k-l,\triv)}{(d,-l,k+l,\triv)}}}
-            }}}{gcdProp(s_2,s_1)}
+                    &(d,l,k-lq,\triv)}}
+              }}}}{gcdProp(s_2,s_1)}
             \end{align*}
         \end{itemize}
         Thus realizer can be defined as 
@@ -329,34 +390,35 @@ Additionally, we need to show the following:
             \ifthen{&eq\,n\,0}{i\,x\,\triv\\}{
               \ifthen{&eq\,n\,1}{i\,y\,(\triv,\triv)\\}{
                 \ifthen{&eq\,n\,2\\}{
-          \bind{\bind{x-y}{d}{i\, d\, (\triv,\triv,\triv)\\}}{&g}{
-              \bind{\fst{g}\\}{&d}{
-                \bind{\fst{\snd{g}}\\}{&k}{
-                  \bind{\fst{\snd{\snd{g}}}\\}{&l}{
-                    &\ifthen{x \ge_b y}{(d,l,k-l,\triv)}{(d,-l,k+l,\triv)}}}
-            }\\}
-          }{
-            \bind{\bind{|s_2-s_1|}{d}{i\, d\, (\triv,\triv,\triv)\\}}{&g}{
-              \bind{\fst{g}\\}{&d}{
-                \bind{\fst{\snd{g}}\\}{&k}{
-                  \bind{\fst{\snd{\snd{g}}}\\}{&l}{
-                    &\ifthen{s_2 \ge_b s_1}{(d,l,k-l,\triv)}{(d,-l,k+l,\triv)}}}
-            }}
+                  \bind{&divmod\,a\,b}{q,r\\}{
+                    \bind{&i\, r\, (\triv,\triv,\triv)}{g\\}{
+                      \bind{&\fst{g}}{d\\}{
+                        \bind{&\fst{\snd{g}}}{k\\}{
+                          \bind{&\fst{\snd{\snd{g}}}}{l\\}{
+                    &(d,l,k-lq,\triv)}}\\
+              }}}
+                    }{
+                      \bind{&divmod\,s_2\,s_1}{q,r\\}{
+                        \bind{&i\, r\, (\triv,\triv,\triv)}{g\\}{
+                          \bind{&\fst{g}}{d\\}{
+                            \bind{&\fst{\snd{g}}}{k\\}{
+                              \bind{&fst{\snd{\snd{g}}}}{l\\}{
+                    &(d,l,k-lq,\triv)}}
+              }}}
           }
               }
             }
           }
         \end{align*}
-    \end{itemize}
   \item \isVal{dec}{\pityc{\isOf{n}{\lift{\nat}}}{\pityc{\isOf{s}{\lift{\nseq{n}}}}{\lift{B(n,s) + \lift{\neg} B(n,s)}}}}:
   Let \isVal{n}{\lift{\nat}} and \isVal{s}{\lift{\nseq{n}}}.
   Case on $n$:
   \begin{itemize}
-    \item $n = \zero, \suc{\zero}$:
+    \item $n = \zero$:
       Prove the right disjunct:
       $B(n,s) \mapsto^* \bot \lift{\times} \_$, so 
       \isVal{\lam{b}{}{\bind{\fst{b}}{v}{absurd\,v}}}{\lift{\neg} B(n,s)}.
-    \item $n \ge_b 2$:
+    \item $n \ge_b 1$:
       Let \eval{s(n-1)}{v}. If $v = \zero$, we can prove the left disjunct:
       \isVal{(\triv, \triv)}{B(n,s)}. Otherwise, we can prove 
       \isVal{\lam{b}{}{\triv}}{\lift{\neg}B(n,s)}.
@@ -377,16 +439,20 @@ Additionally, we need to show the following:
     \isVal{r}{\squash{R(n,s)}}, and \isVal{b}{B(n,s)}. We need to show 
     $P(n,s)$. Case on $n$: 
     \begin{itemize}
-      \item $n = \zero,\suc{\zero}$:
+      \item $n = \zero$:
         Then $B(n,s) \mapsto^* \bot \lift{\times}  (s(n-1) =_{\nat} \ret{\zero})$, so 
         \isComp{\bind{\fst{b}}{v}{absurd\,v}}{P(n,s)}.
-      \item $n = \suc{\suc{\zero}}$: 
+      \item $n = \suc{\zero}, \suc{\suc{\zero}}$: 
         Then $B(n,s) \mapsto^* \top \lift{\times}  (s(n-1) =_{\nat} \ret{\zero})$.
         We need to show 
         $P(n,s) \mapsto^* gcdProp(x,y)$. By $\squash{R(n,s)}$, we know 
-        $s(0) =_{\nat} \ret{x}$ and $s(1) =_{\nat} \ret{y}$. Hence we know 
-        $\ret{y} =_{\nat} \ret{\zero}$. Since $x = 1 \cdot x + 0 \cdot 0$,  
-        \isComp{\ret{(x,\suc{\zero},\zero)}}{gcdProp(x,\zero)}.
+        $s(0) =_{\nat} \ret{x}$. Hence we know 
+        $\ret{x} =_{\nat} \ret{\zero}$. 
+        If $y \le x$, then $y = 0$, and 
+        \isComp{\ret{(0,0,0)}}{gcdProp(0,0)}.
+        Else, we need to show $gcdProp(y,0)$.
+        Since $y = 1 \cdot y + 0 \cdot 0$,  
+        \isComp{\ret{(y,1,0)}}{gcdProp(y,0)}.
       \item $n \ge_b 3$: 
         Then $B(n,s) \mapsto^* \top \lift{\times}  (s(n-1) =_{\nat} \ret{\zero})$.
         Let \eval{s(n-2)}{s_2}. We need to show 
@@ -412,3 +478,92 @@ Finally, we can define gcd as
   gcd(x,y) \triangleq \dbr{dec}{base}{ind}{0}{\empseq}{r}
 \]
 
+Again, note that the most we can state in the type theory is the fact that $gcd$ has the 
+correct functional behavior. In fact, the number of $\mathtt{dbr}$ calls made is 
+bounded by the witness $n$ to the bar condition. However, due to the lazy nature of
+bar recursion, this cannot be expressed in the theory. A wanting result would be a
+lemma that states $\sigmatyc{\isOf{n}{\nat}}{B(n,s)}$ implies number of recursive 
+calls is bounded by $n$. Together with the constraint on $n$ we have shown in the 
+bar condition, this would suffices to bound the number of recursive calls to the 
+inverse Fibonacci of $\max{(x,y)}$. However, to achieve this, we would need to know 
+that the recursive call is only made once each time, which is 
+a property of the \emph{presentation} of the code, not of its \emph{behavior}.
+Perhaps there is a behavioral condition which implies the former, but we have not 
+found such a formulation yet.
+
+It should be noted that the unsquashed (bar) assumption is sufficient for 
+implementing a version of $\mathsf{BID}$ (without (dec)). 
+Suppose we have the assumptions:
+
+\begin{align*}
+    &\isVal{R}{\pityc{\isOf{n}{\lift{\nat}}}{\embed\nseq{n} \tolr \embed\type{}}}\\
+    &\isVal{B}{\pityc{\isOf{n}{\lift{\nat}}}{\embed\nseq{n} \tolr \embed\type{}}}\\
+    &\isVal{P}{\pityc{\isOf{n}{\lift{\nat}}}{\embed\nseq{n} \tolr \embed\type{}}}\\
+    &\isVal{bar}{\pityc{\isOf{s}{\lift{\baire}}}{\intty{\isOf{m}{\lift{\nat}}}{\squash{R(m,s)}} 
+      \tolr \lift{\sigmaty{\isOf{n}{\lift{\nat}}}{B(n,s)}}}}\\
+    &\isVal{ind}{\pityc{\isOf{n}{\lift{\nat}}}{\pityc{\isOf{s}{\lift{\nseq{n}}}}
+      {\\
+      &\qquad\squash{R(n,s)} \tolr (\pityc{\isOf{m}{\lift{\nat}}}{R(\suc{n}, s \oplus_n m) 
+        \tolr P(\suc{n}, s \oplus_n m)}) \tolr P(n,s)}}}\\
+    &\isVal{base}{\pityc{\isOf{n}{\lift{\nat}}}{\pityc{\isOf{s}{\lift{\nseq{n}}}}{\squash{R(n,s)} \tolr 
+      B(n,s) \tolr P(n,s)}}}\\
+    &\isVal{r}{R(0,\empseq)}
+  \end{align*}
+
+We can show $P(0,\empseq)$. Recall the two spread laws:
+
+\begin{gather*}
+\isVal{S_1}{\pityc{\isOf{n}{\lift{\nat}}}{
+\pityc{\isOf{s}{\lift{\nseq{n}}}}{R(n,s) \tolr \sigmatyc{\isOf{m}{\lift{\nat}}}{R(\suc{n},s \oplus_n m)}}}}\\
+\isVal{S_2}{\pityc{\isOf{n}{\lift{\nat}}}{
+  \pityc{\isOf{s}{\lift{\nseq{n}}}}{R(n,s) \tolr 
+  \pityc{\isOf{m}{\lift{\nat}}}{m \le n \tolr R(m,s \restriction_m)}}}}
+\end{gather*}
+
+Given a spread $R$ and an admissible prefix \isVal{s}{\nseq{n}} with \isVal{r}{\squash{R(n,s)}}, 
+we can extend it to an infinite sequence. 
+\begin{align*}
+  extend(s,r) &\triangleq \lam{k}{}{
+  \ifthen{k <_b n}{s}{
+  \bind{
+  \rec{k+1-n}{(s,r)}{p}{f\\}{
+    \bind{&\fst{f}}{s'\\}{
+      \bind{&\snd{f}}{r'\\}{
+        \bind{&S_1\,(p+n)\,s'\,r'}{x\\}{
+          \bind{&\fst{x}}{m}{
+          \bind{\snd{x}}{r''}{
+            (s' \oplus_{p+n} m, r'')
+          }
+        }
+      }
+      }
+    }
+  }\\
+}{&(s',r')}{s', r'}
+  }
+}\\
+  \extSeq{s}{r} &\triangleq \lam{k}{}{\bind{extend(s,r)\,k}{f}{
+    \bind{\fst{f}}{s}{s(k)}}}
+\end{align*}
+
+Let \isVal{m}{\lift{\nat}}. We need to show $R(m, \extSeq{s}{r}\restriction_m)$.
+If $m \le n$, then it follows from the second spread law. 
+Otherwise, \eval{extend(s,r)\,(m-1)}{(s',r')}, which is a pair of 
+length $m$ extension of $s$ and proof that $R(m, s')$. 
+This suffices since $s' = \extSeq{s}{r}\restriction_m$.
+
+Then we have 
+\begin{align*}
+  M \triangleq \bind{&(\extSeq{\empseq}{r})}{s\\}{
+    \bind{&bar\,s\,\triv}{(n,b)\\}{
+    \bind{
+      &base\,n\,s\restriction_n\,\triv\,b
+    }{p_n\\}{
+      &\rec{n}{(p_n,\triv)}{z}{f}{ind\,(n-(\suc{z}))\,\triv\,(\lam{\_,\_}{}{f})}
+    }
+  }
+  }
+\end{align*}
+
+and \isComp{M}{P(0,\empseq)}. Essentially, instead of searching upwards for the bar, we compute 
+the bar directly, and then recursively compute $P$ for the initial segments of $s$.

@@ -1,0 +1,134 @@
+\section{Cbv vs. Cbn}
+
+In our setup, all computations are performed ``call by value''. In particular, this means
+the recursor schedules the recursive calls to complete before the body. This leads to
+predictable generic cost behavior given the cost of the body. However, the call by value
+protocol leads to wasted computations in case when the body short-circuits in some way.
+Consider the gcd as usually defined:
+
+\begin{verbatim}
+gcd = 
+  \m.rec(m){
+    0 => \x,y -> 0
+    s(m'),f => \x,y -> if x = 0 then y else f y (mod x y)
+  }
+\end{verbatim}
+
+Where \texttt{m} is a structural argument that witnesses termination. Morally, 
+it represents the amount of ``fuel'' the computation needs before the recursion stops.
+A naive analysis shows that the sum of relevant inputs suffices, since it decreases
+by at least one each recursive call.
+We can trace how \texttt{gcd 100} computes:
+
+\begin{verbatim}
+gcd 100 = rec(100){...}
+==> f1 <- rec(99){...}; 
+    \x,y.if x = 0 then y else f1 y (mod x y)
+==> f1 <- 
+      f2 <- rec(98){...};
+      \x,y.if x = 0 then y else f2 y (mod x y);
+    \x,y.if x = 0 then y else f1 y (mod x y)
+...
+==> f1 <- 
+      f2 <- 
+        ...
+        f99 <- rec(0){...};
+        \x,y.if x = 0 then y else f99 y (mod x y)
+        ... 
+      \x,y.if x = 0 then y else f2 y (mod x y);
+    \x,y.if x = 0 then y else f1 y (mod x y)
+==>  f1 <- 
+      f2 <- 
+        ...
+        f99 <- 0;
+        \x,y.if x = 0 then y else f99 y (mod x y)
+        ... 
+      \x,y.if x = 0 then y else f2 y (mod x y);
+    \x,y.if x = 0 then y else f1 y (mod x y)
+==>  f1 <- 
+      f2 <- 
+        ...
+        f99 <- \x,y -> 0;
+        \x,y.if x = 0 then y else f99 y (mod x y)
+        ... 
+      \x,y.if x = 0 then y else f2 y (mod x y);
+    \x,y.if x = 0 then y else f1 y (mod x y)
+...
+==> \x,y.if x = 0 then y else 
+       (\x,y. if x = 0 then y else 
+         (\x,y. if x = 0 then y else
+           ...
+           (\x,y. if x = 0 then y else
+             (
+              \x,y. 0
+             ) y (mod x y)
+           )
+           ...
+         ) y (mod x y)
+        
+        ) y (mod x y)
+\end{verbatim}
+
+Note that \emph{all} recursive calls are scheduled regardless whether the body actually 
+uses them. Consider the input pair \texttt{(70,30)}. Ordinarily, one would expect the
+call graph to look like 
+
+\[
+\texttt{gcd(70,30)} \to \texttt{gcd(30,10)} \to \texttt{gcd(10,0)} \to \texttt{gcd(0,10)} 
+\]
+
+And so we have \text{gcd(70,30) = 10}. Indeed, this is what happens if recursive calls 
+are scheduled lazily. However, with CBV, all 100 recursive calls are 
+computed before we even get to look at the body. 
+
+It seems that lazy evaluation is advantageous in this sense. However, this comes at the 
+cost of non-uniformity, as the unevaluated thunks can be arbitrarily duplicated within
+the body, making any general statements about the complexity of a recursive function 
+impossible. 
+
+The issue further complicated by tree-like call graphs engenered by inductive types with
+multiple recursive constructors. In some cases, such as node insertion in a binary tree,
+lazy evaluation is the only way to achieve the expected complexity if all we have 
+are the corresponding elimination principles. Again, we have no way of recording this 
+information in the type theory if recursive calls are lazily evaluated. We choose to 
+value expressiveness over performance, since all is moot if we cannot write anything 
+down. 
+
+The notion of the structural argument also deserves attention. In the gcd example, we 
+naively chose the sum of the inputs as the measure of termination. A closer analysis 
+was given by Gabriel Lam\'{e} in 1844, where he showed that the number of recursive calls
+$n$ satisfied the relation $F_{n+2} \ge \max{x,y}$. In essense, this means $n$ is
+proportional to the log of the inputs. With this fact, one can define a ``better '' 
+algorithm computing the gcd using only the recursor. 
+
+We also discovered another way to incorporate this observation in an efficient
+implementation of Euclid's algorithm, which uses the notion of bar induction.
+The benefit of doing this is that the termination proof is not 
+directly ``baked in'' to the algorithm itself. The analogy would be 
+bar induction is to ``while-loop'' as recursion is to ``for-loop''.
+This modularity enables the programmer to implement the algorithm, and gradually 
+refine the descriptive complexity as needed 
+(we were able to extend  the mere existence of 
+the bar with the above bound without rewriting the code itself). However, as mentioned
+earlier, this does not yet enable us to give a cost bound to the resulting bar 
+recursion, as we discuss later.
+
+For the case of gcd, we first encode the patterns of recursive calls as the spread of 
+admissible sequences. In this case, an admissible sequence $s$ of length $n$ must
+begin with the inputs i.e. $s_0 = x, s_1 = y$, and furthermore satisfying the relation
+ $mod\,s_{n-j-2}\,s_{n-j-1} = s_{n-j}$ for all $1 \le j \le n-2$. 
+In other words, it is the sequence of 
+arguments to gcd laid out linearly. 
+We call a sequence barred if at some point it becomes 0.
+Next, we prove the fact that each of these 
+sequences are barred, i.e. the recursive calls terminate. 
+Lastly, we construct a predicate $P$ on sequences which is 1) implied by the bar,
+and 2) inductive, which corresponds to the fact that if each 
+admissible extension of a sequence satisfy $P$, then so does that sequence.
+All of these ingredients suffice to define a ``while-loop'' version of the gcd, in which
+termination is not evident in the code written, but instead implied by the 
+bar condition. In the next section, we give the detailed construction of this
+description.
+
+
+

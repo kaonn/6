@@ -5,11 +5,11 @@
     \mid \suc{v}
     \mid \zero 
     \mid \thunk{M}
-    \mid \comp{M}
+    \mid \ccomp{P}{\isOf{a}{A}}{Q}
     \mid x
     \mid \nat
-    \mid \pair{v}{w}
-    \mid \arr{\isOf{x}{M}}{\varphi}{\isOf{x'}{M'}}{\varphi'}
+    \mid \pair{v}{w}\\
+    &\mid \arr{\isOf{x}{M}}{P}{\isOf{x'}{M'}}{P'}
     \mid \dprod{\isOf{x}{M}}{M'}\\
     \mathsf{Comp} \quad M &::= 
      v_1 \; v_2
@@ -18,7 +18,6 @@
     \mid \fst{v}
     \mid \snd{v}
     \mid \ret{v}\\
-    \mathsf{Pot} \quad \varphi &::= M
 \end{align*}
 
 \section{Semantics}

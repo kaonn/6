@@ -1,0 +1,170 @@
+\section{Fold}
+
+Now we can characterize the complexity of some familiar functions. 
+First, add lists to the language: 
+
+\begin{align*}
+    \mathsf{Val} \quad v &::= \listty{A}
+    \mid \nil
+    \mid \cons{u}{v}\\
+    \mathsf{Comp} \quad M &::= \lrec{v}{M_0}{x,xs,f}{M_1}
+\end{align*}
+
+\begin{mathpar}
+
+\inferrule{
+}{
+  \lrec{\nil}{M_0}{x,xs,f}{M_1} \mapsto M_0
+}
+
+\inferrule{
+}{
+  \lrec{\cons{u}{v}}{M_0}{x,xs,f}{M_1} \mapsto 
+  \seq{\thunk{\lrec{v}{M_0}{x,xs,f}{M_1}}}{f}{[u/x,v/xs]M_1}
+}
+\end{mathpar}
+
+For convenience, we define a resource monoid on pairs of natural numbers (from 
+Section 3.3.1 in~\cite{Hoffmann11}: 
+\[
+(p,q) \cdot (p',q') \triangleq \begin{cases}
+(p + p' - q, q') \quad\text{ if } $p' > q$\\
+(p, q - p' + q') \quad\text{ else }
+\end{cases}
+\]
+
+Then we have some properties:
+
+\begin{lemma}(Resource Monoid)
+\begin{enumerate}
+\item If $p \ge c + q$ and $p' \ge c' + q'$ then $r \ge c+c' + s$ where 
+$(r,s) = (p,q) \cdot (p',q')$
+\item If $p > q$, then $(p,q)^n = (np - (n-1)q, q)$. Otherwise, 
+$(p,q)^n = (p, nq - (n-1)p)$. 
+\end{enumerate}
+\end{lemma}
+
+We can lift the monoid to the computation layer:
+
+\begin{verbatim}
+ressum = \(p,q),(p',q') ->
+  if p' > q then ret((p+p'-q,q'))
+  else ret((p, q+q'-p'))
+\end{verbatim}
+
+Suppose we define fold as follows:
+
+\[
+fold \triangleq \lam{f,b,l}{}{\lrec{l}{\ret{b}}{x,xs,z}{f(x,z)}}
+\]
+
+Then we have the following:
+
+\begin{lemma}(Fold)\label{lemma:fold}
+Given
+\begin{gather*}
+\isVal{f}{\arrabtc{\dprodc{A}{B}}{B}{x.P,x.y.Q}}\\
+\isVal{b}{B}\\
+\isVal{l}{\listtyc{A}}
+\end{gather*}
+let 
+\begin{verbatim}
+T = fold (\(a,(v,p,q)) ->
+  v' <- f(a,v);
+  p' <- [(a,v)/x]P;
+  q' <- [(a,v)/x,v'/y]Q;
+  ressum (p,q) (p',q')
+) (0,0) l
+\end{verbatim}
+
+then \isCComp{fold\,f\,b\,l}{B}{\fst{T} + 3n+2}{\snd{T}}
+\end{lemma}
+
+\begin{proof}
+Let $l = [a_0,...,a_{n-1}]$. Unfolding the computation of fold:
+\begin{verbatim}
+fold f b l 
+==>^3 lrec{l}(...) 
+==> v1 <- lrec{[a1,...,a{n-})]}(...);
+    f(a0,v1)
+==> v1 <- 
+      v2 <- lrec{[a2,...a{n-1}]}(...);
+      f(a1,v2);
+    f(a0,v1)
+... // n-2 steps
+==> v1 <- 
+      v2 <- 
+        ...
+        vn <- lrec{[]}(...);
+        f(a{n-1},vn);
+        ...
+      f(a1,v2);
+    f(a0,v1)
+==> v1 <- 
+      v2 <- 
+        ...
+        vn <- ret(b);
+        f(a{n-1},vn);
+        ...
+      f(a1,v2);
+    f(a0,v1)
+==> v1 <- 
+      v2 <- 
+        ...
+        v{n-1} <- f(a{n-1},b);
+        ...
+      f(a1,v2);
+    f(a0,v1)
+\end{verbatim}
+So essentially we have to compute 
+\[
+f(a_0,f(a_1,...,f(a_{n-1},b)...))
+\]
+Let each \evalCost{f(a_i,...)}{c_i}{v_i}, and $v_n \triangleq b$. We know by assumption that 
+\begin{gather*}
+\eval{[(a_i,v_{i+1})/x]P}{\bar{p_i}},\\
+\eval{[(a_i,v_{i+1})/x,v_i/y]Q}{\bar{q_i}},\\
+p_i \ge c_i + q_i
+\end{gather*}
+
+Thus the total cost for the function calls is $c = sum_i(c_i)$, which is bounded by
+the sum in the resource monoid: 
+\[
+(p_{i-1}, q_{i-1}) \cdot (p_{i-2}, q_{i-2}) \cdot \dots \cdot (p_0,q_0) 
+\]
+
+This can be computed as another fold:
+
+\begin{verbatim}
+t = fold (\(a,(v,p,q)) ->
+  v' <- f(a,v);
+  p' <- [(a,v)/x]P;
+  q' <- [(a,v)/x,v'/y]Q;
+  ressum (p,q) (p',q')
+) (0,0) l
+
+p,q = t.1, t.2
+\end{verbatim}
+Where $p \ge c + q$.
+
+Furthermore, we need 1 unit for each function application, and 1 unit for each sequence, 
+which accounts for another $2n-1$ units.
+
+Hence in total we need $3 + n + c + 2n-1 = c + 3n+2$, and is bounded by the given cost specification.
+\end{proof}
+
+We can define map in terms of fold: 
+
+\[
+map \triangleq \lam{f,l}{}{fold\,(\lam{(a,b)}{}{\bind{f(a)}{v}{\ret{\cons{v}{b}}}})\,\nil\,l}
+\]
+
+In particular, assuming \isVal{f}{\arrabtc{A}{B}{\_.\ret{p},\_.\_.\ret{q}}}, we can deduce that 
+\[
+\isVal{f'}{\arrabtc{\dprodc{A}{B}}{\listtyc{B}}{\_.\ret{p+2},\_.\_.\ret{q}}}
+\]
+
+where $f'$ is the function argument to fold.
+Then the total function cost can be bounded by $(p+2,q)^n = (n(p+2) - (n-1)q,q) = (n(p-q+2) + q,q)$,
+i.e. it suffices to start map with $n(p-q+2)$ units, where $n = |l|$.
+

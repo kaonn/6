@@ -27,17 +27,20 @@
 
 \end{mathpar}
 
-Recall the first spread law: 
+Recall the two spread laws:
 \begin{gather*}
 \isVal{S_1}{\pityc{\isOf{n}{\lift{\nat}}}{
-\pityc{\isOf{s}{\lift{\nseq{n}}}}{R(n,s) \tolr \sigmatyc{\isOf{m}{\lift{\nat}}}{R(\suc{n},s \oplus_n m)}}}}
+\pityc{\isOf{s}{\lift{\nseq{n}}}}{R(n,s) \tolr \sigmatyc{\isOf{m}{\lift{\nat}}}{R(\suc{n},s \oplus_n m)}}}}\\
+\isVal{S_2}{\pityc{\isOf{n}{\lift{\nat}}}{
+  \pityc{\isOf{s}{\lift{\nseq{n}}}}{R(n,s) \tolr 
+  \pityc{\isOf{m}{\lift{\nat}}}{m \le n \tolr R(m,s \restriction_m)}}}}
 \end{gather*}
 
 Given a spread $R$ and an admissible prefix \isVal{s}{\nseq{n}} with \isVal{r}{\squash{R(n,s)}}, 
 we can extend it to an infinite sequence. 
 \begin{align*}
-\extSeq{s}{r} \triangleq \lam{k}{}{
-  &\ifthen{k <_b n}{s(k)}{
+  extend(s,r) &\triangleq \lam{k}{}{
+  \ifthen{k <_b n}{s}{
   \bind{
   \rec{k+1-n}{(s,r)}{p}{f\\}{
   \bind{\fst{f}\\}{&s'}{
@@ -45,17 +48,26 @@ we can extend it to an infinite sequence.
       \bind{S_1\,(p+n)\,s'\,r'}{&x}{
         \bind{\fst{x}}{m}{
           \bind{\snd{x}}{r''}{
-            (s' \oplus_(p+n) m, r'')
+            (s' \oplus_{p+n} m, r'')
           }
         }
       }
       }
     }
   }\\
-  }{s'}{&s'(k)}
+}{(s',r')}{&s', r'}
   }
-}
+}\\
+  \extSeq{s}{r} &\triangleq \lam{k}{}{\bind{extend(s,r)\,k}{f}{
+    \bind{\fst{f}}{s}{s(k)}}}
 \end{align*}
+
+Let \isVal{m}{\lift{\nat}}. We need to show $R(m, \extSeq{s}{r}\restriction_m)$.
+If $m \le n$, then it follows from the second spread law. 
+Otherwise, \eval{extend(s,r)\,(m-1)}{(s',r')}, which is a pair of 
+length $m$ extension of $s$ and proof that $R(m, s')$. 
+This suffices since $s' = \extSeq{s}{r}\restriction_m$.
+
 \begin{lemma}
 If
 \begin{align*}
@@ -77,17 +89,41 @@ If
 Then $\doState{k}{\dbrp{dec}{base}{ind}{0}{\empseq}{r}} \mapsto^* \retState{k}{\ret{v}}$ and
 \isVal{v}{P(0,\empseq)}. 
 Suppose the inductive argument is fully applied in the body of $ind$, i.e. the 4th argument is 
-fully applied. Let 
-\doState{k}{\dbrp{dec}{base}{ind}{n}{s}{r}} be the last 
-distinguished dbr state for some $n,s,r$ in the computation.
-Then there are exactly $n$ distinguished dbr states in the computation. 
-Furthermore, $n$ is bounded by the bar for the extended sequence \extSeq{s}{r}:
+fully applied. If 
+\doState{k}{\dbrp{dec}{base}{ind}{i}{s}{r}} occurs as a 
+in the computation for some $i,s,r$, 
+then it is the $i$th distinguished $\underline{\mathtt{dbr}}$.
+Let \doState{k}{\dbrp{dec}{base}{ind}{n}{s}{r}} be the last such state.
+Then $n$ is bounded by the bar for the extended sequence \extSeq{s}{r}:
 $n \le_b b$, where \eval{\bind{bar\,(\extSeq{s}{r})\,\triv}{x}{\fst{x}}}{b}.
+Write $term(\extSeq{s}{r})$ for b.
 \end{lemma}
 
 \begin{proof}
   The first part follows from Lemma~\ref{lemma:dbr} and ~\ref{lemma:stack}.
-  For the second part, proceed by induction on $n$. If $n = 0$, 
+  Note 
+  \begin{gather*}
+  \doState{k}{\dbrp{dec}{base}{ind}{n}{s}{r}} \mapsto \\
+  \doState{k; \seq{\thunkcst{\_}}{x}{\case{x}{p}{base\;n\;s\;r\;p}{\_}{ind\;n\;s\;\;r\;(\lam{t,r'}{}{\dbrp{dec}{base}{ind}{\suc{n}}{s\oplus_n t}{r'}})}
+}}{dec\,n\,s}
+  \end{gather*}
+  For the second part, proceed by induction on $n$. 
+  
+  If $n = 0$, 
+  then \doState{k}{\dbrp{dec}{base}{ind}{0}{\empseq}{r}} is the last 
+  $\underline{\mathtt{dbr}}$. This implies \eval{dec\,0\,\empseq}{\inl{p}} 
+  for some \isVal{p}{\lift{B(0,\empseq)}}, 
+  since otherwise it would not be the last such state. 
+  Then clearly there are exactly 1 such state and 
+  $0 \le_b term(\extSeq{s}{r})$.
 
+  If $n = \suc{n'}$, then
+  \doState{k}{\dbrp{dec}{base}{ind}{\suc{n'}}{s}{r}} is the last 
+  $\underline{\mathtt{dbr}}$. Suppose $n >_b term(\extSeq{s}{r})$.
+  This means there exists $m < n$ s.t. $B(m,s\restriction_m)$ is inhabited.
+  But this is a contradiction since $dec\,m\,(s\restriction_m)$ would have 
+  returned $\inl{p}$ and 
+  \doState{k'}{\dbrp{dec}{base}{ind}{m}{s\restriction_m}{r}} would have been
+  the last. Hence $n \le_b term(\extSeq{s}{r})$. 
 \end{proof}
 

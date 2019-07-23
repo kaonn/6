@@ -54,11 +54,12 @@
 
 \newcommand{\lam}[3]{\ensuremath{{\color{red}{\lambda}} #1 .\; #3}}
 \newcommand{\seq}[3]{\mathtt{seq}(#1;#2.\;#3)}
-\newcommand{\bind}[3]{#2 \leftarrow #1;\;#3}
+%\newcommand{\bind}[3]{#2 \leftarrow #1;\;#3}
+\newcommand{\bind}[3]{\mathtt{do}\; #1 \; \mathtt{as}\; #2\; \mathtt{in}\; #3}
 \newcommand{\rec}[5]{\mathtt{rec}(#1)(#2;#3.#4.#5)}
 \newcommand{\case}[5]{\mathtt{case}(#1)(#2.#3; #4.#5)}
 \newcommand{\thunk}[1]{{\color{red}{\mathtt{thunk}}}(#1)}
-\newcommand{\comp}[1]{{\color{red}{\lift{\mathtt{comp}}}}(#1)}
+\newcommand{\comp}[1]{{\color{red}{\mathtt{comp}}}(#1)}
 \newcommand{\compc}[1]{{\color{red}{\mathtt{comp}}}(#1)}
 \newcommand{\ccomp}[3]{{\color{red}{\mathtt{comp}}}(#1, #2 \diamond #3)}
 \newcommand{\force}[1]{\mathtt{force}(#1)}
@@ -99,6 +100,7 @@
 \newcommand{\isVal}[2]{\ensuremath{#1 \in_0 #2}}
 \newcommand{\isType}[1]{\ensuremath{#1 \; \mathsf{type}_0}}
 \newcommand{\isComp}[2]{\ensuremath{#1 \in #2}}
+\newcommand{\isCComp}[4]{\ensuremath{#1 \in #2 {\color{purple}{\;[#3; #4]}}}}
 \newcommand{\isTypeComp}[1]{\ensuremath{#1 \; \mathsf{type}}}
 \newcommand{\isPot}[1]{\ensuremath{#1 \; \mathsf{pot}}}
 \newcommand{\isPotTyped}[2]{\ensuremath{#1 \; \mathsf{pot} \; #2}}
@@ -127,8 +129,10 @@
 \newcommand{\eqVal}[3]{\ensuremath{#1 \doteq #2 \in_0 #3}}
 
 \newcommand{\openEqComp}[4]{\ensuremath{#1 \gg #2 \doteq #3 \in #4}}
+\newcommand{\openEqCComp}[6]{\ensuremath{#1 \gg #2 \doteq #3 \in #4 {\color{purple}{\;[#5; #6]}}}}
 \newcommand{\openEqVal}[4]{\ensuremath{#1 \gg #2 \doteq #3 \in_0 #4}}
 \newcommand{\openComp}[3]{\ensuremath{#1 \gg #2 \in #3}}
+\newcommand{\openCComp}[5]{\ensuremath{#1 \gg #2 \in #3 {\color{purple}{\;[#4; #5]}}}}
 \newcommand{\openTypeComp}[2]{\ensuremath{#1 \gg #2 \; \mathsf{type}}}
 \newcommand{\openEqTypeComp}[3]{\ensuremath{#1 \gg #2 \doteq  #3 \; \mathsf{type}}}
 
@@ -171,7 +175,8 @@
 \newcommand{\class}[1]{\ensuremath{[#1]}}
 \newcommand{\cost}[1]{\ensuremath{\mathcal{C}}(#1)}
 \newcommand{\fequiv}[2]{\ensuremath{#1 \asymp #2}}
-\newcommand{\arrabt}[3]{\ensuremath{\Pi(#1; #2)}}
+\newcommand{\arrabt}[3]{\ensuremath{\Pi(#1, #2, #3)}}
+\newcommand{\arrabtc}[3]{\ensuremath{\lift{\Pi(#1, #2, #3)}}}
 \newcommand{\relpot}[4]{\ensuremath{\mathtt{relpot}(#1.#2; #3.#4)}}
 \newcommand{\relpotty}[3]{\ensuremath{\mathtt{relpotty}(#1;#2.#3)}}
 
@@ -196,6 +201,14 @@
 \newcommand{\retState}[2]{\ensuremath{#1\,\lhd\, #2}}
 \newcommand{\thunkcst}[1]{\ensuremath{\{#1\}}}
 \newcommand{\extSeq}[2]{\ensuremath{#1 \nearrow #2}}
+
+%examples
+\newcommand{\listty}[1]{\ensuremath{\mathtt{list}(#1)}}
+\newcommand{\listtyc}[1]{\ensuremath{\lift{\mathtt{list}}(#1)}}
+\newcommand{\nil}{\ensuremath{\mathtt{nil}}}
+\newcommand{\cons}[2]{\ensuremath{\mathtt{cons}(#1;#2)}}
+\newcommand{\lrec}[4]{\mathtt{lrec}(#1)(#2;#3.#4)}
+
 \begin{document}
  
 % --------------------------------------------------------------
@@ -218,9 +231,14 @@
 %\input{arith.tex}
 
 %\input{tree.tex}
-%\input{construction.tex}
-\input{stack.tex}
-\input{bar.tex}
+\input{construction.tex}
+%\input{stack.tex}
 \input{lemmas.tex}
+\input{examples.tex}
+\input{tension.tex}
+\input{bar.tex}
+\input{appendix.tex}
 
+\bibliography{bib}{}
+\bibliographystyle{plain}
 \end{document}
