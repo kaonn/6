@@ -18,13 +18,13 @@ Define the spread $R$, bar $B$, and $P$:
       }{
         &s(0) =_{\nat} \ret{max(x,y)} \lift{\times} s(1) =_{\nat} \ret{min(x,y)}\\
         &\lift{\times} \pityc{\isOf{j}{\lift{\nat}}}{
-          {1 \le j \le n-2 \to mod\, s(n-3)\, s(n-2) =_{\nat} s(n-1)}
+          {1 \le j \le n-2 \to mod\, s(n-j-2)\, s(n-j-1) =_{\nat} s(n-j)}
         }
       }
     }
   }\\
   B(n,s) \triangleq & n \ge 1 \lift{\times} (s(n-1) =_{\nat} \ret{\zero}) \\
-  P(n,s) \triangleq &\bind{n \le_b 2\\}{b}{
+  P(n,s) \triangleq &\bind{n \le_b 1\\}{b}{
     &\ifthen{b}{gcdProp(max(x,y),min(x,y))}
   {\bind{s(n-1)}{s_1}{\bind{s(n-2)}{s_2}{gcdProp(s_2,s_1)}}}}
 \end{align*}
@@ -133,7 +133,8 @@ $F = 0,0,1,1,2,3,5...$.
     \end{itemize}
   \item \isVal{ind}{\pityc{\isOf{n}{\lift{\nat}}}{\pityc{\isOf{s}{\lift{\nseq{n}}}} {\\
       \qquad\squash{R(n,s)} \tolr (\pityc{\isOf{m}{\lift{\nat}}}{R(\suc{n}, s \oplus_n m) 
-        \tolr P(\suc{n}, s \oplus_n m)}) \tolr P(n,s)}}}\\
+        \tolr P(\suc{n}, s \oplus_n m)}) \tolr P(n,s)}}}:\\
+
   Given \isVal{n}{\lift{\nat}}, \isVal{s}{\lift{\nseq{n}}}, 
     \isVal{r}{\squash{R(n,s)}}, 
     \isVal{i}{\pityc{\isOf{m}{\lift{\nat}}}{R(\suc{n}, s \oplus_n m)
@@ -257,7 +258,7 @@ $F = 0,0,1,1,2,3,5...$.
                         \bind{&i\, r\, (\triv,\triv,\triv)}{g\\}{
                           \bind{&\fst{g}}{d\\}{
                             \bind{&\fst{\snd{g}}}{k\\}{
-                              \bind{&fst{\snd{\snd{g}}}}{l\\}{
+                              \bind{&\fst{\snd{\snd{g}}}}{l\\}{
                     &(d,l,k-lq,\triv)}}
               }}}
           }
@@ -333,7 +334,8 @@ Finally, we can define gcd as
   gcd(x,y) \triangleq \dbr{dec}{base}{ind}{0}{\empseq}{r}
 \]
 
-Again, note that the most we can state in the type theory is the fact that $gcd$ has the 
+Without further analysis, the most we can state in the type theory is the 
+fact that $gcd$ has the 
 correct functional behavior. In fact, the number of $\mathtt{dbr}$ calls made is 
 bounded by the witness $n$ to the bar condition. However, due to the lazy nature of
 bar recursion, this cannot be expressed in the theory. A wanting result would be a
@@ -345,4 +347,58 @@ that the recursive call is only made once each time, which is
 a property of the \emph{presentation} of the code, not of its \emph{behavior}.
 Perhaps there is a behavioral condition which implies the former, but we have not 
 found such a formulation yet.
+
+All is not lost, since we \emph{can} analyze the code further. To keep the analysis 
+manageable, let us assume the existence of primitive arithmetic operators with unit
+cost:
+
+\begin{mathpar}
+  \isVal{divmod}{\arrabtc{\lift{\nat}}{\arrabtc{\lift{\nat}}{\lift{\nat}}
+  {\_.\constp{1}, \_.\_.\zp}}{\_.\zp, \_.\_.\zp}}
+
+  \isVal{plus}{\arrabtc{\lift{\nat}}{\arrabtc{\lift{\nat}}{\lift{\nat}}
+  {\_.\constp{1}, \_.\_.\zp}}{\_.\zp, \_.\_.\zp}}
+
+  \isVal{minus}{\arrabtc{\lift{\nat}}{\arrabtc{\lift{\nat}}{\lift{\nat}}
+  {\_.\constp{1}, \_.\_.\zp}}{\_.\zp, \_.\_.\zp}}
+
+  \isVal{mult}{\arrabtc{\lift{\nat}}{\arrabtc{\lift{\nat}}{\lift{\nat}}
+  {\_.\constp{1}, \_.\_.\zp}}{\_.\zp, \_.\_.\zp}}
+
+  \isVal{eq_b}{\arrabtc{\lift{\nat}}{\arrabtc{\lift{\nat}}{\lift{\nat}}
+  {\_.\constp{1}, \_.\_.\zp}}{\_.\zp, \_.\_.\zp}}
+
+  \isVal{\le_b}{\arrabtc{\lift{\nat}}{\arrabtc{\lift{\nat}}{\lift{\nat}}
+  {\_.\constp{1}, \_.\_.\zp}}{\_.\zp, \_.\_.\zp}}
+\end{mathpar}
+
+The sequence extension operator has a constant cost for all \isVal{n}{\lift{\nat}}, since 
+the body is immediately abstracted:
+
+\[
+  \isVal{\oplus_n}{\arrabtc{\nseq{n}}{\arrabtc{\lift{\nat}}{\nseq{\suc{n}}}
+  {\_.\zp, \_.\_.\zp}}{\_.\zp, \_.\_.\zp}}
+\]
+
+Now we case on 
+
+\begin{verbatim}
+gcd(x,y) = dbr(dec,base,ind,0,[],r) 
+==> do dec(0,[]) as x in 
+    case x of
+    inl(p) => base 0 [] r p 
+    inr(p) => ind 0 [] r (\t,r'. dbr(dec,base,ind,1,[] ++ [t], r')) 
+==> do ret(d) as x in 
+    case x of
+    inl(p) => base 0 [] r p 
+    inr(p) => ind 0 [] r (\t,r'. dbr(dec,base,ind,1,[] ++ [t], r')) 
+==> case d of
+    inl(p) => base 0 [] r p 
+    inr(p) => ind 0 [] r (\t,r'. dbr(dec,base,ind,1,[] ++ [t], r')) 
+==> ind 0 [] r (\t,r'. dbr(dec,base,ind,1,[] ++ [t], r')) 
+==>^4 if(eq 0 0; (...) x * ; ...)
+==>^2 if(tt; (...) x * ; ...)
+==> (\t,r'. dbr(dec,base,ind,1,[] ++ [t], r')) x * 
+==> dbr(dec,base,ind,1,[] ++ [x], *)
+\end{verbatim}
 

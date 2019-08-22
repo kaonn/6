@@ -151,10 +151,11 @@ Let $(S,T,\phi) \in \text{Types}(v,\tau)$. NTS $(S,T,\phi) \in \tau$.
             \sameCComp{}{M}{M'}{\alpha'}{P}{a.Q}
             \}$.
 
+            % samecomp: M ~ M' in a [P'; a.Q'] and P ~ P, a >> Q ~ Q' implies M ~ M' in a [P; a.Q]
             This holds by applying Lemma~\ref{lemma:samecomp}.
         \end{itemize}
     \end{itemize}
-\item $(S,T,\phi) =(\arrabt{A}{a.B}{R}, \arrabt{A'}{a.B'}{R'}, \phi)$\\
+\item $(S,T,\phi) =(\arrabt{A}{a.B}{a.P,a.b.Q}, \arrabt{A'}{a.B'}{a.P', a.b.Q'}, \phi)$\\
     From the assumption, \fact{we know}{1} (some conditions omitted): 
   \begin{enumerate}
   \item $\exists \alpha.\, \sameType{A}{A'}{\alpha}{\tau}$. This means 
