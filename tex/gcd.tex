@@ -146,13 +146,9 @@ $F = 0,0,1,1,2,3,5...$.
         Suffices to show $P(0,s) \mapsto^* gcdProp(a,b)$.
         Note that \isComp{i\, a\, \triv}{P(1,[a])}, since 
         $R(1,[a]) \mapsto^* s(0) =_{\nat} \ret{a} \mapsto^* 
-        \ret{a} =_{\nat} \ret{a}$. Thus 
-        \isComp{i\, a\, \triv}{gcdProp(a,b)} since 
-        $P(0,s) \mapsto^* gcdProp(a,b)$.
-      \item $n = \suc{n'}$ for \isVal{n'}{\lift{\nat}}:
-        Suffices to show a term inhabiting $P(\suc{n'}, s)$.
-        Now case on $n'$: 
-          \item $n' = \zero$: then again it suffices to show 
+        \ret{a} =_{\nat} \ret{a}$, and so \isVal{\triv}{R(1,[a])}. Thus 
+        \isComp{i\, a\, \triv}{gcdProp(a,b)}.
+      \item $n = \suc{\zero}$: then again it suffices to show 
             $P(\suc{n'}, s) \mapsto^* gcdProp(a,b)$.
             Since \isVal{r}{\squash{R(\suc{\zero},s)}}, we know
             $s(0) =_{\nat} \ret{a}$.
@@ -165,79 +161,67 @@ $F = 0,0,1,1,2,3,5...$.
             \end{gather*}
             Done since 
             $P(\suc{\suc{\zero}},[a,b]) \mapsto^* gcdProp(a,b)$.
-          \item $n' = \suc{\zero}$: suffices to show
-            $P(\suc{\suc{n'}}, s) \mapsto^* gcdProp(x,y)$.
-            Since \isVal{r}{\squash{R(\suc{\suc{\zero}},s)}}, we know
-            $s(0) =_{\nat} \ret{a}$ and $s(1) =_{\nat} \ret{b}$.
-            Let \eval{mod\,a\,b}{v}.
-            Note that \isComp{\bind{mod\,a\,b}{d}{i\, d\, (\triv,\triv,\triv)}}{
-              \bind{mod\,a\,b}{d}{P(3,[a,b,d])}}, since 
-            \[R(3,s\oplus_3 v) \mapsto^* \ret{a} =_{\nat} \ret{a} \lift{\times} 
-            \ret{b} =_{\nat} \ret{b} \lift{\times} \ret{v} =_{\nat} \ret{v}\].
-            Furthermore, note that 
-            \begin{align*} 
-              &\bind{mod\,a\,b}{d}{P(3,[a,b,d])} \\
-              \mapsto &gcdProp(b,v)
-            \end{align*}
-            Hence \isComp{\bind{mod\,a\,b}{d}{\bind{i\, d\, (\triv,\triv,\triv)}{r}{
-              \fst{\snd{r}}}}}{gcdProp(b,v)}.
-            So we know the type $gcdProp(b,v) = 
-            \sigmatyc{\isOf{d,k,l}{\lift{\z}}}{d =_{\z} k b + l v}$ is inhabited.
-            To obtain $gcdProp(a,b)$, we case on $x \ge_b y$. If this is the case,
-            then: 
-            \begin{align*}
-              d &=_{\z} k b + l v\\
-                &=_{\z} k (min(x,y)) + l v\\
-                &=_{\z} k y + l v\\
-                &= k y + l (mod\,x\, y)\\
-                & = k y + l (x - qy) \tag{ where  $x = qy + r$}\\
-                & = k y + l x - l qy \\
-                & = k y - l qy + l x\\
-                & = (k - lq)y + l x\\
-                & = l x + (k - lq)y
-            \end{align*}
-            Similarly for $x <_b y$, we know $d = l y + (k - lq)$ where
-            $y = qx + r$.
-            So given \isVal{g}{gcdProp(y,v)}, we know 
-            \begin{align*}
-              \isComp{\bind{\fst{g}\\}{&d}{
-                \bind{\fst{\snd{g}}\\}{&k}{
-                  \bind{\fst{\snd{\snd{g}}}\\}{&l}{
-                    &(d,l,k-lq,\triv)}
-            }}}{gcdProp(a,b)}
-            \end{align*}
-            Hence 
-            \begin{align*}
-              \isComp{
-                \bind{divmod\,a\,b\\}{&q,r}{
-                \bind{i\, r\, (\triv,\triv,\triv)\\}{&g}{
-              \bind{\fst{g}\\}{&d}{
-                \bind{\fst{\snd{g}}\\}{&k}{
-                  \bind{\fst{\snd{\snd{g}}}\\}{&l}{
-                    &(d,l,k-lq,\triv)}}
-              }}}}{gcdProp(a,b)}
-            \end{align*}
-          \item $n' > \suc{\zero}$:
+      \item $n > \suc{\zero}$:
             Let \eval{s(n-1)}{s_1} and \eval{s(n-2)}{s_2}.
             Now we to need show 
             \begin{align*}
               P(\suc{n'},s) \mapsto^* gcdProp(s_2,s_1)
             \end{align*}
-            is inhabited. Then we have 
+            is inhabited.
+            Since \isVal{r}{\squash{R(n,s)}}, we know
+            $s(0) =_{\nat} \ret{a}$, $s(1) =_{\nat} \ret{b}$, 
+            and \pityc{\isOf{j}{\lift{\nat}}}{
+          {1 \le j \le n-2 \to mod\, s(n-j-2)\, s(n-j-1) =_{\nat} s(n-j)}
+        }.
+            Let \eval{mod\,s_2\,s_1}{v}.
+            To apply $i\,v$, we need to show $R(\suc{n}, s \oplus_{n} v)$. 
+            The first two conditions carry from $R(n,s)$. For the last, we 
+            need to show  
+            \[\pityc{\isOf{j}{\lift{\nat}}}{
+              {1 \le j \le n-1 \to mod\, (s\oplus_n v)(n-j-1)\, (s\oplus_n v)(n-j) 
+              =_{\nat} (s\oplus_n v)(n+1-j)} }\]
+            For $2 \le j \le n-1$, this is equivalent to
+            \[\pityc{\isOf{j'}{\lift{\nat}}}{
+              {1 \le j' \le n-2 \to mod\, s(n-j'-2)\, s(n-j'-1) 
+              =_{\nat} s(n-j')} }\]
+            , which holds from above. For $j = 1$, we need to show 
+            \[
+              mod\, (s\oplus_n v)(n-2)\, (s\oplus_n v)(n-1) =_{\nat} (s\oplus_n v)(n)
+            \]
+            or that 
+            \[
+              mod\, s_2\, s_1 =_{\nat} v
+            \]
+            which is true as by construction.
+            Thus we have 
+            \[
             \isComp{\bind{mod\,s_2\,s_1}{d}{i\, d\, (\triv,\triv,\triv)}}{
-              P(\suc{\suc{n'}}, s \oplus_{\suc{n'}} d)}. 
-            Note that $P(\suc{\suc{n'}}, s \oplus_{\suc{n'}} d) \mapsto^* 
-            gcdProp(s_1,v)$, where \eval{mod\,s_2\,s_1}{v}.
-            Similar to above, we derive the following:
+              P(\suc{n}, s \oplus_{n} d)}\]
+            Note that $P(\suc{n}, s \oplus_{n} d) \mapsto^* 
+            gcdProp(s_1,v)$.
+            So we know the type $gcdProp(s_1,v) =
+            \sigmatyc{\isOf{d,k,l}{\lift{\z}}}{d =_{\z} k s_1  + l v}$ is inhabited.
+            To obtain $gcdProp(s_2,s_1)$, rearrange the coefficients:
+            \begin{align*}
+              d &=_{\z} k s_1 + l v\\
+                &= k s_1 + l (mod\,s_2\, s_1)\\
+                & = k s_1 + l (s_2 - qs_1) 
+                \tag{ where  $s_2 = q s_1 + v$ for some $q$ by Lemma~{}}\\
+                & = k s_1 + l s_2 - l qs_1 \\
+                & = k s_1 - l qs_1 + l s_2\\
+                & = (k - lq)s_1 + l s_2\\
+                & = l s_2 + (k - lq)s_1
+            \end{align*}\todo{what's the lemma?}
+            Hence
             \begin{align*}
               \isComp{
-                \bind{divmod\,s_2\,s_1\\}{&q,r}{
+                \bind{&divmod\,s_2\,s_1\\}{&q,r}{
                 \bind{i\, r\, (\triv,\triv,\triv)\\}{&g}{
               \bind{\fst{g}\\}{&d}{
                 \bind{\fst{\snd{g}}\\}{&k}{
                   \bind{\fst{\snd{\snd{g}}}\\}{&l}{
-                    &(d,l,k-lq,\triv)}}
-              }}}}{gcdProp(s_2,s_1)}
+                    (d,l,k-lq,\triv)\\}}
+              }}}}{&gcdProp(s_2,s_1)}
             \end{align*}
         \end{itemize}
         Thus realizer can be defined as 
@@ -245,15 +229,6 @@ $F = 0,0,1,1,2,3,5...$.
           ind \triangleq &\lam{n,s,r,i}{}{\\
             \ifthen{&eq\,n\,0}{i\,x\,\triv\\}{
               \ifthen{&eq\,n\,1}{i\,y\,(\triv,\triv)\\}{
-                \ifthen{&eq\,n\,2\\}{
-                  \bind{&divmod\,a\,b}{q,r\\}{
-                    \bind{&i\, r\, (\triv,\triv,\triv)}{g\\}{
-                      \bind{&\fst{g}}{d\\}{
-                        \bind{&\fst{\snd{g}}}{k\\}{
-                          \bind{&\fst{\snd{\snd{g}}}}{l\\}{
-                    &(d,l,k-lq,\triv)}}\\
-              }}}
-                    }{
                       \bind{&divmod\,s_2\,s_1}{q,r\\}{
                         \bind{&i\, r\, (\triv,\triv,\triv)}{g\\}{
                           \bind{&\fst{g}}{d\\}{
@@ -261,7 +236,6 @@ $F = 0,0,1,1,2,3,5...$.
                               \bind{&\fst{\snd{\snd{g}}}}{l\\}{
                     &(d,l,k-lq,\triv)}}
               }}}
-          }
               }
             }
           }
@@ -273,18 +247,25 @@ $F = 0,0,1,1,2,3,5...$.
     \item $n = \zero$:
       Prove the right disjunct:
       $B(n,s) \mapsto^* \bot \lift{\times} \_$, so 
-      \isVal{\lam{b}{}{\bind{\fst{b}}{v}{absurd\,v}}}{\lift{\neg} B(n,s)}.
+      \isVal{\lam{b}{}{\triv}}{\lift{\neg} B(n,s)}.
     \item $n \ge_b 1$:
       Let \eval{s(n-1)}{v}. If $v = \zero$, we can prove the left disjunct:
-      \isVal{(\triv, \triv)}{B(n,s)}. Otherwise, we can prove 
-      \isVal{\lam{b}{}{\triv}}{\lift{\neg}B(n,s)}.
+      \isVal{(\triv, \triv)}{B(n,s)}. Otherwise, we have a proof of
+      $eq_b\,v\,\zero = \mathtt{ff}$, and proof the right side. Let
+      \isVal{b}{B(n,s)}. We know $B(n,s) = n \ge 1 \lift{\times} s(n-1) =_{\nat} \zero$.
+      This means $eq_b\,v\,\zero = \mathtt{tt}$, which gives us $\mathtt{tt} = \mathtt{ff}$.
+      Since this is a contradiction, we are done.
+      Hence we have \isVal{\lam{b}{}{\triv}}{\lift{\neg}B(n,s)}.
   \end{itemize}
   The realizer for dec is 
   \begin{align*}
     dec &\triangleq \lam{n,s}{}{
-      \ifthen{n \le_b 1}{\lam{b}{}{\bind{\fst{b}}{v}{absurd\,v}}}
+      \ifthen{eq_b\,n\,\zero}{\lam{b}{}{\triv}}
       {
-        \lam{b}{}{\triv}
+        \ifthen{eq_b\,s(n-1)\,\zero}{
+          (\triv,\triv)  
+        }{\lam{b}{}{\triv}
+        }
       }
     }
   \end{align*}
@@ -296,21 +277,21 @@ $F = 0,0,1,1,2,3,5...$.
     $P(n,s)$. Case on $n$: 
     \begin{itemize}
       \item $n = \zero$:
-        Then $B(n,s) \mapsto^* \bot \lift{\times}  (s(n-1) =_{\nat} \ret{\zero})$, so 
-        \isComp{\bind{\fst{b}}{v}{absurd\,v}}{P(n,s)}.
-      \item $n = \suc{\zero}, \suc{\suc{\zero}}$: 
+        Then $B(n,s) \mapsto^* \bot \lift{\times}  (s(n-1) =_{\nat} \ret{\zero})$,
+        which is a contradiction so \isVal{\triv}{P(n,s)}.
+      \item $n = \suc{\zero}$: 
         Then $B(n,s) \mapsto^* \top \lift{\times}  (s(n-1) =_{\nat} \ret{\zero})$.
+        Let \eval{max(x,y)}{a} and \eval{min(x,y)}{b}.
         We need to show 
-        $P(n,s) \mapsto^* gcdProp(x,y)$. By $\squash{R(n,s)}$, we know 
-        $s(0) =_{\nat} \ret{x}$. Hence we know 
-        $\ret{x} =_{\nat} \ret{\zero}$. 
-        If $y \le x$, then $y = 0$, and 
+        $P(n,s) \mapsto^* gcdProp(a,b)$. By $\squash{R(n,s)}$, we know 
+        $s(0) =_{\nat} \ret{a}$. Hence we know 
+        $\ret{x} =_{\nat} \ret{\zero}$ and
+        $\ret{y} =_{\nat} \ret{\zero}$. 
+        We need to show $gcdProp(0,0)$.
+        Since $0 = 0 \cdot 0 + 0 \cdot 0$,  
         \isComp{\ret{(0,0,0)}}{gcdProp(0,0)}.
-        Else, we need to show $gcdProp(y,0)$.
-        Since $y = 1 \cdot y + 0 \cdot 0$,  
-        \isComp{\ret{(y,1,0)}}{gcdProp(y,0)}.
-      \item $n \ge_b 3$: 
-        Then $B(n,s) \mapsto^* \top \lift{\times}  (s(n-1) =_{\nat} \ret{\zero})$.
+      \item $n \ge_b 2$: 
+        Then $B(n,s) \mapsto^* \top \lift{\times} (s(n-1) =_{\nat} \ret{\zero})$.
         Let \eval{s(n-2)}{s_2}. We need to show 
         $P(n,s) \mapsto^* gcdProp(s_2,\zero)$.
         Since $s_2 = 1 \cdot s_2 + 0 \cdot 0$,  
@@ -319,8 +300,8 @@ $F = 0,0,1,1,2,3,5...$.
     Hence the realizer for base is:
     \begin{align*}
       base &\triangleq \lam{n,s,r,b}{}{\\
-        \ifthen{&n \le_b 1}{\bind{\fst{b}}{v}{absurd\,v}\\}{
-          \ifthen{&eq\,n\,2}{\ret{(x,\suc{\zero},\zero)}\\}{
+        \ifthen{&eq_b\,n\,\zero}{\triv\\}{
+          \ifthen{&eq\,n\,1}{\ret{(\zero,\zero,\zero)}\\}{
             &\bind{s(n-2)}{s_2}{(s_2,\suc{\zero},\zero)}
           }
         }}
@@ -380,7 +361,22 @@ the body is immediately abstracted:
   {\_.\zp, \_.\_.\zp}}{\_.\zp, \_.\_.\zp}}
 \]
 
-Now we case on 
+Now we analyze the components of the induction:
+
+\textbf{dec:}
+\begin{align*}
+dec &\triangleq \lam{n,s}{}{
+      \ifthen{eq_b\,n\,\zero}{\lam{b}{}{\triv}}
+      {
+        \ifthen{eq_b\,s(n-1)\,\zero}{
+          (\triv,\triv)  
+        }{\lam{b}{}{\triv}
+        }
+      }
+    }
+\end{align*}
+
+
 
 \begin{verbatim}
 gcd(x,y) = dbr(dec,base,ind,0,[],r) 
@@ -399,6 +395,7 @@ gcd(x,y) = dbr(dec,base,ind,0,[],r)
 ==>^4 if(eq 0 0; (...) x * ; ...)
 ==>^2 if(tt; (...) x * ; ...)
 ==> (\t,r'. dbr(dec,base,ind,1,[] ++ [t], r')) x * 
-==> dbr(dec,base,ind,1,[] ++ [x], *)
+==>^2 dbr(dec,base,ind,1,[] ++ [x], *)
+==> do dec(1,[]++[x]) 
 \end{verbatim}
 
