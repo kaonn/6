@@ -4,11 +4,13 @@
 Notation: let $M =_{\nat} N$ when \eqtyc{\lift{\nat}}{M}{N}.
 We can use $\mathtt{dbr}$ to define gcd:
 \[
-  gcdProp(x,y) \triangleq \sigmatyc{\isOf{d,l,k}{\lift{\nat}}}{\ret{d} =_{\nat} kx + ly}
+  gcdProp(x,y) \triangleq \sigmatyc{\isOf{d}{\lift{\nat}}}{
+    \sigmatyc{\isOf{l,k}{\lift{\z}}}{\ret{\pos{d}} =_{\z} kx + ly}}
 \]
+(Clearly, we want the minimum such $d$. However, for the sake of brevity, let us work with this 
+``truncated'' GCD, which demonstrates the main ideas).
 
 Define the spread $R$, bar $B$, and $P$: 
-
 \begin{align*}
   R(n,s) \triangleq &
   \ifthen{eq_b\;n\;0}{\ret{\top}\\}{
@@ -220,22 +222,24 @@ $F = 0,0,1,1,2,3,5...$.
               \bind{\fst{g}\\}{&d}{
                 \bind{\fst{\snd{g}}\\}{&k}{
                   \bind{\fst{\snd{\snd{g}}}\\}{&l}{
-                    (d,l,k-lq,\triv)\\}}
+                \ret{(d,l,k-lq,\triv)}\\}}
               }}}}{&gcdProp(s_2,s_1)}
             \end{align*}
         \end{itemize}
         Thus realizer can be defined as 
         \begin{align*}
           ind \triangleq &\lam{n,s,r,i}{}{\\
-            \ifthen{&eq\,n\,0}{i\,x\,\triv\\}{
-              \ifthen{&eq\,n\,1}{i\,y\,(\triv,\triv)\\}{
-                      \bind{&divmod\,s_2\,s_1}{q,r\\}{
+            \ifthen{&eq_b\,n\,0}{\bind{max(x,y)}{a}{i\,a\,\triv}\\}{
+                \ifthen{&eq_b\,n\,1}{\bind{min(x,y)}{b}{i\,b\,(\triv,\triv)}\\}{
+                    \bind{&s(n-1)}{s_1\\}{
+                    \bind{&s(n-2)}{s_2\\}{
+                    \bind{&divmod(s_2,s_1)}{q,r\\}{
                         \bind{&i\, r\, (\triv,\triv,\triv)}{g\\}{
                           \bind{&\fst{g}}{d\\}{
                             \bind{&\fst{\snd{g}}}{k\\}{
                               \bind{&\fst{\snd{\snd{g}}}}{l\\}{
-                    &(d,l,k-lq,\triv)}}
-              }}}
+                    &\ret{(d,l,k-lq,\triv)}}}
+          }}}}}
               }
             }
           }
@@ -260,11 +264,11 @@ $F = 0,0,1,1,2,3,5...$.
   The realizer for dec is 
   \begin{align*}
     dec &\triangleq \lam{n,s}{}{
-      \ifthen{eq_b\,n\,\zero}{\lam{b}{}{\triv}}
+      \ifthen{eq_b\,n\,\zero}{\ret{\inr{\lam{b}{}{\triv}}}}
       {
         \ifthen{eq_b\,s(n-1)\,\zero}{
-          (\triv,\triv)  
-        }{\lam{b}{}{\triv}
+            \ret{\inl{(\triv,\triv)}}
+            }{\ret{\inr{\lam{b}{}{\triv}}}
         }
       }
     }
@@ -300,9 +304,9 @@ $F = 0,0,1,1,2,3,5...$.
     Hence the realizer for base is:
     \begin{align*}
       base &\triangleq \lam{n,s,r,b}{}{\\
-        \ifthen{&eq_b\,n\,\zero}{\triv\\}{
+        \ifthen{&eq_b\,n\,\zero}{\ret{\triv}\\}{
           \ifthen{&eq\,n\,1}{\ret{(\zero,\zero,\zero)}\\}{
-            &\bind{s(n-2)}{s_2}{(s_2,\suc{\zero},\zero)}
+            &\bind{s(n-2)}{s_2}{\ret{(s_2,\suc{\zero},\zero)}}
           }
         }}
     \end{align*}
@@ -353,49 +357,346 @@ cost:
   {\_.\constp{1}, \_.\_.\zp}}{\_.\zp, \_.\_.\zp}}
 \end{mathpar}
 
-The sequence extension operator has a constant cost for all \isVal{n}{\lift{\nat}}, since 
-the body is immediately abstracted:
+Furthermore, we need to specifiy the cost of the sequences. Let 
+\[\nseqc{n}{a.P}{a.b.Q} \triangleq \arrabt{\lift{\nat}_n}{\lift{\nat}}{a.P,a.b.Q}\].
+So far, the implementation of sequence extension was not relevant, since we were only concerned
+with its functional specification. But now, we need to state exactly how the operator 
+extends a sequence with a given cost specification. For this, we implement the operator as follows:
+\begin{align*}
+  \oplus_n \triangleq \lam{s,t,i}{}{
+    \ifthen{eq_b\,i\,n}{\ret{t}}{s(i)}
+  }
+\end{align*}
 
+The sequence extension operator itself has a constant cost for all \isVal{n}{\lift{\nat}}, since 
+the body is immediately abstracted. Furthermore, it delivers an extended sequence such that
+it is constant cost to retrieve the last element:
 \[
-  \isVal{\oplus_n}{\arrabtc{\nseq{n}}{\arrabtc{\lift{\nat}}{\nseq{\suc{n}}}
+  \isVal{\oplus_n}{\arrabtc{\nseqc{n}{a.P}{a.b.Q}}{\arrabtc{\lift{\nat}}{\nseqc{\suc{n}}{a.P'}{a.b.Q'}}
   {\_.\zp, \_.\_.\zp}}{\_.\zp, \_.\_.\zp}}
 \]
 
+where
+\begin{gather*}
+  P' \triangleq \ifthen{eq_b\,a\,n}{\ret{2}}{\seq{P}{p}{p+3}}\\
+  Q' \triangleq \ifthen{eq_b\,a\,n}{\ret{0}}{Q}\\
+\end{gather*}
+
 Now we analyze the components of the induction:
 
-\textbf{dec:}
+\textbf{dec}:
 \begin{align*}
 dec &\triangleq \lam{n,s}{}{
-      \ifthen{eq_b\,n\,\zero}{\lam{b}{}{\triv}}
+  \ifthen{eq_b(n,\zero)}{\ret{\inr{\lam{b}{}{\triv}}}}
       {
         \ifthen{eq_b\,s(n-1)\,\zero}{
-          (\triv,\triv)  
-        }{\lam{b}{}{\triv}
+            \ret{\inl{(\triv,\triv)}}
+            }{\ret{\inr{\lam{b}{}{\triv}}}
         }
       }
     }
 \end{align*}
 
+We already know that 
+\isVal{dec}{\pityc{\isOf{n}{\lift{\nat}}}{\pityc{\isOf{s}{\lift{\nseq{n}}}}{\lift{B(n,s) + \lift{\neg} B(n,s)}}}}, so it remains to count the number of steps the branches take.
+
+Let \isVal{n}{\lift{\nat}} and \isVal{s}{\lift{\nseqc{n}{a.P}{a.b.Q}}}.
+\begin{enumerate}
+  \item $n = \zero$: 
+    \begin{align*}
+      &\ifthen{eq_b(n,\zero)}{\ret{\inr{\lam{b}{}{\triv}}}}
+      {
+        \ifthen{eq_b(s(n-1),\zero)}{
+          \ret{\inl{(\triv,\triv)} }
+        }{\ret{\inr{\lam{b}{}{\triv}}}
+        }
+      }\\
+      \mapsto^2& 
+      \ifthen{\ret{\ttcst}}{\ret{\inr{\lam{b}{}{\triv}}}}
+      {
+        \ifthen{eq_b(s(n-1),\zero)}{
+          \ret{\inl{(\triv,\triv)}}  
+        }{\ret{\inr{\lam{b}{}{\triv}}}
+        }
+      }\\
+      \mapsto&\lam{b}{}{\triv}
+    \end{align*}
+    Hence 3 steps in this case.
+  \item $n \ne \zero$: 
+    \begin{align*}
+      &\ifthen{eq_b(n,\zero)}{\ret{\inr{\lam{b}{}{\triv}}}}
+      {
+        \ifthen{eq_b(s(n-1),\zero)}{
+          \ret{\inl{(\triv,\triv)}}
+        }{\ret{\inr{\lam{b}{}{\triv}}}
+        }
+      }\\
+      \mapsto^2& 
+      \ifthen{\ret{\ffcst}}{\ret{\inr{\lam{b}{}{\triv}}}}
+      {
+        \ifthen{eq_b(s(n-1),\zero)}{
+          \ret{\inl{(\triv,\triv)}}  
+        }{\ret{\inr{\lam{b}{}{\triv}}}}
+        }
+      \\
+      \mapsto&
+      \ifthen{eq_b(s(n-1),\zero)}{
+          \ret{\inl{(\triv,\triv)}}  
+        }{\ret{\lam{b}{}{\triv}
+        }}
+    \end{align*}
+    So far 3 steps. Now case on $eq_b(s(n-1), \zero)$. Let \evalCost{s(n-1)}{c}{v}.
+    \begin{itemize}
+      \item $v = \zero$:
+        \begin{align*}
+          &\ifthen{eq_b(s(n-1),\zero)}{
+            \ret{\inl{(\triv,\triv)}}
+          }{\ret{\inr{\lam{b}{}{\triv}}}
+        }\\
+          \mapsto^2&
+          \ifthen{eq_b(s (\ret{\toNum{n-1}}),\zero)}{
+            \ret{\inl{(\triv,\triv)}}
+          }{\ret{\inr{\lam{b}{}{\triv}}}
+        }\\
+          \mapsto&
+          \ifthen{eq_b(s (\toNum{n-1}),\zero)}{
+            \ret{\inl{(\triv,\triv)}}
+          }{\ret{\inr{\lam{b}{}{\triv}}}
+        }\\
+        \mapsto^{1+c}&
+          \ifthen{eq_b(\zero,\zero)}{
+            \ret{\inl{(\triv,\triv)}}
+          }{\ret{\inr{\lam{b}{}{\triv}}}
+        }\\
+          \mapsto^2& 
+          \ifthen{\ret{\ttcst}}{
+            \ret{\inl{(\triv,\triv)}}
+          }{\ret{\inr{\lam{b}{}{\triv}}}
+        }\\
+          \mapsto& \ret{\inl{(\triv,\triv)}}
+        \end{align*}
+        Furthermore, we know \eval{[\toNum{n-1}/a]P}{p}, \eval{[\toNum{n-1}/a,\zero/b]Q}{q}, and
+        $p \ge c + q$.
+      \item  $v \ne \zero$:
+        \begin{align*}
+          &\ifthen{eq_b(s(n-1),\zero)}{
+            \ret{\inl{(\triv,\triv)}}
+          }{\ret{\inr{\lam{b}{}{\triv}}}
+        }\\
+          \mapsto^2&
+          \ifthen{eq_b(s (\ret{\toNum{n-1}}),\zero)}{
+            \ret{\inl{(\triv,\triv)}}
+          }{\ret{\inr{\lam{b}{}{\triv}}}
+        }\\
+          \mapsto&
+          \ifthen{eq_b(s (\toNum{n-1}),\zero)}{
+            \ret{\inl{(\triv,\triv)}}
+          }{\ret{\inr{\lam{b}{}{\triv}}}
+        }\\
+        \mapsto^{1+c}&
+          \ifthen{eq_b(v,\zero)}{
+            \ret{\inl{(\triv,\triv)}}
+          }{\ret{\inr{\lam{b}{}{\triv}}}
+        }\\
+          \mapsto^2& 
+          \ifthen{\ret{\ffcst}}{
+            \ret{\inl{(\triv,\triv)}}
+          }{\ret{\inr{\lam{b}{}{\triv}}}
+        }\\
+          \mapsto& \ret{\inr{\lam{b}{}{\triv}}}
+        \end{align*}
+        Again, we know \eval{[\toNum{n-1}/a]P}{p}, \eval{[\toNum{n-1}/a,v/b]Q}{q'}, and
+        $p \ge c + q'$.
+    \end{itemize}
+    In any case we need $p+7$ steps.
+\end{enumerate}
+
+Hence $p+10$ steps will be enough in all cases:
+\[
+  \isVal{dec}{\arrabtc{\lift{\nat}}
+  {n.\arrabtc{\lift{\nseqc{n}{a.P}{a.b.Q}}}{s.\lift{B(n,s) + \lift{\neg} B(n,s)}}
+  {\_.\seq{[\toNum{n-1}/a]P}{p}{p + 10}, \_.\_.\zp}}{\_.\zp,\_.\_.\zp}}
+\]
+
+\textbf{base}:
+ \begin{align*}
+      base &\triangleq \lam{n,s,r,b}{}{\\
+        \ifthen{&eq_b(n,\zero)}{\ret{\triv}\\}{
+            \ifthen{&eq_b(n,1)}{\ret{(\zero,\zero,\zero)}\\}{
+            &\bind{s(n-2)}{s_2}{\ret{(s_2,\suc{\zero},\zero)}}
+          }
+        }}
+ \end{align*}
+
+ Let \isVal{n}{\lift{\nat}}, \isVal{s}{\nseqc{n}{a.S}{a.b.T}}, \isVal{r}{\squash{R(n,s)}},
+ and \isVal{b}{B(n,s)}.
+The longest path in $base$ is when we compute $s(n-2)$, after 6 steps through
+ the conditional. Let \evalCost{s(\toNum{n-2})}{c}{v}:
+
+ \begin{align*}
+&\bind{s(n-2)}{s_2}{\ret{(s_2,\suc{\zero},\zero)}}\\
+   \mapsto^2 &\bind{s (\ret{\toNum{n-2}})}{s_2}{\ret{(s_2,\suc{\zero},\zero)}}\\
+   \mapsto &\bind{s (\toNum{n-2})}{s_2}{\ret{(s_2,\suc{\zero},\zero)}}\\
+   \mapsto^{1+c} &\bind{\ret{v}}{s_2}{\ret{(s_2,\suc{\zero},\zero)}}\\
+   \mapsto &\ret{(v,\suc{\zero},\zero)}\\
+ \end{align*}
+
+ Where \eval{[\toNum{n-2}/a]/S}{p}, \eval{[\toNum{n-2}/a, v/b]T}{t} s.t. $p \ge c + t$.
+Hence $p + 5$ steps suffices. 
+\begin{align*}
+\isVal{base}{\pityc{\isOf{n}{\lift{\nat}}}
+  {\pityc{\isOf{s}{\lift{\nseqc{n}{a.S}{a.b.T}}}}{
+  \squash{R(n,s)} \tolr \arrabtc{B(n,s)}{P(n,s)}
+  {\_.\seq{[\toNum{n-2}/a]S}{p}{p + 11},\_.\_.\zp}}}}
+\end{align*}
+
+\begin{lemma}
+  Let \isVal{n}{\lift{\nat}}, \isVal{s}{\nseqc{n}{a.P_n}{a.b.Q}}, and \isVal{r}{\squash{R(n,s)}},
+  where $P_n = \ifthen{eq_b(a,n-1)}{\ret{2}}{P'}$ for some $P'$. Then
+    \begin{itemize}
+      \item If $n = \zero$:\\
+        \stepIn{\dbr{dec}{base}{ind}{n}{s}{r}}{c}{\dbr{dec}{base}{ind}{\suc{n}}{s'}{r'}}, and
+        \isVal{s'}{\nseqc{\suc{n}}{a.P_{\suc{n}}}{a.b.Q}}, \isVal{r'}{\squash{R(\suc{n},s)}}.
+      \item If \eval{s(n-1)}{\zero}:\\
+        \stepIn{\dbr{dec}{base}{ind}{n}{s}{r}}{c}{\ret{d,k,l}},
+        \isVal{d}{\lift{\nat}}, \isVal{k}{\lift{\z}}, \isVal{l}{\lift{\z}}, and
+        \isVal{s'}{\nseqc{\suc{n}}{a.P_{\suc{n}}}{a.b.Q}}, \isVal{r'}{\squash{R(\suc{n},s)}}.
+      \item Else, if \eval{s(n-1)}{v}, $v \ne \zero$:
+        \begin{enumerate}
+      \item If $n = 0,1$:
+        \stepIn{\dbr{dec}{base}{ind}{n}{s}{r}}{c}{\dbr{dec}{base}{ind}{\suc{n}}{s'}{r'}}, and
+        \isVal{s'}{\nseqc{\suc{n}}{a.P_{\suc{n}}}{a.b.Q}}, \isVal{r'}{\squash{R(\suc{n},s)}}.
+      \item If $n > 1$:
+        \stepIn{\dbr{dec}{base}{ind}{n}{s}{r}}{c}{
+          \bind{\dbr{dec}{base}{ind}{\suc{n}}{s'}{r'}}{g}{M}
+        },
+        \isVal{s'}{\nseqc{\suc{n}}{a.P_{\suc{n}}}{a.b.Q}}, \isVal{r'}{\squash{R(n,s)}},\\
+        and \openCComp{\isOf{g}{\lift{\nat} \lift{\times} \lift{\z} \lift{\times} \lift{\z}}}{M}{
+      \lift{\nat} \lift{\times} \lift{\z} \lift{\times} \lift{\z}}{c_1}{c_2}
+  \end{enumerate}
+    \end{itemize}
+\end{lemma}
+
+So we know that there are a constant number of steps between each extension up the spread. 
+Since the spread is linear (no branches), it suffices to find the length of the 
+initial segment of non-zero entries.
+
+\begin{lemma}
+  Let \isVal{n}{\lift{\nat}}, \isVal{s}{\lift{\nseq{n}}}, and \isVal{r}{\squash{R(n,s)}}.
+  Then the first $\zero$ in $s$ occurs at index $i$, such that:
+  \begin{cases}
+    x \ge F_i \text{ and } y \ge F_{i-1} \text{ if $x > y$ }\\
+    y \ge F_i \text{ and } x \ge F_{i-1} \text{ o.w.}\\
+  \end{cases}
+\end{lemma}
+
+Hence $max(x,y) \ge F_i$, and $i \le F^{-1}(max(x,y))$. We know the computation of gcd 
+starts from the empty sequence, so:
+
+\begin{verbatim}
+dbr(dec,base,ind,0,[],r)
+==>^c1 dbr(dec,base,ind,1,[max(x,y)],r) 
+==>^c2 dbr(dec,base,ind,2,[max(x,y),min(x,y)],r) 
+==>^c3 do dbr(dec,base,ind,3,[max(x,y),min(x,y),s2],r) as g in M
+==>^c3 do 
+        do 
+          dbr(dec,base,ind,4,[max(x,y),min(x,y),s2,s3],r) 
+        as g in M
+       as g in M
+...
+==>^c3 do 
+        do 
+        ...
+          do
+            dbr(dec,base,ind,i+1,s,r) 
+          as g in M
+        as g in M
+       as g in M
+==>^c4 do 
+        do 
+        ...
+          do
+            ret(d,k,l)
+          as g in M
+        as g in M
+       as g in M
+...
+==> ret(d',k',l')
+\end{verbatim}
+
+Where we first build up a $i$-layer stack of \texttt{do} statements and then 
+pop out $i$ times again. The dominating term is $c\cdot i$, for some constant $c$.
 
 
 \begin{verbatim}
 gcd(x,y) = dbr(dec,base,ind,0,[],r) 
-==> do dec(0,[]) as x in 
-    case x of
+==> do dec(0,[]) as d in 
+    case d of
     inl(p) => base 0 [] r p 
-    inr(p) => ind 0 [] r (\t,r'. dbr(dec,base,ind,1,[] ++ [t], r')) 
-==> do ret(d) as x in 
-    case x of
+    inr(p) => ind 0 [] r (\t,r'. do [] ++ [t] as s in dbr(dec,base,ind,1,s,r')) 
+==>^(3+12) do ret(inr(\b.*)) as d in 
+    case d of
     inl(p) => base 0 [] r p 
-    inr(p) => ind 0 [] r (\t,r'. dbr(dec,base,ind,1,[] ++ [t], r')) 
-==> case d of
+    inr(p) => ind 0 [] r (\t,r'. do [] ++ [t] as s in dbr(dec,base,ind,1,s,r')) 
+==> case inr(\b.*) of
     inl(p) => base 0 [] r p 
-    inr(p) => ind 0 [] r (\t,r'. dbr(dec,base,ind,1,[] ++ [t], r')) 
-==> ind 0 [] r (\t,r'. dbr(dec,base,ind,1,[] ++ [t], r')) 
-==>^4 if(eq 0 0; (...) x * ; ...)
-==>^2 if(tt; (...) x * ; ...)
-==> (\t,r'. dbr(dec,base,ind,1,[] ++ [t], r')) x * 
-==>^2 dbr(dec,base,ind,1,[] ++ [x], *)
-==> do dec(1,[]++[x]) 
+    inr(p) => ind 0 [] r (\t,r'. do [] ++ [t] as s in dbr(dec,base,ind,1,s,r')) 
+==> ind 0 [] r (\t,r'. do [] ++ [t] as s in dbr(dec,base,ind,1,s, r')) 
+==>^7 if(eq 0 0; (\t,r'. do [] ++ [t] as s in dbr(dec,base,ind,1,s,r')) x * ; ...)
+==> if(ret(tt); (\t,r'. do [] ++ [t] as s in dbr(dec,base,ind,1,s,r')) x * ; ...)
+==> (\t,r'. do [] ++ [t] as s in dbr(dec,base,ind,1,s,r')) x * 
+==>^2 do [] ++ [x] as s in dbr(dec,base,ind,1,s,*)
+==> do ret([x]) as s in dbr(dec,base,ind,1,s,*)
+==> dbr(dec,base,ind,1,ret([x]),*)
+==> do dec(1,[x]) as b in 
+    case b of
+    inl(p) => base 1 [x] r p
+    inr(p) => ind 1 [x] r (\t,r'. do [x] ++ [t] as s in dbr(dec,base,ind,2,s,r')) 
+==> 
 \end{verbatim}
+
+If $x = 0$:
+\begin{verbatim}
+==>^(7+2) do ret(inl(*,*)) as b in 
+    case b of
+    inl(p) => base 1 [x] r p
+    inr(p) => ind 1 [x] r (\t,r'. do [x] ++ [t] as s in dbr(dec,base,ind,2,s,r')) 
+==> case inl(*,*) of 
+    inl(p) => base 1 [x] r p
+    inr(p) => ind 1 [x] r (\t,r'. do [x] ++ [t] as s in dbr(dec,base,ind,2,s,r')) 
+==> base 1 [x] r (*,*)
+==>^(4+4) ret(0,0,0)
+\end{verbatim}
+
+TODO: CHANGE X AND Y TO MAX(x,y) and MIN(x,y)!!!!
+Otherwise:
+\begin{verbatim}
+==>^(7+2) do ret(inr(\_.*)) as b in 
+    case b of
+    inl(p) => base 1 [x] r p
+    inr(p) => ind 1 [x] r (\t,r'. do [x] ++ [t] as s in dbr(dec,base,ind,2,s,r')) 
+==> case inr(\_.*) of 
+    inl(p) => base 1 [x] r p
+    inr(p) => ind 1 [x] r (\t,r'. do [x] ++ [t] as s in dbr(dec,base,ind,2,s,r')) 
+==> ind 1 [x] r (\t,r'. do [x] ++ [t] as s in dbr(dec,base,ind,2,s,r')) 
+==>^4 if(eq 1 0; ... ; 
+        if(eq 1 1; (\t,r'. do [x] ++ [t] as s in dbr(dec,base,ind,2,s,r')) y (*,*); ...)) 
+==> if(ret(ff); ... ; 
+        if(eq 1 1; (\t,r'. do [x] ++ [t] as s in dbr(dec,base,ind,2,s,r')) y (*,*); ...)) 
+==> if(eq 1 1; (\t,r'. do [x] ++ [t] as s in dbr(dec,base,ind,2,s,r')) y (*,*); ...) 
+==> if(ret(tt); (\t,r'. do [x] ++ [t] as s in dbr(dec,base,ind,2,s,r')) y (*,*); ...) 
+==> (\t,r'. do [x] ++ [t] as s in dbr(dec,base,ind,2,s,r')) y (*,*)
+==>^2 do [x] ++ [t] as s in dbr(dec,base,ind,2,s,(*,*))
+==> do ret([x,t]) as s in dbr(dec,base,ind,2,s,(*,*))
+==> dbr(dec,base,ind,2,[x,t],(*,*))
+==> do dec(2,[x]) as b in 
+    case b of
+    inl(p) => base 1 [x] r p
+    inr(p) => ind 1 [x] r (\t,r'. do [x] ++ [t] as s in dbr(dec,base,ind,2,s,r')) 
+==> 
+
+
+\end{verbatim}
+
+
 
