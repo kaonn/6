@@ -378,7 +378,7 @@ it is constant cost to retrieve the last element:
 
 where
 \begin{gather*}
-  P' \triangleq \ifthen{eq_b\,a\,n}{\ret{2}}{\seq{P}{p}{p+3}}\\
+  P' \triangleq \ifthen{eq_b\,a\,n}{\ret{3}}{\seq{P}{p}{p+4}}\\
   Q' \triangleq \ifthen{eq_b\,a\,n}{\ret{0}}{Q}\\
 \end{gather*}
 
@@ -552,30 +552,192 @@ Hence $p + 5$ steps suffices.
 
 \begin{lemma}
   Let \isVal{n}{\lift{\nat}}, \isVal{s}{\nseqc{n}{a.P_n}{a.b.Q}}, and \isVal{r}{\squash{R(n,s)}},
-  where $P_n = \ifthen{eq_b(a,n-1)}{\ret{2}}{P'}$ for some $P'$. Then
+  where $P_n = \ifthen{eq_b(a,n-1)}{\ret{3}}{P'}$ for some $P'$. Then
     \begin{itemize}
       \item If $n = \zero$:\\
-        \stepIn{\dbr{dec}{base}{ind}{n}{s}{r}}{c}{\dbr{dec}{base}{ind}{\suc{n}}{s'}{r'}}, and
-        \isVal{s'}{\nseqc{\suc{n}}{a.P_{\suc{n}}}{a.b.Q}}, \isVal{r'}{\squash{R(\suc{n},s)}}.
-      \item If \eval{s(n-1)}{\zero}:\\
-        \stepIn{\dbr{dec}{base}{ind}{n}{s}{r}}{c}{\ret{d,k,l}},
-        \isVal{d}{\lift{\nat}}, \isVal{k}{\lift{\z}}, \isVal{l}{\lift{\z}}, and
-        \isVal{s'}{\nseqc{\suc{n}}{a.P_{\suc{n}}}{a.b.Q}}, \isVal{r'}{\squash{R(\suc{n},s)}}.
+        \stepIn{\dbr{dec}{base}{ind}{n}{s}{r}}{38}{\dbr{dec}{base}{ind}{\suc{n}}{s'}{r'}}, 
+        \isVal{s'}{\nseqc{\suc{n}}{a.P_{\suc{n}}}{a.b.\zp}}, and \isVal{r'}{\squash{R(\suc{n},s')}}.
+      \item Else, if \eval{s(n-1)}{\zero}:\\
+        \stepIn{\dbr{dec}{base}{ind}{n}{s}{r}}{40}{\ret{v}} and \isVal{v}{P(n,s)}.
       \item Else, if \eval{s(n-1)}{v}, $v \ne \zero$:
         \begin{enumerate}
-      \item If $n = 0,1$:
-        \stepIn{\dbr{dec}{base}{ind}{n}{s}{r}}{c}{\dbr{dec}{base}{ind}{\suc{n}}{s'}{r'}}, and
-        \isVal{s'}{\nseqc{\suc{n}}{a.P_{\suc{n}}}{a.b.Q}}, \isVal{r'}{\squash{R(\suc{n},s)}}.
+      \item If $n = 1$:
+        \stepIn{\dbr{dec}{base}{ind}{n}{s}{r}}{41}{\dbr{dec}{base}{ind}{\suc{n}}{s'}{r'}},
+        \isVal{s'}{\nseqc{\suc{n}}{a.P_{\suc{n}}}{a.b.\zp}}, and \isVal{r'}{\squash{R(\suc{n},s')}}.
       \item If $n > 1$:
-        \stepIn{\dbr{dec}{base}{ind}{n}{s}{r}}{c}{
+        \stepIn{\dbr{dec}{base}{ind}{n}{s}{r}}{61}{
           \bind{\dbr{dec}{base}{ind}{\suc{n}}{s'}{r'}}{g}{M}
         },
-        \isVal{s'}{\nseqc{\suc{n}}{a.P_{\suc{n}}}{a.b.Q}}, \isVal{r'}{\squash{R(n,s)}},\\
-        and \openCComp{\isOf{g}{\lift{\nat} \lift{\times} \lift{\z} \lift{\times} \lift{\z}}}{M}{
-      \lift{\nat} \lift{\times} \lift{\z} \lift{\times} \lift{\z}}{c_1}{c_2}
+        \isVal{s'}{\nseqc{\suc{n}}{a.P_{\suc{n}}}{a.b.\zp}}, \isVal{r'}{\squash{R(n,s')}},
+        and \openCComp{\isOf{g}{P(\suc{n},s')}}{M}{P(n,s)}{\constp{18}}{\zp}
   \end{enumerate}
     \end{itemize}
 \end{lemma}
+
+\begin{proof}
+  Let \eval{max(x,y)}{a} and \eval{min(x,y)}{b}. Below, \texttt{dec} and \texttt{base} take a 
+  uniform constant amount of work at
+13 and 14 steps respectively, since the extension operator maintains that it takes constant work 
+to retrieve the last element, and that's all we need for both functions.
+
+\paragraph{\textbf{Case} $n = \zero$:}
+\begin{verbatim}
+dbr(dec,base,ind,0,[],r) 
+==> do dec(0,[]) as d in 
+    case d of
+    inl(p) => base 0 [] r p 
+    inr(p) => ind 0 [] r (\t,r'. do [] ++ [t] as s in dbr(dec,base,ind,1,s,r')) 
+==>^(3+13) do ret(inr(\b.*)) as d in 
+    case d of
+    inl(p) => base 0 [] r p 
+    inr(p) => ind 0 [] r (\t,r'. do [] ++ [t] as s in dbr(dec,base,ind,1,s,r')) 
+==> case inr(\b.*) of
+    inl(p) => base 0 [] r p 
+    inr(p) => ind 0 [] r (\t,r'. do [] ++ [t] as s in dbr(dec,base,ind,1,s,r')) 
+==> ind 0 [] r (\t,r'. do [] ++ [t] as s in dbr(dec,base,ind,1,s, r')) 
+==>^7 if(eq(0,0); do max(x,y) as a in (\t,r'. do [] ++ [t] as s in dbr(dec,base,ind,1,s,r')) a * ; ...)
+==>^2 if(ret(tt); do max(x,y) as a in (\t,r'. do [] ++ [t] as s in dbr(dec,base,ind,1,s,r')) a * ; ...)
+==> do max(x,y) as a in (\t,r'. do [] ++ [t] as s in dbr(dec,base,ind,1,s,r')) a * 
+==>^2 do ret(a) as a in (\t,r'. do [] ++ [t] as s in dbr(dec,base,ind,1,s,r')) a * 
+==> (\t,r'. do [] ++ [t] as s in dbr(dec,base,ind,1,s,r')) a * 
+==>^3 do [] ++ [a] as s in dbr(dec,base,ind,1,s,*)
+==>^2 do ret([a]) as s in dbr(dec,base,ind,1,s,*)
+==> dbr(dec,base,ind,1,ret([a]),*)
+\end{verbatim}
+
+Hence we see that it takes 38 steps to reach the second recursive call.
+Since \isVal{\empseq}{\lift{\nseqc{\zero}{\_.\zp}{\_.\_.\zp}}} and \isVal{r}{\squash{R(\zero,\empseq)}},
+by construction, we know \isVal{[a]}
+{\lift{\nseqc{\zero}{\_.P_{\suc{\zero}}}{\_.\_.\zp}}} with $P' = \seq{\zp}{p}{p+4}$.
+The remaining potential is still $\zp$ since $\ifthen{eq_b(a,n)}{\ret{0}}{\ret{0}}$ is 0 for all 
+  \isVal{a}{\lift{\nat_{\suc{\zero}}}}. Furthermore, $[a]$ is part of the spread: 
+  \isVal{\triv}{\squash{R(\suc{\zero},[a])}}.
+
+\paragraph{\textbf{Case} \eval{s(n-1)}{\zero}:}
+\begin{verbatim}
+dbr(dec,base,ind,n,s,r) 
+==> do dec(n,s) as d in 
+    case d of
+    inl(p) => base n s r p 
+    inr(p) => ind n s r (\t,r'. do s ++ [t] as s' in dbr(dec,base,ind,n+1,s',r')) 
+==>^(3+13) do ret(inl(*,*)) as d in 
+    case d of
+    inl(p) => base n s r p
+    inr(p) => ind n s r (\t,r'. do [x] ++ [t] as s' in dbr(dec,base,ind,2,s',r')) 
+==> case inl(*,*) of 
+    inl(p) => base n s r p
+    inr(p) => ind n s r (\t,r'. do [x] ++ [t] as s' in dbr(dec,base,ind,2,s',r')) 
+==> base n s r (*,*)
+==>^(7+14) ret(v)
+\end{verbatim}
+
+Number of steps is 40. \isVal{v}{P(n,s)} by construction of \texttt{base}. 
+
+\paragraph{\textbf{Case} \eval{s(n-1)}{v}, $v \ne \zero$, $n = 1$:}
+\begin{verbatim}
+dbr(dec,base,ind,1,s,r) 
+==> do dec(1,s) as b in 
+    case b of
+    inl(p) => base 1 s r p
+    inr(p) => ind 1 s r (\t,r'. do s ++ [t] as s' in dbr(dec,base,ind,2,s',r')) 
+==>^(3+13) do ret(inr(\b.*)) as d in 
+    case d of
+    inl(p) => base 1 s r p 
+    inr(p) => ind 1 s r (\t,r'. do s ++ [t] as s' in dbr(dec,base,ind,2,s',r')) 
+==> case inr(\b.*) of
+    inl(p) => base 1 s r p 
+    inr(p) => ind 1 s r (\t,r'. do s ++ [t] as s' in dbr(dec,base,ind,2,s',r')) 
+==> ind 1 s r (\t,r'. do s ++ [t] as s' in dbr(dec,base,ind,2,s',r')) 
+==>^7 if(eq(1,0); ...; if(eq 1 1; ...; ...))
+==>^2 if(ret(ff); ...; if(eq 1 1; ...; ...))
+==> if(eq 1 1; do min(x,y) as b in (\t,r'. do s ++ [t] as s' in dbr(dec,base,ind,2,s',r')) b (*,*))
+==>^2 if(ret(tt); do min(x,y) as b in (\t,r'. do s ++ [t] as s' in dbr(dec,base,ind,2,s',r')) b (*,*))
+==> do min(x,y) as b in (\t,r'. do s ++ [t] as s' in dbr(dec,base,ind,2,s',r')) b (*,*)
+==>^2 do ret(b) as b in (\t,r'. do s ++ [t] as s' in dbr(dec,base,ind,2,s',r')) b (*,*) 
+==> (\t,r'. do s ++ [t] as s' in dbr(dec,base,ind,2,s',r')) b (*,*) 
+==>^3 do s ++ [b] as s' in dbr(dec,base,ind,2,s',(*,*))
+==>^2 do ret([s;b]) as s' in dbr(dec,base,ind,2,s',(*,*))
+==> dbr(dec,base,ind,2,[s;b],(*,*))
+\end{verbatim}
+
+Number of steps is 41.
+Again, \isVal{[s;b]}{\lift{\nseqc{\suc{n}}{a.P_{\suc{n}}}{a.b.\zp}}} and 
+\isVal{(\triv,\triv)}{\squash{R(n,s)}} by construction. 
+
+\paragraph{\textbf{Case} \eval{s(n-1)}{v}, $v \ne \zero$, $n > 1$:}
+
+Let \eval{n-1}{n_1}, \eval{n-2}{n_2}, \eval{s(n_1)}{s_1} and \eval{s(n_2)}{s_2}.
+\begin{verbatim}
+dbr(dec,base,ind,n,s,r) 
+==> do dec(n,s) as b in 
+    case b of
+    inl(p) => base n s r p
+    inr(p) => ind n s r (\t,r'. do s ++ [t] as s' in dbr(dec,base,ind,n+1,s',r')) 
+==>^(3+13) do ret(inr(\b.*)) as d in 
+    case d of
+    inl(p) => base n s r p 
+    inr(p) => ind n s r (\t,r'. do s ++ [t] as s' in dbr(dec,base,ind,n+1,s',r')) 
+==> case inr(\b.*) of
+    inl(p) => base n s r p 
+    inr(p) => ind n s r (\t,r'. do s ++ [t] as s' in dbr(dec,base,ind,n+1,s',r')) 
+==> ind n s r (\t,r'. do s ++ [t] as s' in dbr(dec,base,ind,n+1,s',r')) 
+==>^7 if(eq(n,0); ...; if(eq n 1; ...; ...))
+==>^2 if(ret(ff); ...; if(eq n 1; ...; ...))
+==> if(eq n 1; ...; ...) 
+==>^2 if(ret(ff); ...; ...)
+==> do s(n-1) as s1 in do s(n-2) as s2 in ... 
+==>^2 do s(ret(n1)) as s1 in do s(n-2) as s2 in ... 
+==> do s(n1) as s1 in do s(n-2) as s2 in ...
+==>^(1+3) do ret(s1) as s1 in do s(n-2) as s2 in ...
+==> do s(n-2) as s2 in ... 
+==>^2 do s(ret(n2)) as s2 in ...
+==> do s(n2) as s2 in ...
+==>^(1+3) do ret(s2) as s2 in ...
+==> do divmod(s2,s1) as q,r in ...
+==>^2 do ret((q,r)) as q,r in ...
+==>^5 do (\t,r'. do s ++ [t] as s' in dbr(dec,base,ind,n+1,s',r')) r * as g in M
+==>^3 do do s ++ [r] as s' in dbr(dec,base,ind,n+1,s',*) as g in M
+==>^2 do do ret([s;r]) as s' in dbr(dec,base,ind,n+1,s',*) as g in M 
+==> do dbr(dec,base,ind,n+1,[s;r],*) as g in M 
+\end{verbatim}
+
+Where 
+\begin{align*}
+M \triangleq \bind{&\fst{g}}{d\\}{
+                            \bind{&\fst{\snd{g}}}{k\\}{
+                              \bind{&\fst{\snd{\snd{g}}}}{l\\}{
+                    &\ret{(d,l,k-lq,\triv)}}}
+          }
+\end{align*}
+
+By construction, \isVal{[s;r]}{\lift{\nseqc{\suc{n}}{a.P_{\suc{n}}}{a.b.\zp}}}
+\isVal{\triv}{\squash{R(\suc{n},[s;r])}}, and 
+\openComp{\isOf{g}{P(\suc{n},[s;r])}}{M}{P(n,s)}. We can show $M$ is a constant time computation:
+
+Let \isVal{(d,k,l,\triv)}{P(\suc{n}, [s;r])}. Let \eval{l*q}{lq}, \eval{k-lq}{klq}.
+\begin{verbatim}
+do (d,k,l,*).1 as d in ...
+==> do ret(d) as d in ...
+==> do (d,k,l,*).2.1 as k in ...
+==> do ret((k,l,*)).1 as k in ...
+==> do (k,l,*).1 as k in ...
+==> do ret(k) as k in ...
+==> do (d,k,l,*).2.2.1 as l in ... 
+==> do ret(k,l,*).2.1 as l in ...
+==> do (k,l,*).2.1 as l in ...
+==> do ret(l,*).1 as l in ...
+==> do (l,*).1 as l in ...
+==> do ret(l) as l in ...
+==> ret((d,l,k-l*q,*)) 
+==>^2 ret((d,l,k-ret(lq),*)) 
+==> ret((d,l,k-lq,*)) 
+==>^2 ret((d,l,ret(klq),*)) 
+==> ret((d,l,klq,*)) 
+\end{verbatim}
+
+Number of steps is 18. Hence \openCComp{\isOf{g}{P(\suc{n},[s;r])}}{M}{P(n,s)}{\constp{18}}{\zp}
+
+\end{proof}
 
 So we know that there are a constant number of steps between each extension up the spread. 
 Since the spread is linear (no branches), it suffices to find the length of the 
@@ -595,16 +757,16 @@ starts from the empty sequence, so:
 
 \begin{verbatim}
 dbr(dec,base,ind,0,[],r)
-==>^c1 dbr(dec,base,ind,1,[max(x,y)],r) 
-==>^c2 dbr(dec,base,ind,2,[max(x,y),min(x,y)],r) 
-==>^c3 do dbr(dec,base,ind,3,[max(x,y),min(x,y),s2],r) as g in M
-==>^c3 do 
+==>^38 dbr(dec,base,ind,1,[max(x,y)],r) 
+==>^41 dbr(dec,base,ind,2,[max(x,y),min(x,y)],r) 
+==>^61 do dbr(dec,base,ind,3,[max(x,y),min(x,y),s2],r) as g in M
+==>^61 do 
         do 
           dbr(dec,base,ind,4,[max(x,y),min(x,y),s2,s3],r) 
         as g in M
        as g in M
 ...
-==>^c3 do 
+==>^61 do 
         do 
         ...
           do
@@ -612,91 +774,26 @@ dbr(dec,base,ind,0,[],r)
           as g in M
         as g in M
        as g in M
-==>^c4 do 
+==>^40 do 
         do 
         ...
           do
-            ret(d,k,l)
+            ret(v0)
           as g in M
         as g in M
        as g in M
 ...
-==> ret(d',k',l')
+==>^18 do ret(v{i-2}) as g in M
+==> M
+==>^18 ret(v)
 \end{verbatim}
 
-Where we first build up a $i$-layer stack of \texttt{do} statements and then 
-pop out $i$ times again. The dominating term is $c\cdot i$, for some constant $c$.
-
-
-\begin{verbatim}
-gcd(x,y) = dbr(dec,base,ind,0,[],r) 
-==> do dec(0,[]) as d in 
-    case d of
-    inl(p) => base 0 [] r p 
-    inr(p) => ind 0 [] r (\t,r'. do [] ++ [t] as s in dbr(dec,base,ind,1,s,r')) 
-==>^(3+12) do ret(inr(\b.*)) as d in 
-    case d of
-    inl(p) => base 0 [] r p 
-    inr(p) => ind 0 [] r (\t,r'. do [] ++ [t] as s in dbr(dec,base,ind,1,s,r')) 
-==> case inr(\b.*) of
-    inl(p) => base 0 [] r p 
-    inr(p) => ind 0 [] r (\t,r'. do [] ++ [t] as s in dbr(dec,base,ind,1,s,r')) 
-==> ind 0 [] r (\t,r'. do [] ++ [t] as s in dbr(dec,base,ind,1,s, r')) 
-==>^7 if(eq 0 0; (\t,r'. do [] ++ [t] as s in dbr(dec,base,ind,1,s,r')) x * ; ...)
-==> if(ret(tt); (\t,r'. do [] ++ [t] as s in dbr(dec,base,ind,1,s,r')) x * ; ...)
-==> (\t,r'. do [] ++ [t] as s in dbr(dec,base,ind,1,s,r')) x * 
-==>^2 do [] ++ [x] as s in dbr(dec,base,ind,1,s,*)
-==> do ret([x]) as s in dbr(dec,base,ind,1,s,*)
-==> dbr(dec,base,ind,1,ret([x]),*)
-==> do dec(1,[x]) as b in 
-    case b of
-    inl(p) => base 1 [x] r p
-    inr(p) => ind 1 [x] r (\t,r'. do [x] ++ [t] as s in dbr(dec,base,ind,2,s,r')) 
-==> 
-\end{verbatim}
-
-If $x = 0$:
-\begin{verbatim}
-==>^(7+2) do ret(inl(*,*)) as b in 
-    case b of
-    inl(p) => base 1 [x] r p
-    inr(p) => ind 1 [x] r (\t,r'. do [x] ++ [t] as s in dbr(dec,base,ind,2,s,r')) 
-==> case inl(*,*) of 
-    inl(p) => base 1 [x] r p
-    inr(p) => ind 1 [x] r (\t,r'. do [x] ++ [t] as s in dbr(dec,base,ind,2,s,r')) 
-==> base 1 [x] r (*,*)
-==>^(4+4) ret(0,0,0)
-\end{verbatim}
-
-TODO: CHANGE X AND Y TO MAX(x,y) and MIN(x,y)!!!!
-Otherwise:
-\begin{verbatim}
-==>^(7+2) do ret(inr(\_.*)) as b in 
-    case b of
-    inl(p) => base 1 [x] r p
-    inr(p) => ind 1 [x] r (\t,r'. do [x] ++ [t] as s in dbr(dec,base,ind,2,s,r')) 
-==> case inr(\_.*) of 
-    inl(p) => base 1 [x] r p
-    inr(p) => ind 1 [x] r (\t,r'. do [x] ++ [t] as s in dbr(dec,base,ind,2,s,r')) 
-==> ind 1 [x] r (\t,r'. do [x] ++ [t] as s in dbr(dec,base,ind,2,s,r')) 
-==>^4 if(eq 1 0; ... ; 
-        if(eq 1 1; (\t,r'. do [x] ++ [t] as s in dbr(dec,base,ind,2,s,r')) y (*,*); ...)) 
-==> if(ret(ff); ... ; 
-        if(eq 1 1; (\t,r'. do [x] ++ [t] as s in dbr(dec,base,ind,2,s,r')) y (*,*); ...)) 
-==> if(eq 1 1; (\t,r'. do [x] ++ [t] as s in dbr(dec,base,ind,2,s,r')) y (*,*); ...) 
-==> if(ret(tt); (\t,r'. do [x] ++ [t] as s in dbr(dec,base,ind,2,s,r')) y (*,*); ...) 
-==> (\t,r'. do [x] ++ [t] as s in dbr(dec,base,ind,2,s,r')) y (*,*)
-==>^2 do [x] ++ [t] as s in dbr(dec,base,ind,2,s,(*,*))
-==> do ret([x,t]) as s in dbr(dec,base,ind,2,s,(*,*))
-==> dbr(dec,base,ind,2,[x,t],(*,*))
-==> do dec(2,[x]) as b in 
-    case b of
-    inl(p) => base 1 [x] r p
-    inr(p) => ind 1 [x] r (\t,r'. do [x] ++ [t] as s in dbr(dec,base,ind,2,s,r')) 
-==> 
-
-
-\end{verbatim}
-
+Where we first build up a $(i-1)$-layer stack of \texttt{do} statements and then 
+pop out $i-1$ times again. Number of steps is $38+41+61*(i-1) + 40 + (1+18)*(i-1) = 80i+39$. 
+Thus 
+\[\isCComp{gcd(x,y)}{\sigmatyc{\isOf{d}{\lift{\nat}}}{
+    \sigmatyc{\isOf{l,k}{\lift{\z}}}{\ret{\pos{d}} =_{\z} kx + ly}}
+}{\seq{F^{-1}(max(x,y))}{i}{80i+39}}{\zp}
+\]
 
 
