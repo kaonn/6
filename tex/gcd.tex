@@ -746,10 +746,10 @@ initial segment of non-zero entries.
 \begin{lemma}
   Let \isVal{n}{\lift{\nat}}, \isVal{s}{\lift{\nseq{n}}}, and \isVal{r}{\squash{R(n,s)}}.
   Then the first $\zero$ in $s$ occurs at index $i$, such that:
-  \begin{cases}
+  \[\begin{cases}
     x \ge F_i \text{ and } y \ge F_{i-1} \text{ if $x > y$ }\\
     y \ge F_i \text{ and } x \ge F_{i-1} \text{ o.w.}\\
-  \end{cases}
+  \end{cases}\]
 \end{lemma}
 
 Hence $max(x,y) \ge F_i$, and $i \le F^{-1}(max(x,y))$. We know the computation of gcd 
