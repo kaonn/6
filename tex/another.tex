@@ -1,0 +1,461 @@
+\section{Computation Tree}
+
+We will try to find a compositional way of proving the result from the last section. This requires
+a restricted form of bar recursion in which the inductive case $ind$ does not get access to the 
+recursive argument; instead $ind$ provides a list of recursive arguments and a function 
+from the resulting inductive \emph{values} to the current case. This makes it possible to 
+construct a generic argument for the computation graph semantically while giving a 
+morally syntactic rule for bounding the cost of bar recursion.
+
+From the client perspective, one needs to provide the modified inductive case:
+\begin{align*}
+  \isVal{ind'}{&\sigmatyc{\isOf{k}{\lift{\nat}}}{
+    \pityzc{\isOf{n}{\lift{\nat}}}{\pityzc{\isOf{s}{\lift{\nseq{n}}}}
+      {\squash{R(n,s)} \tolr \\
+        &\quad\sigmatyc{\isOf{f}{\lift{\N_k} \to 
+        \sigmatyc{\isOf{x}{\lift{\nat}}}{R(\suc{n},s \oplus_n x)}}}{\\
+      &\quad\quad\Inj{f} \lift{\times} 
+        (\pityc{\isOf{i}{\lift{\N_k}}}{P(\suc{n}, s \oplus_n f(i))}}) \tolr P(n,s)}}}}
+\end{align*}
+
+Where \Inj{f} validates an injective function \isVal{f}{A \tolr B}:
+\[
+  \Inj{f} \triangleq \pityc{\isOf{a_1,a_2}{A}}{\eqtyc{B}{f(a_1)}{f(a_2)} \tolr \eqtyc{A}{a_1}{a_2}}
+\]
+And \pityzc{A}{a.B} stands for an annotated $\Pi$-type with all zero potential:
+\[
+\pityzc{A}{a.B} \triangleq \arrabtc{A}{a.B}{a.\zp,a.b.\zp}
+\]
+
+Then the actual inductive case can be generically defined as follows:
+\begin{align*}
+  \isVal{ind}{&\pityc{\isOf{n}{\lift{\nat}}}{\pityc{\isOf{s}{\lift{\nseq{n}}}}
+      {
+      \squash{R(n,s)} \tolr (\pityc{\isOf{m}{\lift{\nat}}}{R(\suc{n}, s \oplus_n m) 
+        \tolr P(\suc{n}, s \oplus_n m)}) \tolr P(n,s)}}}\\
+        ind &\triangleq \lam{n,s,r,i}{}{\\
+          \bind{&ind'}{k,indf\\}{
+          \bind{&indf\,n\,s\,r}{snd\\}{
+            \bind{&\fst{snd}}{f\\}{
+              \bind{&\snd{snd}}{gg\\}{
+                \bind{&\snd{gg}}{g\\}{
+                  \bind{
+                  &\rec{\bar{k-1}}{
+                  \bind{f(\zero)}{x,xr\\}{
+                    &\quad\bind{i\,x\,xr}{t}{
+                    \empseq \oplus_{\zero} t
+                    }
+                  }
+                }{z}{zf}{\\
+                \bind{&f(z)}{x,xr\\}{
+                    &\quad\bind{i\,x\,xr}{t}{
+                    zf \oplus_{z} t
+                  }
+                  }
+                }
+              }{recs\\}{
+                    \qquad &g\,recs
+              }
+              }
+            }
+          }
+        }
+        }
+      }
+\end{align*}
+Write this as $ind = \wrap{ind'}$.
+
+For the next few lemmas, we assume the following:
+  \begin{align*}
+    &\isVal{R}{\pityc{\isOf{n}{\lift{\nat}}}{\lift{\nseq{n}} \tolr \lift{\type{}}}}\\
+    &\isVal{B}{\pityc{\isOf{n}{\lift{\nat}}}{\lift{\nseq{n}} \tolr \lift{\type{}}}}\\
+    &\isVal{P}{\pityc{\isOf{n}{\lift{\nat}}}{\lift{\nseq{n}} \tolr \lift{\type{}}}}\\
+    &\isVal{bar}{\pityc{\isOf{s}{\lift{\baire}}}{\inttyc{\isOf{m}{\lift{\nat}}}{\squash{R(m,s)}} 
+      \tolr \sigmatyc{\isOf{n}{\lift{\nat}}}{B(n,s)}}}\\
+    &\isVal{ind'}{\sigmatyc{\isOf{k}{\lift{\nat}}}{
+        \pityzc{\isOf{n}{\lift{\nat}}}{\pityzc{\isOf{s}{\lift{\nseq{n}}}}
+        {\squash{R(n,s)} \tolr \\
+        &\quad\quad\sigmatyc{\isOf{f}{\lift{\N_k} \to 
+        \sigmatyc{\isOf{x}{\lift{\nat}}}{R(\suc{n},s \oplus_n x)}}}{\\
+      &\quad\quad\quad\Inj{f} \lift{\times} 
+        (\pityc{\isOf{i}{\lift{\N_k}}}{P(\suc{n}, s \oplus_n f(i))}}) \tolr P(n,s)}}}}\\
+    &\isVal{dec}{\pityc{\isOf{n}{\lift{\nat}}}{\pityc{\isOf{s}{\lift{\nseq{n}}}}{\lift{B(n,s) + \neg B(n,s)}}}}\\
+    &\isVal{base}{\pityc{\isOf{n}{\lift{\nat}}}{\pityc{\isOf{s}{\lift{\nseq{n}}}}{\squash{R(n,s)} \tolr 
+      B(n,s) \tolr P(n,s)}}}\\
+    &\isVal{r}{R(0,\empseq)}\\
+  &\isVal{fan}{
+      \pityc{\isOf{n}{\lift{\nat}}}{\pityc{\isOf{s}{\lift{\nseq{n}}}}{
+        \squash{R(n,s)} \tolr \\
+        &\quad\quad\sigmatyc{\isOf{d}{\lift{\nat}}}{
+        \sigmatyc{\isOf{f}{\lift{\N_d} \to 
+        \sigmatyc{\isOf{x}{\lift{\nat}}}{R(\suc{n},s \oplus_n x)}}}{\\
+      &\quad\quad\quad\pityc{\isOf{y}{\lift{\nat}}}{
+        R(\suc{n}, s\oplus_n y) \tolr \sigmatyc{\isOf{i}{\lift{\nat}}}{f(i) = y}
+      }
+    }
+  }}}}
+  \end{align*}
+  The premise $fan$ states that at each node, there are finitely many successors in the spread.
+\begin{lemma}(Fan Theorem)
+  There exists a \isVal{N}{\lift{\nat}} such that for all admissible sequences \isVal{s}{\lift{\baire}},
+  there is a \isVal{k}{\lift{\N_N}} such that
+  $B(k,s)$. Furthermore, there exists an admissible sequence \isVal{s}{\lift{\baire}} such that
+  $bar\,s\,\triv = N$.
+\end{lemma}
+
+\begin{proof}
+  We need to construct a value in the type 
+  \begin{align*}
+    &\sigmatyc{\isOf{N}{\lift{\nat}}}{\\
+    &\quad\pityc{\isOf{s}{\lift{\baire}}}{\inttyc{\isOf{m}{\lift{\nat}}}{\squash{R(m,s)}} 
+\tolr \sigmatyc{\isOf{k}{\lift{\nat_N}}}{B(k,s)}}
+\lift{\times}\\ &\quad\sigmatyc{\isOf{s}{\lift{\baire}}}
+  {\sigmatyc{\isOf{x}{\inttyc{\isOf{m}{\lift{\nat}}}{\squash{R(m,s)}}}}{bar\,s\,x = N}}}
+  \end{align*}
+  Slightly generalize to the following:
+   \begin{align*}
+     T \triangleq &\pityc{\isOf{n}{\lift{\nat}}}{\pityc{\isOf{s}{\lift{\nseq{n}}}}{\sigmatyc{\isOf{N}{\lift{\nat}}}{\\
+    &\quad\pityc{\isOf{s'}{\lift{\baire}}}{\inttyc{\isOf{m}{\lift{\nat}}}{\squash{R(m,s')}} 
+\tolr s \preceq_n s' \tolr \sigmatyc{\isOf{k}{\lift{\nat_N}}}{B(k,s')}}
+\lift{\times}\\ &\quad\sigmatyc{\isOf{s'}{\lift{\baire}}}
+  {\sigmatyc{\isOf{x}{\inttyc{\isOf{m}{\lift{\nat}}}{\squash{R(m,s)}}}}{bar\,s'\,x = N}}}}}
+  \end{align*}
+  Where $s \preceq_n s' \triangleq \pityc{\isOf{i}{\lift{\nat_n}}}{s(i) = s'(i)}$.
+Proceed by bar induction. Define the spread, bar, and property: 
+\begin{align*}
+  R' &\triangleq R\\
+  B' &\triangleq B\\
+  P' &\triangleq T
+\end{align*}
+\begin{itemize}
+  \item (wfb), (wfs), (init), (bar): immediate from $bar$ premise.
+  \item (ind): let \isVal{n}{\lift{\nat}}, \isVal{s}{\lift{\nseq{n}}}, \isVal{r}{\squash{R'(n,s)}}, and 
+    \isVal{i}{\pityc{\isOf{m}{\lift{\nat}}}{R'(\suc{n}, s \oplus_n m) \tolr P'(\suc{n}, s\oplus_n m)}}. We 
+    need to show $P'(n,s)$. Note 
+    \begin{align*}
+      &\isComp{fan\,n\,s\,r}{\sigmatyc{\isOf{d}{\lift{\nat}}}{
+        \sigmatyc{\isOf{f}{\lift{\N_d} \to 
+        \sigmatyc{\isOf{x}{\lift{\nat}}}{R(\suc{n},s \oplus_n x)}}}{\\
+      &\quad\quad\pityc{\isOf{y}{\lift{\nat}}}{
+        R(\suc{n}, s\oplus_n y) \tolr \sigmatyc{\isOf{i}{\lift{\nat}}}{f(i) = y}
+      }
+    }
+  }}
+\end{align*}
+This means there are $d$ admissible extensions from $s$. Call these $t_1$,...,$t_d$.   
+Applying $i$ to these nodes gives $P'(\suc{n}, s\oplus_n t_i)$ for $1 \le i \le d$.
+To show $P'(n,s)$, we need to show an $N$ such that 1) all extensions of $s$ are barred by (or before) $N$
+and 2) the bound $N$ is realized by some admissible sequence. By indcution, we know that all 
+one step extensions $s \oplus_n t_i$ are uniformly bounded by some $N_i$ for $1 \le i \le d$.
+Thus we can set $N = \max_i{N_i}$. The witness to the maximum given by the third projection in 
+$P'(\suc{n}, s\oplus_n t_{argmax_i{N_i}})$. 
+\item (base): let \isVal{n}{\lift{\nat}}, \isVal{s}{\lift{\nseq{n}}}, \isVal{r}{\squash{R'(n,s)}}, and 
+  \isVal{b}{B'(n,s)}. We need to show $P'(n,s)$. As before, we know there are admissible extensions
+  $t_1,...,t_d$ to $s$. Note that $bar\,(\extSeq{s \oplus_n t_i}{\triv})\,\triv$ gives a sequence of bounds $N_i$ 
+  on when each extension is barred. Taking $N = \max_i{N_i}$ gives us the uniform bound. Again, the 
+  realizing sequence $s'$ is given by the argmax: $s' \triangleq s \oplus_n t_i$ where
+  $bar\,(\extSeq{s \oplus_n t_i}{\triv})\,\triv = N$.
+\end{itemize}
+Hence we know $P(\zero,\empseq)$ is inhabited. Since $\empseq \preceq_{\zero} s'$ for any 
+\isVal{s'}{\lift{\baire}}, we are done.
+\end{proof}
+
+\begin{lemma}
+\iffalse 
+  Suppose at each node, the number of successors is bounded by $d$, i.e. there is a value
+  \begin{align*}
+    \isVal{&fixed}{
+      \sigmatyc{\isOf{d}{\lift{\nat}}}{\pityc{\isOf{n}{\lift{\nat}}}{\pityc{\isOf{s}{\lift{\nseq{n}}}}{
+        \squash{R(n,s)} \tolr \\
+        &\quad\quad\sigmatyc{\isOf{f}{\lift{\N_d} \to 
+        \sigmatyc{\isOf{x}{\lift{\nat}}}{R(\suc{n},s \oplus_n x)}}}{\\
+      &\quad\quad\quad\pityc{\isOf{y}{\lift{\nat}}}{
+        R(\suc{n}, s\oplus_n y) \tolr \sigmatyc{\isOf{i}{\lift{\nat}}}{f(i) = y}
+      }
+    }
+  }}}}
+\end{align*}
+\fi
+Let \eval{\dbr{dec}{base}{\wrap{ind'}}{\zero}{\empseq}{r}}{v}. Then the number of principal dbr head 
+redices (steps of the form \step{\dbr{dec}{base}{\wrap{ind'}}{n}{s}{r}}{M}) is bounded by $d^N$, where
+$d$ is the branching factor of $ind'$.
+\end{lemma}
+
+\begin{proof}
+  Slightly generalize the goal: let \isVal{n}{\lift{\nat}} and \isVal{s}{\lift{\nseq{n}}}, such that 
+  no prefix of $s$ is barred, i.e \pityc{\isOf{n'}{\lift{\nat}}}{\lift{\neg}(B(n',s))}.
+  Then if \eval{\dbr{dec}{base}{\wrap{ind'}}{n}{s}{r}}{v},
+  then the number of principal dbr head redices is no more than $d^{N - n}$. 
+  First, $n < N$ since otherwise a prefix of $s$ is necessarily barred. 
+  Since $s$ has $d$ extensions, which are all uniformly bounded by $N$, the maximum number of 
+  sequences to search is bounded by $d^{N-n}$. The search is realized by expanding the computation and seeing 
+  that \wrap{ind'} invokes $d$ recursive calls at each stage. 
+
+  Applying the result at 0 gives the bound of $d^N$.
+\end{proof}
+
+Finally, suppose we have the following cost bounds for $ind'$, $dec$, and $base$:
+\begin{align*}
+&\isVal{ind'}{\pityzc{\isOf{n}{\lift{\nat}}}{\pityzc{\isOf{s}{\lift{\nseq{n}}}}
+    {\squash{R(n,s)} \tolrc{c_0} \\
+      &\quad\sigmatyc{\isOf{k}{\lift{\nat}}}{\\
+        &\quad\quad\sigmatyc{\isOf{f}{\lift{\N_k} \tolrc{c_1}
+        \sigmatyc{\isOf{x}{\lift{\nat}}}{R(\suc{n},s \oplus_n x)}}}{\\
+      &\quad\quad\quad\Inj{f} \lift{\times} 
+        (\pityc{\isOf{i}{\lift{\N_k}}}{P(\suc{n}, s \oplus_n f(i))}}) \tolrc{c_2} P(n,s)}}}}\\
+    &\isVal{dec}{\pityzc{\isOf{n}{\lift{\nat}}}{\arrabtc{\lift{\nseq{n}}}
+    {s.\lift{B(n,s) + \neg B(n,s)}}{\_.\constp{c_3},\_.\_.\zp}}}\\
+    &\isVal{base}{\pityzc{\isOf{n}{\lift{\nat}}}{\pityzc{\isOf{s}{\lift{\nseq{n}}}}{\squash{R(n,s)} \tolrz 
+    B(n,s) \tolrc{c_4} P(n,s)}}}\\
+\end{align*}
+Where the notation $A \tolrc{c} B$ means $\arrabtc{A}{B}{\_.\constp{c},\_\_.\zp}$, and $c_1, c_2, c_3$ and $c_4$
+are constants. 
+
+\begin{lemma}
+  Given the above cost bounds, we know 
+  \isCComp{\dbr{dec}{base}{ind}{\zero}{\empseq}{r}}{P(\zero,\empseq)}{ss}{tt}
+\end{lemma}
+
+\begin{proof}
+  Let $N$ be the uniform bound on the bar obtained from the fan theorem and $d$ be the degree of branching for 
+  $ind'$.
+  First, we show that each for all \isVal{n}{\lift{\nat}}, \isVal{s}{\lift{\nseq{n}}}, and 
+  \isVal{r}{\squash{R(n,s)}} such that no proper prefix of $s$ is barred, either: 
+  \begin{enumerate}
+    \item \dbr{dec}{base}{\wrap{ind'}}{n}{s}{r}{c} $\mapsto^c$
+        \seqs{[\dbr{dec}{base}{\wrap{ind'}}{\suc{n}}{s_1}{r_1},\dots,\\
+      \dbr{dec}{base}{\wrap{ind'}}{\suc{n}}{s_d}{r_d}]}{v_1,...,v_d}{M}, 
+      where \isVal{s_i}{\lift{\nseq{\suc{n}}}} and \isVal{r_i}{\squash{R(\suc{n},s_i)}} for $1 \le i \le d$, 
+      \isCComp{M}{P(n,s)}{ss}{tt}, or 
+    \item \evalCost{\dbr{dec}{base}{\wrap{ind'}}{n}{s}{r}}{c_3+c_4+13}{v}
+  \end{enumerate}
+  Since $ind'$ is a value of $\Sigma$, we know $ind = \pair{k}{indf}$ for some $k,indf$.
+  Run the computation. If $s$ is barred, then we know:
+  \begin{verbatim}
+  dbr(dec,base,{ind'},n,s,r) 
+  ==> do dec(n,s) as d in 
+    case d of
+    inl(p) => base n s r p 
+    inr(p) => {ind'} n s r (\t,r'. do s ++ [t] as s' in dbr(dec,base,{ind'},n+1,s',r')) 
+  ==>^(3+c3) do ret(inl(p)) as d in 
+    case d of
+    inl(p) => base n s r p 
+    inr(p) => {ind'} n s r (\t,r'. do s ++ [t] as s' in dbr(dec,base,{ind'},n+1,s',r')) 
+  ==> case inl(p) of
+    inl(p) => base n s r p 
+    inr(p) => {ind'} n s r (\t,r'. do s ++ [t] as s' in dbr(dec,base,{ind'},n+1,s',r')) 
+  ==> base n s r p
+  ==>^(7+c4) v
+  \end{verbatim}
+  Number of steps is $c_3 + c_4 + 13$.
+  Otherwise: 
+  \begin{verbatim}
+  dbr(dec,base,{ind'},n,s,r) 
+  ==> do dec(n,s) as d in 
+    case d of
+    inl(p) => base n s r p 
+    inr(p) => {ind'} n s r (\t,r'. do s ++ [t] as s' in dbr(dec,base,{ind'},n+1,s',r')) 
+  ==>^(3+c3) do ret(inr(p)) as d in 
+    case d of
+    inl(p) => base n s r p 
+    inr(p) => {ind'} n s r (\t,r'. do s ++ [t] as s' in dbr(dec,base,{ind'},n+1,s',r')) 
+  ==> case inr(p) of
+    inl(p) => base n s r p 
+    inr(p) => {ind'} n s r (\t,r'. do s ++ [t] as s' in dbr(dec,base,{ind'},n+1,s',r')) 
+  ==> {ind'} n s r (\t,r'. do s ++ [t] as s' in dbr(dec,base,{ind'},n+1,s',r')) 
+  ==>^7 do ind' as k, indf in ... 
+  ==>^2 do indf n s r as snd in ...
+  ==>^(5 + c0) do ret(f) as snd in ...
+  ==> do snd . 1 as f in ...
+  ==> do snd . 2 as gg  in ...
+  ==> do gg . 2 as g in 
+  ==> do rec(k-1) (...) as recs in g recs
+  ==> do 
+        do rec(k-2) (...) as zf in 
+        do f(k-1) as x,xr in 
+        do i x xr as t in ret(zf ++ [t])
+      as recs in g recs
+  ==> do 
+        do 
+          do rec(k-3) (...) as zf in 
+          do f(k-2) as x,xr in 
+          do i x xr as t in ret(zf ++ [t])
+        as zf in 
+        do f(k-1) as x,xr in 
+        do i x xr as t in ret(zf ++ [t])
+      as recs in g recs
+  ==>^(k-3) 
+      do 
+        do 
+          do 
+            ...
+            do rec(0) (...) as zf in
+            do f(1) as x,xr in 
+            do i x xr as t in ret(zf ++ [t])
+            ...
+          as zf in 
+          do f(k-2) as x,xr in 
+          do i x xr as t in ret(zf ++ [t])
+        as zf in 
+        do f(k-1) as x,xr in 
+        do i x xr as t in ret(zf ++ [t])
+      as recs in g recs
+  ==>
+      do 
+        do 
+          do 
+            ...
+            do 
+              do f(0) as x,xr in 
+              do i x xr as t in ret([] ++ [t]) 
+            as zf in
+            do f(1) as x,xr in 
+            do i x xr as t in ret(zf ++ [t])
+            ...
+          as zf in 
+          do f(k-2) as x,xr in 
+          do i x xr as t in ret(zf ++ [t])
+        as zf in 
+        do f(k-1) as x,xr in 
+        do i x xr as t in ret(zf ++ [t])
+      as recs in g recs
+      == iter_k[do f(0) as x,xr in do i x xr as t in ret([] ++ [t]), ... , do f(k-1) as x,xr in do i x xr as t in ret(zf ++ [t])] with zf1,...zf{k-1},recs in g recs
+  \end{verbatim}
+  (for readability \texttt{i} was not substituted for the recursive call)
+
+  Next, we show that the number of steps need to evaluate \dbr{dec}{base}{\wrap{ind'}}{n}{s}{r} is related to the recurrence defined as:\\
+  \[T(k)= \begin{cases}
+    c_3 + c_4 + 13 \text{ if } k = 0\\
+    d \cdot T(k-1) + d \cdot (c_1 + 13) + c_2 + 26 \text{ o.w.}
+  \end{cases}\]
+  for $0 \le k \le N$. Then the number of steps is bounded by $T(N-n)$. Hence we prove the claim: 
+  for all k, \isVal{n}{\lift{\nat}}, \isVal{s}{\lift{\nseq{n}}} such that no proper prefix of $s$ is barred, if 
+  \evalCost{M = \dbr{dec}{base}{\wrap{ind'}}{n}{s}{r}}{c}{v} and $k = N - n$, then $c \le T(N-n)$.
+  Proceed by induction on $k$:
+  \begin{itemize}
+    \item $k= 0$: 
+      This means $n = N$. But then some prefix of $s$ must have been barred, which is a contradiction.
+    \item $k = k' + 1$: 
+      Need to show that \evalCost{M}{c}{v} implies $c \le T(k)$.
+      By our previous observation, we know that either $s$ is barred and $M$ steps to the base case or $s$ is not barred and $M$ starts $d$ recursive calls. 
+      \begin{itemize}
+        \item $s$ is barred: 
+          \evalCost{\dbr{dec}{base}{\wrap{ind'}}{n}{s}{r}}{c_3+c_4+13}{v} by above. Suffices to show
+          $c_3 + c_4 + 13 \le T(k)$. Since $T(0) = c_3 + c_4 + 13$ and $T$ is a monotonic function, this holds.
+        \item $s$ not barred: 
+          Then $M$ sequences for $d$ further recursive calls. Let the extensions be $s_1,\dots,s_d$. From above: 
+  \begin{verbatim}
+  dbr(dec,base,{ind'},n,s,r) 
+  ==>^(24+d) do 
+        do 
+          do 
+            ...
+            do 
+              do f(0) as x,xr in 
+              do i x xr as t in ret([] ++ [t]) 
+            as zf in
+            do f(1) as x,xr in 
+            do i x xr as t in ret(zf ++ [t])
+            ...
+          as zf in 
+          do f(d-2) as x,xr in 
+          do i x xr as t in ret(zf ++ [t])
+        as zf in 
+        do f(d-1) as x,xr in 
+        do i x xr as t in ret(zf ++ [t])
+      as recs in g recs
+  \end{verbatim}
+  Zooming in on the principal reduct:
+  \begin{verbatim}
+   do f(0) as x,xr in 
+   do i x xr as t in ret([] ++ [t]) 
+  ==>^(1 + c1) 
+    do ret((s1,*)) as x,xr in 
+    do i x xr as t in ret([] ++ [t]) 
+  ==> do 
+        (\t,r'. do s ++ [t] as s' in dbr(dec,base,{ind'},n+1,s',r')) s1 * 
+      as t in ret([] ++ [t]) 
+  ==>^3 do 
+            do s ++ [t] as s' in dbr(dec,base,{ind'},n+1,s',*) 
+          as t in ret([] ++ [t]) 
+  ==>^2 do 
+          do ret([s;t]) as s' in dbr(dec,base,{ind'},n+1,s',*) 
+        as t in ret([] ++ [t]) 
+  ==> do 
+        dbr(dec,base,{ind'},n+1,[s;t],*) 
+      as t in ret([] ++ [t]) 
+  ==>^r0 do ret(v0) as t in ret([] ++ [t]) 
+  ==> ret([] ++ [v0])
+  ==>^2 ret([v0])
+  \end{verbatim}
+  Where $r_0 \le T(k')$ by induction. The number of steps taken is $r_0 + c_1 + 11$. This holds for all the extensions:
+  \begin{verbatim}
+    do 
+      do 
+        do 
+          ...
+          do 
+            do f(0) as x,xr in 
+            do i x xr as t in ret([] ++ [t]) 
+          as zf in
+          do f(1) as x,xr in 
+          do i x xr as t in ret(zf ++ [t])
+          ...
+        as zf in 
+        do f(d-2) as x,xr in 
+        do i x xr as t in ret(zf ++ [t])
+      as zf in 
+      do f(d-1) as x,xr in 
+      do i x xr as t in ret(zf ++ [t])
+    as recs in g recs
+  ==>^(r0 + c1 + 11) do 
+      do 
+        do 
+          ...
+          do ret([v0]) 
+          as zf in
+          do f(1) as x,xr in 
+          do i x xr as t in ret(zf ++ [t])
+          ...
+        as zf in 
+        do f(d-2) as x,xr in 
+        do i x xr as t in ret(zf ++ [t])
+      as zf in 
+      do f(d-1) as x,xr in 
+      do i x xr as t in ret(zf ++ [t])
+    as recs in g recs
+  ==> do 
+      do 
+        do 
+          ...
+          do f(1) as x,xr in 
+          do i x xr as t in ret([v0] ++ [t])
+          ...
+        as zf in 
+        do f(d-2) as x,xr in 
+        do i x xr as t in ret(zf ++ [t])
+      as zf in 
+      do f(d-1) as x,xr in 
+      do i x xr as t in ret(zf ++ [t])
+    as recs in g recs
+  ...
+  ==> do ret([v0,...v{d-1}]) as recs in g recs
+  ==> g [v0,...v{d-1}]
+  ==>^(1 + c2) ret(v)
+  \end{verbatim}
+  Where the total number of steps is $24+d+1 + 1 + c_2 + \Sigma_{0 \le i \le d-1} r_i + c_1 + 11 + 1 = 26 + d + c_2 + \Sigma_{0 \le i \le d-1} r_i + c_1 + 12$. 
+  By induction, 
+  \begin{align*}
+    &26 + d + c_2 + \Sigma_{0 \le i \le d-1} r_i + c_1 + 12 \\
+    &\le 26 + d + c_2 + \Sigma_{0 \le i \le d-1} T(k') + c_1 + 12 \\
+    &=  26 + d + c_2 + d (T(k') + c_1 + 12)\\
+    &=  d\cdot T(k') + d\cdot(c_1 + 13) + c_2 + 26
+    &= T(k' + 1)
+  \end{align*}
+  Hence this case holds as well.
+    \end{itemize}
+  \end{itemize}
+  For $d >1$, we can show that $T(k) = t_0 \cdot d^k + t_1 \cdot \frac{d^k-1}{d-1}$, where $t_0 = c_3 + c_4 + 13$ and $t_1 = d \cdot (c_1 + 13) + c_2 + 26$. 
+  Otherwise, $T(k) = k \cdot t_1 + t_0$. 
+  When we instantiate this for $k = N$, we get that \evalCost{\dbr{dec}{base}{ind}{\zero}{\empseq}{r}}{c}{v} and $c \le T(N)$.  
+\end{proof}
