@@ -9,15 +9,15 @@ in the CBPV setting. For convenience we write $\lift{}$ for embedding type const
 computations, i.e. $A \lift{\to} B \triangleq \lift{A \to B}$, and write 
 $\Uparrow A$ for $\ret{A}$.
 
-\begin{definition}(Admissibility of Bar Induction)\label{lemma:birule}
+\begin{definition}(Bar Induction Rule)\label{lemma:birule}
   If 
   \begin{align*}
     &\text{(wfb)}\quad \openTypeComp{\Gamma, \isOf{n}{\lift{\nat}}, \isOf{s}{\lift{\nseq{n}}}}{B}\\
     &\text{(wfs)}\quad \openTypeComp{\Gamma, \isOf{n}{\lift{\nat}}, \isOf{s}{\lift{\nseq{n}}}}{R}\\
     &\text{(init)}\quad \openComp{\Gamma}{M_0}{R(\zero,\empseq)}\\
     &\text{(bar)}\quad \openComp{\Gamma,\isOf{s}{\lift{\baire}}, 
-      \isOf{z}{\lift{\intty{\isOf{m}{\lift{\nat}}}{\squash{R(m,s)}}}}}{M_1}
-      {\squash{\lift{\sigmaty{\isOf{n}{\lift{\nat}}}{B(n,s)}}}}\\ 
+      \isOf{z}{\inttyc{\isOf{m}{\lift{\nat}}}{\squash{R(m,s)}}}}{M_1}
+      {\squash{\sigmatyc{\isOf{n}{\lift{\nat}}}{B(n,s)}}}\\ 
     &\text{(base)}\quad \openComp{\Gamma,\isOf{n}{\lift{\nat}}, \isOf{s}{\lift{\nseq{n}}},
     \isOf{z}{\squash{R(n,s)}}, \isOf{b}{B(n,s)}}{M_2}{P(n,s)}\\
     &\text{(ind)} \quad \openComp{\Gamma,\isOf{n}{\lift{\nat}}, \isOf{s}{\lift{\nseq{n}}},

@@ -3,7 +3,7 @@
 % Head down to where it says "Start here"
 % --------------------------------------------------------------
  
-\documentclass[12pt]{article}
+\documentclass[12pt,usenames,dvipsnames]{article}
  
 \usepackage[margin=1in]{geometry} 
 \usepackage{amsmath,amsthm,amssymb,tikz}
@@ -59,16 +59,16 @@
 \newcommand{\bind}[3]{\mathtt{do}\; #1 \; \mathtt{as}\; #2\; \mathtt{in}\; #3}
 \newcommand{\rec}[5]{\mathtt{rec}(#1)(#2;#3.#4.#5)}
 \newcommand{\case}[5]{\mathtt{case}(#1)(#2.#3; #4.#5)}
-\newcommand{\thunk}[1]{{\color{red}{\mathtt{thunk}}}(#1)}
-\newcommand{\comp}[1]{{\color{red}{\mathtt{comp}}}(#1)}
+\newcommand{\susp}[1]{\ensuremath{{\color{red}{\mathtt{susp}}}(#1)}}
+\newcommand{\comp}[1]{\ensuremath{{\color{red}{\mathtt{comp}}}(#1)}}
 \newcommand{\compc}[1]{{\color{red}{\mathtt{comp}}}(#1)}
-\newcommand{\ccomp}[3]{{\color{red}{\mathtt{comp}}}(#1, #2 \diamond #3)}
+\newcommand{\ccomp}[3]{\ensuremath{{\color{red}{\mathtt{comp}}}(#1, #2, #3)}}
 \newcommand{\force}[1]{\mathtt{force}(#1)}
 \newcommand{\ret}[1]{\mathtt{ret}(#1)}
 \newcommand{\fst}[1]{#1 \cdot \mathtt{1}}
 \newcommand{\snd}[1]{#1 \cdot \mathtt{2}}
 
-\newcommand{\nat}{\mathtt{nat}}
+\newcommand{\nat}{\ensuremath{\mathtt{nat}}}
 \newcommand{\pure}[2]{#1 \rhd #2}
 \newcommand{\arr}[4]{\ensuremath{(#1\diamond#2) \to (#3\diamond#4)}}
 \newcommand{\dprod}[2]{\ensuremath{#1 \times #2}}
@@ -132,6 +132,7 @@
 \newcommand{\openEqComp}[4]{\ensuremath{#1 \gg #2 \doteq #3 \in #4}}
 \newcommand{\openEqCComp}[6]{\ensuremath{#1 \gg #2 \doteq #3 \in #4 {\color{purple}{\;[#5; #6]}}}}
 \newcommand{\openEqVal}[4]{\ensuremath{#1 \gg #2 \doteq #3 \in_0 #4}}
+\newcommand{\openVal}[3]{\ensuremath{#1 \gg #2 \in_0 #3}}
 \newcommand{\openComp}[3]{\ensuremath{#1 \gg #2 \in #3}}
 \newcommand{\openCComp}[5]{\ensuremath{#1 \gg #2 \in #3 {\color{purple}{\;[#4; #5]}}}}
 \newcommand{\openTypeComp}[2]{\ensuremath{#1 \gg #2 \; \mathsf{type}}}
@@ -152,13 +153,15 @@
     \else \advance \qqArgHgt by -\qqCornerHgt%
     \fi \raise\qqArgHgt\hbox{$\ulcorner$} \box\qqBoxA %
     \raise\qqArgHgt\hbox{$\urcorner$}}
-\newcommand{\lift}[1]{\ensuremath{\Quinequote{#1}}}
+%\newcommand{\lift}[1]{\ensuremath{\Quinequote{#1}}}
+\newcommand{\lift}[1]{\ensuremath{{\acute{#1}}}}
 
 \newcommand{\triv}{\star}
 \newcommand{\inl}[1]{\mathtt{inl}(#1)}
 \newcommand{\inr}[1]{\mathtt{inr}(#1)}
 \newcommand{\sigmaty}[2]{\Sigma #1.#2}
 \newcommand{\sigmatyc}[2]{\lift{\Sigma} #1.#2}
+\newcommand{\pity}[2]{\ensuremath{\Pi(#1,#2)}}
 \newcommand{\pityc}[2]{\ensuremath{\lift{\Pi} #1.#2}}
 \newcommand{\intty}[2]{\cap #1. #2}
 \newcommand{\inttyc}[2]{\ensuremath{\lift{\cap} #1. #2}}
@@ -177,7 +180,7 @@
 \newcommand{\cost}[1]{\ensuremath{\mathcal{C}}(#1)}
 \newcommand{\fequiv}[2]{\ensuremath{#1 \asymp #2}}
 \newcommand{\arrabt}[3]{\ensuremath{\Pi(#1, #2, #3)}}
-\newcommand{\arrabtc}[3]{\ensuremath{\lift{\Pi(#1, #2, #3)}}}
+\newcommand{\arrabtc}[3]{\ensuremath{\lift{\Pi}(#1, #2, #3)}}
 \newcommand{\relpot}[4]{\ensuremath{\mathtt{relpot}(#1.#2; #3.#4)}}
 \newcommand{\relpotty}[3]{\ensuremath{\mathtt{relpotty}(#1;#2.#3)}}
 
@@ -187,14 +190,17 @@
 \newcommand{\baire}{\mathcal{B}}
 \newcommand{\squash}[1]{\ensuremath{\downarrow \! #1}}
 
+\newcommand{\cf}[1]{\ensuremath{{\color{gray}{#1}}}}
 \newcommand\independent{\protect\mathpalette{\protect\independenT}{\perp}}
 \def\independenT#1#2{\mathrel{\rlap{$#1#2$}\mkern2mu{#1#2}}}
 \newcommand{\empseq}{\independent}
-\newcommand{\dbr}[6]{\mathtt{dbr}(#1,#2,#3,#4,#5,#6)}
+\newcommand{\dbr}[6]{\ensuremath{\mathtt{dbr}(#1,#2,#3,#4,#5,#6)}}
 \newcommand{\dbrp}[6]{\underline{\mathtt{dbr}}(#1,#2,#3,#4,#5,#6)}
 \newcommand{\tol}{\ulcorner\to}
 \newcommand{\tor}{\to\urcorner}
 \newcommand{\tolr}{\lift{\to}}
+\newcommand{\tolrz}{\cf{\tolr}}
+\newcommand{\tolrc}[1]{\tolr^{#1}}
 \newcommand{\embed}{\Uparrow}
 \newcommand{\ifthen}[3]{\mathtt{if}(#1;#2;#3)}
 
@@ -215,6 +221,16 @@
 \newcommand{\ttcst}{\mathtt{tt}}
 \newcommand{\ffcst}{\mathtt{ff}}
 \newcommand{\pos}[1]{\mathtt{pos}(#1)}
+
+%another
+\newcommand{\Inj}[1]{\ensuremath{\mathsf{Inj}(#1)}}
+\newcommand{\pityz}[2]{\ensuremath{{\color{gray}{\Pi}} #1.#2}}
+\newcommand{\pityzc}[2]{\ensuremath{{\color{gray}{\lift{\Pi}}} #1.#2}}
+\newcommand{\wrap}[1]{\ensuremath{\llparenthesis #1 \rrparenthesis}}
+\newcommand{\seqs}[3]{\ensuremath{\mathtt{seqs}(#1;#2.\;#3)}}
+
+%\intro
+\newcommand{\dlpcf}{\ensuremath{\mathsf{d}l\mathsf{PCF}}\,}
 \begin{document}
  
 % --------------------------------------------------------------
@@ -229,6 +245,7 @@
  
 %\maketitle
 
+%\input{intro.tex}
 \input{setup.tex}
 %\input{ground.tex}
 %\input{types.tex}
@@ -244,6 +261,7 @@
 \input{tension.tex}
 \input{bar.tex}
 \input{gcd.tex}
+\input{another.tex}
 \input{appendix.tex}
 
 \bibliography{bib}{}

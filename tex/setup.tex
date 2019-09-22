@@ -1,15 +1,15 @@
 \section{Language}
 
 \begin{align*}
-    \mathsf{Val} \quad v &::= \lam{x}{A}{M} 
-    \mid \suc{v}
+    \mathsf{Exp} \quad E &::= \lam{x}{A}{M} 
+    \mid \suc{E}
     \mid \zero 
-    \mid \thunk{M}
-    \mid \ccomp{P}{\isOf{a}{A}}{Q}
+    \mid \susp{E}
+    \mid \ccomp{E_1}{E}{a.E_2}
     \mid x
     \mid \nat
-    \mid \pair{v}{w}\\
-    &\mid \arr{\isOf{x}{M}}{P}{\isOf{x'}{M'}}{P'}
+    \mid \pair{E_1}{E_2}\\
+    &\mid \arrabt{A}{a.B}{a.P,a.b.Q}
     \mid \dprod{\isOf{x}{M}}{M'}\\
     \mathsf{Comp} \quad M &::= 
      v_1 \; v_2
@@ -20,7 +20,11 @@
     \mid \ret{v}\\
 \end{align*}
 
+We start with a simple language consisting of functions, natural numbers, and pairs. Later on we will add
+various constructs to illustrate cost analysis.
 \section{Semantics}
+We start with the usual small-step operational semantics, adjusted so that consecutive computations are 
+strung together by a sequencing operation.
 \[
 \fbox{$\step{M}{M'}$} \quad\quad \fbox{$\final{M}$}
 \]
